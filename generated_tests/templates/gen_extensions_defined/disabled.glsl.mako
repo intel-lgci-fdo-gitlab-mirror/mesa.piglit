@@ -30,7 +30,7 @@
 
 #version ${str(version)}
 % for ext in extra_extensions:
-  #extension ${ext} : require
+#extension ${ext} : require
 % endfor
 
 % if version.is_es:
