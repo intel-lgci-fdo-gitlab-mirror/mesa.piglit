@@ -47,6 +47,21 @@
 
 #include "piglit-util-gl.h"
 
+static enum piglit_result
+do_random(void *);
+
+static enum piglit_result
+empty_vbo(void *);
+
+static struct piglit_subtest
+subtests[] = {
+	{ .name = "random", .option = "random", .subtest_func = do_random },
+	{ .name = "empty-vbo", .option = "empty-vbo", .subtest_func = empty_vbo },
+	{ 0 },
+};
+
+static const struct piglit_gl_test_config *piglit_config;
+
 PIGLIT_GL_TEST_CONFIG_BEGIN
 
 	config.supports_gl_compat_version = 10;
@@ -55,6 +70,9 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 	config.window_height = 320;
 	config.window_visual = PIGLIT_GL_VISUAL_RGB;
 	config.khr_no_error_support = PIGLIT_NO_ERRORS;
+
+	config.subtests = subtests;
+	piglit_config = &config;
 
 PIGLIT_GL_TEST_CONFIG_END
 
@@ -191,12 +209,13 @@ test_random(void)
     return pass;
 }
 
-enum piglit_result
-piglit_display(void)
+static enum piglit_result
+do_random(void * data)
 {
     bool pass = true;
     unsigned i;
 
+    glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -205,5 +224,59 @@ piglit_display(void)
         pass = piglit_check_gl_error(GL_NO_ERROR) && pass;
     }
 
+    glDisableClientState(GL_VERTEX_ARRAY);
     return pass ? PIGLIT_PASS : PIGLIT_FAIL;
+}
+
+static enum piglit_result
+empty_vbo(void * data)
+{
+    bool pass = true;
+    GLuint color_buffer;
+    float black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+    if (!piglit_is_extension_supported("GL_ARB_robustness"))
+        return PIGLIT_SKIP;
+
+    glClearColor(1.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    float positions[] = {
+         0.0f,  0.0f, 0.0f,
+         piglit_width, 0.0f, 0.0f,
+         0.0f,  piglit_height, 0.0f
+    };
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexPointer(3, GL_FLOAT, 0, positions);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    /* use empty buffer object */
+    glGenBuffers(1, &color_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
+    glColorPointer(4, GL_FLOAT, 0, NULL);
+    glEnableClientState(GL_COLOR_ARRAY);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+
+    pass &= piglit_probe_rect_rgba(1, 1,
+                                   piglit_width / 2 - 1, piglit_height / 2 -1,
+                                   black);
+
+    return pass ? PIGLIT_PASS : PIGLIT_FAIL;
+}
+
+
+enum piglit_result
+piglit_display(void)
+{
+    enum piglit_result result = PIGLIT_PASS;
+    result = piglit_run_selected_subtests(piglit_config->subtests,
+                                          piglit_config->selected_subtests,
+                                          piglit_config->num_selected_subtests,
+                                          result);
+    piglit_present_results();
+    return result;
 }
