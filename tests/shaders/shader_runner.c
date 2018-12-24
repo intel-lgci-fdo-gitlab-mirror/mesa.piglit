@@ -3209,6 +3209,26 @@ query_check_error_int(const char *query_str, int expected, int got)
 	}
 }
 
+static void
+query_check_error_name(const char *query_str,
+		       int expected_length, int actual_length,
+		       const char *expected_name, const char *actual_name)
+{
+	if (!piglit_check_gl_error(GL_NO_ERROR)) {
+		fprintf(stderr, "%s error\n", query_str);
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
+	if (actual_length != expected_length || strcmp(actual_name, expected_name)) {
+		fprintf(stderr,
+			"%s: expected (length = %d, name = \"%s\"),"
+			"got (length = %d, name = \"%s\")\n", query_str,
+			expected_length, expected_name,
+			actual_length, actual_name);
+		piglit_report_result(PIGLIT_FAIL);
+	}
+}
+
 static int
 resource_info_get_block_or_atomic_buffer_index(struct resource_info *resource)
 {
@@ -3501,6 +3521,21 @@ verify_query_object_result(const char *line)
 		return PIGLIT_FAIL;
 	}
 	return PIGLIT_PASS;
+}
+
+static void
+query_resource_name(unsigned interface_type, GLuint index,
+		    GLsizei expected_length, const char *expected_name,
+		    const char *query_str)
+{
+	GLsizei actual_length;
+	char actual_name[512];
+
+	glGetProgramResourceName(prog, interface_type, index, sizeof(actual_name),
+				 &actual_length, actual_name);
+
+	query_check_error_name(query_str, expected_length, actual_length,
+			       expected_name, actual_name);
 }
 
 static void
@@ -3884,10 +3919,47 @@ verify_program_interface_query(const char *line,
 
 	}
 		break;
+	case QUERY_RESOURCE_NAME: {
+		struct resource_info resource = {GL_NONE, -1, -1, -1, -1, false};
+		GLuint index;
+		GLsizei expected_length;
+		char expected_name[512];
+
+		parse_resource_info(&line, interface_type, &resource);
+		index = resource_info_get_index(&resource);
+
+		REQUIRE(parse_int(line, &expected_length, &line),
+			"Bad expected length at: %s\n", line);
+
+		if (parse_str(line, "\"\"", &line))
+			expected_name[0] = '\0';
+		else
+			REQUIRE(parse_word_copy(line, expected_name,
+						sizeof(expected_name), &line),
+				"Bad expected name at: %s\n", line);
+
+		if (strlen(expected_name) != expected_length) {
+			fprintf(stderr,
+				"Expected values for length and name do not "
+				"match: length = %d, name = \"%s\" "
+				"(name's real length = %zu)\n",
+				expected_length, expected_name,
+				strlen(expected_name));
+			piglit_report_result(PIGLIT_FAIL);
+		}
+
+		snprintf(query_str, sizeof(query_str),
+			 "glGetProgramResourceName(%s, %d)",
+			 piglit_get_gl_enum_name(interface_type),
+			 index);
+
+		query_resource_name(interface_type, index,
+				    expected_length, expected_name, query_str);
+	}
+		break;
 	case QUERY_RESOURCE_INDEX:
 	case QUERY_RESOURCE_LOCATION:
 	case QUERY_RESOURCE_LOCATION_INDEX:
-	case QUERY_RESOURCE_NAME:
 		assert(!"Not implemented.");
 		break;
 	default:
