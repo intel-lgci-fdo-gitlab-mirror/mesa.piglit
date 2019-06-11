@@ -28,7 +28,7 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 PIGLIT_GL_TEST_CONFIG_END
 
 static GLint
-prog1, prog2, prog3;
+prog1, prog2, prog3, prog4;
 
 static GLint
 color_loc;
@@ -86,6 +86,36 @@ piglit_init(int argc, char **argv)
 	projection_loc = glGetUniformLocation(prog3, "projection");
 	color_loc = glGetUniformLocation(prog3, "color");
 	piglit_ortho_uniform(projection_loc, piglit_width, piglit_height);
+
+	prog4 = piglit_build_simple_program_multiple_shaders(
+		GL_VERTEX_SHADER,
+		"uniform mat4 projection;\n"
+		"attribute vec4 piglit_vertex;\n"
+		"void main()\n"
+		"{\n"
+		"  gl_Position = projection * piglit_vertex;\n"
+		"}\n",
+		GL_GEOMETRY_SHADER,
+		"#version 150\n"
+		"layout(triangles) in;\n"
+		"layout(triangle_strip, max_vertices = 3) out;\n"
+		"void main()\n"
+		"{\n"
+		"  for (int i = 0; i < gl_in.length(); i++) {\n"
+		"    gl_Position = gl_in[i].gl_Position;\n"
+		"    EmitVertex();\n"
+		"  }\n"
+		"  EndPrimitive();\n"
+		"}\n",
+		GL_FRAGMENT_SHADER,
+		"void main()\n"
+		"{\n"
+		"  gl_FragColor = vec4(1.0);\n"
+		"}\n",
+		0);
+	glUseProgram(prog4);
+	projection_loc = glGetUniformLocation(prog4, "projection");
+	piglit_ortho_uniform(projection_loc, piglit_width, piglit_height);
 }
 
 enum piglit_result
@@ -122,6 +152,13 @@ piglit_display(void)
 		{ 30, 55, -2, 1 },
 	};
 
+	static const float quad5[4][4] = {
+		{ 40, 40, 2, 1 },
+		{ 60, 40, 2, 1 },
+		{ 40, 60, -2, 1 },
+		{ 60, 60, -2, 1 }
+	};
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_CLAMP);
 
@@ -144,6 +181,9 @@ piglit_display(void)
 	glDisable(GL_DEPTH_TEST);
 	glDepthRange(0.0, 1.0);
 
+	glUseProgram(prog4);
+	piglit_draw_rect_from_arrays(quad5, NULL, false, 1);
+
 	/* verify that gl_FragCoord.z didn't get clamped */
 	pass = piglit_probe_rect_rgb(10, 10, 20, 5, white) && pass;
 	pass = piglit_probe_rect_rgb(10, 15, 20, 10, black) && pass;
@@ -154,6 +194,9 @@ piglit_display(void)
 
 	/* verify that glDepthRange has an effect */
 	pass = piglit_probe_pixel_rgb(20, 50, white) && pass;
+
+	/* verify that clamping still happens with geometry shader */
+	pass = piglit_probe_rect_rgb(40, 40, 20, 20, white) && pass;
 
 	piglit_present_results();
 
