@@ -1,0 +1,406 @@
+/*
+ * Copyright © 2020 Intel Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+#include "sample_common.h"
+#include "image_common.h"
+#include "drm-uapi/drm_fourcc.h"
+
+#include <inttypes.h>
+
+#define W 257
+#define H 257
+
+/**
+ * @file modifiers.c
+ *
+ * Test various operations on imported dmabufs with supported modifiers.
+ */
+
+PIGLIT_GL_TEST_CONFIG_BEGIN
+
+	config.supports_gl_es_version = 20;
+	config.window_visual = PIGLIT_GL_VISUAL_RGBA;
+
+PIGLIT_GL_TEST_CONFIG_END
+
+PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC dmabuf_query;
+PFNEGLEXPORTDMABUFIMAGEMESAPROC dmabuf_export;
+PFNEGLQUERYDMABUFFORMATSEXTPROC dmabuf_query_formats;
+PFNEGLQUERYDMABUFMODIFIERSEXTPROC dmabuf_query_modifiers;
+
+struct dma_buf_info {
+	int fd;
+	uint32_t w;
+	uint32_t h;
+	uint32_t n_planes;
+	uint32_t stride[4]; /* pitch for each plane */
+	uint32_t offset[4]; /* offset of each plane */
+};
+
+static void
+delete_tex(GLuint *tex)
+{
+	if (*tex != 0) {
+		glDeleteTextures(1, tex);
+		*tex = 0;
+	}
+}
+
+static void
+destroy_img(EGLImageKHR *img)
+{
+	if (*img != EGL_NO_IMAGE_KHR) {
+		eglDestroyImageKHR(eglGetCurrentDisplay(), *img);
+		*img = EGL_NO_IMAGE_KHR;
+	}
+}
+
+
+static const char *
+modifier_str(EGLuint64KHR mod)
+{
+#define CASE(x) case x: return #x
+	switch (mod) {
+	CASE(DRM_FORMAT_MOD_LINEAR);
+	CASE(I915_FORMAT_MOD_X_TILED);
+	CASE(I915_FORMAT_MOD_Y_TILED);
+	CASE(I915_FORMAT_MOD_Yf_TILED);
+	CASE(I915_FORMAT_MOD_Y_TILED_CCS);
+	CASE(I915_FORMAT_MOD_Yf_TILED_CCS);
+	CASE(I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS);
+	CASE(I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS);
+	CASE(I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC);
+	CASE(DRM_FORMAT_MOD_SAMSUNG_64_32_TILE);
+	CASE(DRM_FORMAT_MOD_SAMSUNG_16_16_TILE);
+	CASE(DRM_FORMAT_MOD_QCOM_COMPRESSED);
+	CASE(DRM_FORMAT_MOD_VIVANTE_TILED);
+	CASE(DRM_FORMAT_MOD_VIVANTE_SUPER_TILED);
+	CASE(DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED);
+	CASE(DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED);
+	CASE(DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED);
+	CASE(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB);
+	CASE(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB);
+	CASE(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB);
+	CASE(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB);
+	CASE(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB);
+	CASE(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB);
+	CASE(DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED);
+	CASE(DRM_FORMAT_MOD_BROADCOM_SAND32);
+	CASE(DRM_FORMAT_MOD_BROADCOM_SAND64);
+	CASE(DRM_FORMAT_MOD_BROADCOM_SAND128);
+	CASE(DRM_FORMAT_MOD_BROADCOM_SAND256);
+	CASE(DRM_FORMAT_MOD_ALLWINNER_TILED);
+	default: return NULL;
+	}
+#undef CASE
+}
+
+/* Shorten fourcc "strings" (e.g., "R8  " -> "R8") */
+static int
+format_no_space(int fmt)
+{
+	int fmt_no_space = fmt;
+	char *fmt_str = (char *)&fmt_no_space;
+	for (int i = 0; i < 4; i++)
+		if (fmt_str[i] == ' ')
+			fmt_str[i] = '\0';
+
+	return fmt_no_space;
+}
+
+static void
+report_result(enum piglit_result res, int fmt, EGLuint64KHR mod,
+	      const char *fn)
+{
+	const char *mod_str = modifier_str(mod);
+	const int fmt_no_space = format_no_space(fmt);
+
+	if (mod_str)
+		piglit_report_subtest_result(res, "%.4s-%s-%s",
+					     (char*)&fmt_no_space, mod_str, fn);
+	else
+		piglit_report_subtest_result(res, "%.4s-0x%"PRIx64"-%s",
+					     (char*)&fmt_no_space, mod, fn);
+}
+
+static enum piglit_result
+egl_image_for_dma_buf_fd_mod(struct dma_buf_info *buf, int fourcc,
+			     EGLImageKHR *out_img, EGLuint64KHR modifier)
+{
+#define DMA_BUF_ATTRS \
+	EGL_IMAGE_PRESERVED, EGL_TRUE, \
+	EGL_WIDTH, buf->w, \
+	EGL_HEIGHT, buf->h, \
+	EGL_LINUX_DRM_FOURCC_EXT, fourcc
+#define PLANE_ATTRS \
+	EGL_NONE, EGL_NONE, \
+	EGL_NONE, EGL_NONE, \
+	EGL_NONE, EGL_NONE, \
+	EGL_NONE, EGL_NONE, \
+	EGL_NONE, EGL_NONE
+#define LIST_SIZE(type, list) ARRAY_SIZE(((type []) { list }))
+#define DMA_BUF_ATTRS_LEN LIST_SIZE(EGLint, DMA_BUF_ATTRS)
+#define PLANE_ATTRS_LEN	LIST_SIZE(EGLint, PLANE_ATTRS)
+#define FILL_PLANE(attr, buf, fourcc, mod, p) \
+	if (p < buf->n_planes) { \
+		const EGLint plane_attr[PLANE_ATTRS_LEN] = { \
+		       EGL_DMA_BUF_PLANE ## p ## _FD_EXT, \
+		       buf->fd, \
+		       EGL_DMA_BUF_PLANE ## p ## _OFFSET_EXT, \
+		       buf->offset[p], \
+		       EGL_DMA_BUF_PLANE ## p ## _PITCH_EXT, \
+		       buf->stride[p], \
+		       EGL_DMA_BUF_PLANE ## p ## _MODIFIER_LO_EXT, \
+		       mod, \
+		       EGL_DMA_BUF_PLANE ## p ## _MODIFIER_HI_EXT, \
+		       mod >> 32, \
+		}; \
+		const unsigned plane_attr_offset = \
+			DMA_BUF_ATTRS_LEN + PLANE_ATTRS_LEN * p; \
+		assert(plane_attr_offset + PLANE_ATTRS_LEN < \
+			ARRAY_SIZE(attr)); \
+		memcpy(attr + plane_attr_offset, plane_attr, \
+			sizeof(plane_attr)); \
+	}
+
+	EGLint attr[] = {
+		DMA_BUF_ATTRS,
+		PLANE_ATTRS,
+		PLANE_ATTRS,
+		PLANE_ATTRS,
+		PLANE_ATTRS,
+		EGL_NONE,
+        };
+	FILL_PLANE(attr, buf, fourcc, modifier, 0)
+	FILL_PLANE(attr, buf, fourcc, modifier, 1)
+	FILL_PLANE(attr, buf, fourcc, modifier, 2)
+	FILL_PLANE(attr, buf, fourcc, modifier, 3)
+
+#undef FILL_PLANE
+#undef PLANE_ATTRS_LEN
+#undef DMA_BUF_ATTRS_LEN
+#undef LIST_SIZE
+#undef PLANE_ATTRS
+#undef DMA_BUF_ATTRS
+
+	EGLImageKHR img = eglCreateImageKHR(eglGetCurrentDisplay(),
+					    EGL_NO_CONTEXT,
+					    EGL_LINUX_DMA_BUF_EXT,
+					    (EGLClientBuffer)0, attr);
+	EGLint error = eglGetError();
+
+	/* EGL may not support the format, this is not an error. */
+	if (!img && error == EGL_BAD_MATCH)
+		return PIGLIT_SKIP;
+
+	if (error != EGL_SUCCESS) {
+		printf("eglCreateImageKHR() failed: %s 0x%x\n",
+		       piglit_get_egl_error_name(error), error);
+		return PIGLIT_FAIL;
+	}
+
+	*out_img = img;
+	return PIGLIT_PASS;
+}
+
+/* This function can be implemented locally to make this test load files
+ * that contain or point to dmabuf data. It's intended to be left
+ * unimplemented by default.
+ */
+static bool
+load_dma_buf_from_file(uint32_t format, EGLuint64KHR modifier,
+		       struct dma_buf_info *buf)
+{
+	return false;
+}
+
+static bool
+get_dma_buf(uint32_t format, EGLuint64KHR modifier, bool external_only,
+	    struct dma_buf_info *buf)
+{
+	if (load_dma_buf_from_file(format, modifier, buf))
+		return true;
+
+	return false;
+}
+
+static enum piglit_result
+modifier_test(uint32_t format, EGLuint64KHR modifier, bool external_only)
+{
+	GLuint tex = 0;
+	EGLImageKHR img = EGL_NO_IMAGE_KHR;
+	struct dma_buf_info buf = { .fd = -1 };
+	enum piglit_result res = PIGLIT_SKIP;
+
+	/* Create dma_buf_info. */
+	if (!get_dma_buf(format, modifier, external_only, &buf)) {
+		piglit_logd("No data found");
+		return PIGLIT_SKIP;
+	}
+
+	/* Create EGLImage. */
+	res = egl_image_for_dma_buf_fd_mod(&buf, format, &img, modifier);
+
+	if (!img) {
+		/* Close the descriptor also, EGL does not have ownership */
+		close(buf.fd);
+	}
+
+	if (res != PIGLIT_PASS) {
+		piglit_logd("Failed EGL import");
+		goto destroy;
+	}
+
+	res = texture_for_egl_image(img, &tex, true);
+	if (res != PIGLIT_PASS) {
+		piglit_logd("Failed GL import");
+		goto destroy;
+	}
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	/* TODO - verify results (?) */
+
+	sample_tex(tex, 0, 0, W, H, true);
+	piglit_present_results();
+
+destroy:
+	delete_tex(&tex);
+	destroy_img(&img);
+	close(buf.fd);
+	return res;
+}
+
+static bool
+skip_format(uint32_t format)
+{
+	switch (format) {
+	case DRM_FORMAT_R8:
+	case DRM_FORMAT_R16:
+	case DRM_FORMAT_XRGB8888:
+	case DRM_FORMAT_XBGR8888:
+	case DRM_FORMAT_ARGB8888:
+	case DRM_FORMAT_ABGR8888:
+	case DRM_FORMAT_YUYV:
+	case DRM_FORMAT_UYVY:
+	case DRM_FORMAT_P010:
+	case DRM_FORMAT_P012:
+	case DRM_FORMAT_P016:
+	case DRM_FORMAT_NV12:
+		return false;
+	default:
+		return true;
+	}
+}
+
+static bool
+skip_modifier(EGLuint64KHR mod)
+{
+	return false;
+}
+
+enum piglit_result
+piglit_display(void)
+{
+	EGLDisplay egl_dpy = eglGetCurrentDisplay();
+
+#define MAX_FORMATS 256
+#define MAX_MODIFIERS 256
+
+	/* First query all available formats. */
+	EGLint formats[MAX_FORMATS];
+	EGLuint64KHR modifiers[MAX_MODIFIERS];
+	EGLBoolean external_only[MAX_MODIFIERS];
+	EGLint num_formats = 0;
+	EGLint num_modifiers = 0;
+
+	dmabuf_query_formats(egl_dpy, MAX_FORMATS, formats, &num_formats);
+
+	printf("found %d supported formats\n", num_formats);
+
+	enum piglit_result result = PIGLIT_SKIP;
+
+	for (unsigned i = 0; i < num_formats; i++) {
+		if (skip_format(formats[i]))
+			continue;
+
+		int32_t fmt = formats[i];
+
+		dmabuf_query_modifiers(egl_dpy, fmt, MAX_MODIFIERS, modifiers,
+				       external_only, &num_modifiers);
+
+		printf("format %.4s has %d supported modifiers\n",
+		       (char *)&fmt, num_modifiers);
+
+		for (unsigned j = 0; j < num_modifiers; j++) {
+			if (skip_modifier(modifiers[j]))
+				continue;
+
+			enum piglit_result r;
+			r = modifier_test(fmt, modifiers[j],
+					  external_only[j]);
+			report_result(r, fmt, modifiers[j], "modifiers_test");
+			piglit_merge_result(&result, r);
+		}
+        }
+
+	return result;
+}
+
+void
+piglit_init(int argc, char **argv)
+{
+	EGLDisplay egl_dpy = eglGetCurrentDisplay();
+
+	piglit_require_egl_extension(
+			egl_dpy, "EGL_EXT_image_dma_buf_import_modifiers");
+	piglit_require_egl_extension(
+			egl_dpy, "EGL_MESA_image_dma_buf_export");
+	piglit_require_extension("GL_EXT_EGL_image_storage");
+
+	dmabuf_query =
+		(PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC) eglGetProcAddress(
+			"eglExportDMABUFImageQueryMESA");
+
+	dmabuf_export =
+		(PFNEGLEXPORTDMABUFIMAGEMESAPROC) eglGetProcAddress(
+			"eglExportDMABUFImageMESA");
+
+	if (!dmabuf_query || !dmabuf_export) {
+		fprintf(stderr, "could not find extension entrypoints\n");
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
+	dmabuf_query_formats =
+		(PFNEGLQUERYDMABUFFORMATSEXTPROC) eglGetProcAddress(
+			"eglQueryDmaBufFormatsEXT");
+
+	dmabuf_query_modifiers =
+		(PFNEGLQUERYDMABUFMODIFIERSEXTPROC) eglGetProcAddress(
+			"eglQueryDmaBufModifiersEXT");
+
+	if (!dmabuf_query_formats || !dmabuf_query_modifiers) {
+		fprintf(stderr, "could not find extension entrypoints\n");
+		piglit_report_result(PIGLIT_FAIL);
+	}
+}

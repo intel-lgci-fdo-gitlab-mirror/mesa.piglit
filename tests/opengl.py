@@ -3174,6 +3174,7 @@ with profile.test_list.group_manager(
     g(['ext_image_dma_buf_import-unsupported_format'], run_concurrent=False)
     g(['ext_image_dma_buf_import-intel_external_sampler_only'],
       run_concurrent=False)
+    g(['ext_image_dma_buf_import-modifiers'])
     g(['ext_image_dma_buf_import-refcount'])
     g(['ext_image_dma_buf_import-sample_rgb', '-fmt=AR24'],
       'ext_image_dma_buf_import-sample_argb8888', run_concurrent=False)
