@@ -51,6 +51,8 @@ static const int tex_default_height = 32;
 static const int tex_default_depth = 8;
 static const int tex_default_levels = 6;
 
+static int illegal_levels_amount = 0;
+
 struct image {
 	GLuint texture;
 	GLenum target;
@@ -164,14 +166,17 @@ check_image(GLenum target_type, int level, int data_size)
 	GLuint *data = malloc(data_size * sizeof(GLuint));
 	glGetTexImage(target_type, level, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
 
-	for (int i = 0; i < data_size; i++) {
-		if (data[i] != expected) {
-			pass = false;
-			fprintf(stderr, "%s: level %d, texel idx %d (%d total) "
-					"comparison failed (%d != %d)\n",
-					piglit_get_gl_enum_name(target_type),
-					level, i, data_size, data[i], expected);
-			break;
+	if(level < tex_default_levels) /*Skip illegal levels*/
+	{
+		for (int i = 0; i < data_size; i++) {
+			if (data[i] != expected) {
+				pass = false;
+				fprintf(stderr, "%s: level %d, texel idx %d (%d total) "
+						"comparison failed (%d != %d)\n",
+						piglit_get_gl_enum_name(target_type),
+						level, i, data_size, data[i], expected);
+				break;
+			}
 		}
 	}
 
@@ -194,9 +199,9 @@ run_test(GLenum target_type, enum tex_init_order init_order)
 	bool pass = true;
 
 	init_image(&srcImg, target_type, tex_default_width, tex_default_height,
-			tex_default_depth, tex_default_levels);
+			tex_default_depth, tex_default_levels + illegal_levels_amount);
 	init_image(&dstImg, target_type, tex_default_width, tex_default_height,
-			tex_default_depth, tex_default_levels);
+			tex_default_depth, tex_default_levels + illegal_levels_amount);
 
 	if (init_order == TEX_ORDER_FORWARD) {
 		for(int level = 0; level < srcImg.levels; level++) {
@@ -250,6 +255,19 @@ void
 piglit_init(int argc, char **argv)
 {
 	piglit_require_extension("GL_ARB_copy_image");
+
+	for (int i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "add-illegal-levels") == 0) {
+			illegal_levels_amount = 2;
+			break;
+		}
+	}
+	/* When ran with 'add-illegal-levels' argument,
+	 * we generate 2 more mipmap levels than allowed by texture size.
+	 * Which can possibly corrupt data of existing layers.
+	 * We don't check the data correctness of illegal levels, since
+	 * spec doesn't say what should be in them.
+	 */
 
 	bool pass = true;
 
