@@ -1,4 +1,3 @@
-
 Piglit
 ======
 
@@ -80,7 +79,7 @@ flags), then you must invoke cmake with options
 
 Install development packages.
 
-    $ sudo apt-get install cmake g++ mesa-common-dev libgl1-mesa-dev python3-numpy python3-mako freeglut3-dev x11proto-gl-dev libxrender-dev libwaffle-dev libudev-dev
+    $ sudo apt-get install cmake g++ mesa-common-dev libgl1-mesa-dev python3-numpy python3-mako freeglut3-dev x11proto-gl-dev libxrender-dev libwaffle-dev libudev-dev pkg-config libvulkan-dev glslang-tools libegl1-mesa-dev libxkbcommon-dev
 
 Configure and build.
 
