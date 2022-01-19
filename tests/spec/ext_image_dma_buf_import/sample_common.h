@@ -40,10 +40,11 @@ enum piglit_result
 egl_image_for_dma_buf_fd(struct piglit_dma_buf *buf, int fd, int fourcc, EGLImageKHR *out_img);
 
 enum piglit_result
-texture_for_egl_image(EGLImageKHR img, GLuint *out_tex);
+texture_for_egl_image(EGLImageKHR img, GLuint *out_tex, bool external);
 
 void
-sample_tex(GLuint tex, unsigned x, unsigned y, unsigned w, unsigned h);
+sample_tex(GLuint tex, unsigned x, unsigned y, unsigned w, unsigned h,
+	   bool external);
 
 void
 usage(const char *name, const char *color_space);

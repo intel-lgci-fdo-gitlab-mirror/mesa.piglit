@@ -207,8 +207,8 @@ test(EGLDisplay egl_dpy, bool glfinish_after_dmabuf_export)
 
 	/* Draw EGLImage contents */
 	GLuint imported_tex;
-	texture_for_egl_image(imported_img, &imported_tex);
-	sample_tex(imported_tex, 0, 0, 1, piglit_height);
+	texture_for_egl_image(imported_img, &imported_tex, true);
+	sample_tex(imported_tex, 0, 0, 1, piglit_height, true);
 
 	/* Verify the contents */
 	const float ones[] = { CLEAR_VALUE };

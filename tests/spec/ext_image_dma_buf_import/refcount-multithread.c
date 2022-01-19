@@ -72,7 +72,7 @@ create_and_destroy_texture(struct piglit_dma_buf *buf, int fourcc)
 	if (res != PIGLIT_PASS)
 		return res;
 
-	res = texture_for_egl_image(img, &tex);
+	res = texture_for_egl_image(img, &tex, true);
 	eglDestroyImageKHR(eglGetCurrentDisplay(), img);
 	if (res != PIGLIT_PASS)
 		return res;

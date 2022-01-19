@@ -28,10 +28,19 @@
 #include "image_common.h"
 #include "sample_common.h"
 
-static const char fs_src[] =
+static const char fs_src_external[] =
 	"#extension GL_OES_EGL_image_external : require\n"
 	"precision mediump float;\n"
 	"uniform samplerExternalOES sampler;\n"
+	"varying vec2 texcoords;\n"
+	"\n"
+	"void main()\n"
+	"{\n"
+	"gl_FragColor = texture2D(sampler, texcoords);\n"
+	"}\n";
+static const char fs_src[] =
+	"precision mediump float;\n"
+	"uniform sampler2D sampler;\n"
 	"varying vec2 texcoords;\n"
 	"\n"
 	"void main()\n"
@@ -50,17 +59,17 @@ static const char vs_src[] =
 	"}\n";
 
 enum piglit_result
-texture_for_egl_image(EGLImageKHR img, GLuint *out_tex)
+texture_for_egl_image(EGLImageKHR img, GLuint *out_tex, bool external)
 {
 	GLuint tex;
 	GLenum error;
+	GLenum target = external ? GL_TEXTURE_EXTERNAL_OES : GL_TEXTURE_2D;
 
 	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_EXTERNAL_OES, tex);
+	glBindTexture(target, tex);
 
 	/* Set the image as level zero */
-	glEGLImageTargetTexStorageEXT(GL_TEXTURE_EXTERNAL_OES,
-				      (GLeglImageOES)img, NULL);
+	glEGLImageTargetTexStorageEXT(target, (GLeglImageOES)img, NULL);
 	error = glGetError();
 
 	/**
@@ -76,10 +85,8 @@ texture_for_egl_image(EGLImageKHR img, GLuint *out_tex)
 		return PIGLIT_FAIL;
 	}
 
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER,
-			GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER,
-			GL_NEAREST);
+	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	*out_tex = tex;
 
@@ -87,15 +94,17 @@ texture_for_egl_image(EGLImageKHR img, GLuint *out_tex)
 }
 
 void
-sample_tex(GLuint tex, unsigned x, unsigned y, unsigned w, unsigned h)
+sample_tex(GLuint tex, unsigned x, unsigned y, unsigned w, unsigned h,
+	   bool external)
 {
 	GLuint prog;
 
-	prog = piglit_build_simple_program(vs_src, fs_src);
+	prog = piglit_build_simple_program(vs_src, external ?
+					           fs_src_external : fs_src);
 
 	glUseProgram(prog);
 
-	glBindTexture(GL_TEXTURE_EXTERNAL_OES, tex);
+	glBindTexture(external ? GL_TEXTURE_EXTERNAL_OES : GL_TEXTURE_2D, tex);
 	glUniform1i(glGetUniformLocation(prog, "sampler"), 0);
 
 	glViewport(x, y, w, h);
@@ -216,11 +225,11 @@ sample_buffer(struct piglit_dma_buf *buf, int fourcc)
 	if (res != PIGLIT_PASS)
 		return res;
 
-	res = texture_for_egl_image(img, &tex);
+	res = texture_for_egl_image(img, &tex, true);
 	if (res != PIGLIT_PASS)
 		goto destroy;
 
-	sample_tex(tex, 0, 0, w, h);
+	sample_tex(tex, 0, 0, w, h, true);
 
 destroy:
 	glDeleteTextures(1, &tex);

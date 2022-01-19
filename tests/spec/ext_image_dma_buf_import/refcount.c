@@ -80,27 +80,27 @@ piglit_display(void)
 
 	close(buf->fd);
 
-	res = texture_for_egl_image(img1, &tex1);
+	res = texture_for_egl_image(img1, &tex1, true);
 	if (res != PIGLIT_PASS)
 		return res;
 
-	res = texture_for_egl_image(img2, &tex2);
+	res = texture_for_egl_image(img2, &tex2, true);
 	if (res != PIGLIT_PASS)
 		return res;
 
 	sample_tex(tex1,
 		   0, y_spacing * 0,
-		   w * scale, h * scale);
+		   w * scale, h * scale, true);
 	sample_tex(tex2,
 		   0, y_spacing * 1,
-		   w * scale, h * scale);
+		   w * scale, h * scale, true);
 
 	glDeleteTextures(1, &tex2);
 	eglDestroyImageKHR(eglGetCurrentDisplay(), img2);
 
 	sample_tex(tex1,
 		   0, y_spacing * 2,
-		   w * scale, h * scale);
+		   w * scale, h * scale, true);
 
 	expected = piglit_rgbw_image_ubyte(w * scale, h * scale, false);
 
