@@ -23,6 +23,8 @@
 #ifndef PIGLIT_DRM_DMA_BUF_H
 #define PIGLIT_DRM_DMA_BUF_H
 
+#include <stdint.h>
+
 #include "drm-uapi/drm_fourcc.h"
 
 struct piglit_dma_buf {
@@ -38,6 +40,10 @@ struct piglit_dma_buf {
 enum piglit_result
 piglit_drm_create_dma_buf(unsigned w, unsigned h, unsigned fourcc,
 			const void *src_data,  struct piglit_dma_buf **buf);
+enum piglit_result
+piglit_drm_create_dma_buf_modifiers(unsigned w, unsigned h, unsigned fourcc,
+				    uint64_t modifier, const void *src_data,
+				    struct piglit_dma_buf **buf);
 
 void
 piglit_drm_destroy_dma_buf(struct piglit_dma_buf *buf);

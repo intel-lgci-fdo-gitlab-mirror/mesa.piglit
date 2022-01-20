@@ -411,6 +411,110 @@ piglit_drm_get_driver(void)
 	return NULL;
 }
 
+static bool
+drm_create_dma_buf_modifiers(unsigned w, unsigned h, unsigned fourcc,
+			     uint64_t modifier, const unsigned char *src_data,
+			     struct piglit_dma_buf *buf)
+{
+	unsigned i;
+	struct gbm_bo *bo;
+	uint32_t dst_stride;
+	struct gbm_device *gbm = piglit_gbm_get();
+	void *dst_data;
+	void *map_data = NULL;
+	unsigned cpp = 0, src_stride;
+
+	if (!gbm)
+		return false;
+
+	switch (fourcc) {
+	case DRM_FORMAT_R8:
+		cpp = 1;
+		break;
+	case DRM_FORMAT_R16:
+		cpp = 2;
+		break;
+	case DRM_FORMAT_XBGR8888:
+	case DRM_FORMAT_XRGB8888:
+	case DRM_FORMAT_ABGR8888:
+	case DRM_FORMAT_ARGB8888:
+		cpp = 4;
+		break;
+	default:
+		fprintf(stderr, "invalid fourcc: %.4s\n", (char *)&fourcc);
+		return false;
+	}
+
+	bo = gbm_bo_create_with_modifiers(gbm, w, h, fourcc, &modifier, 1);
+	if (!bo)
+		return false;
+
+	dst_data = gbm_bo_map(bo, 0, 0, w, h, GBM_BO_TRANSFER_WRITE,
+			      &dst_stride, &map_data);
+	if (!dst_data) {
+		fprintf(stderr, "Failed to map GBM bo\n");
+		gbm_bo_destroy(bo);
+		return false;
+	}
+
+	src_stride = cpp * w;
+
+	buf->w = w;
+	buf->h = h;
+
+	buf->n_planes = gbm_bo_get_plane_count(bo);
+	assert(buf->n_planes <= ARRAY_SIZE(buf->offset));
+	for (int i = 0; i < buf->n_planes; i++) {
+		buf->offset[i] = gbm_bo_get_offset(bo, i);
+		buf->stride[i] = gbm_bo_get_stride_for_plane(bo, i);
+	}
+
+	buf->fd = -1;
+	buf->priv = bo;
+
+	for (i = 0; i < h; ++i) {
+		memcpy((char *)dst_data + i * dst_stride,
+		       src_data + i * src_stride,
+		       w * cpp);
+	}
+
+	gbm_bo_unmap(bo, map_data);
+
+
+	return true;
+}
+enum piglit_result
+piglit_drm_create_dma_buf_modifiers(unsigned w, unsigned h, unsigned fourcc,
+				    uint64_t modifier, const void *src_data,
+				    struct piglit_dma_buf **buf)
+{
+	struct piglit_dma_buf *drm_buf;
+	const struct piglit_drm_driver *drv = piglit_drm_get_driver();
+
+	if (!drv)
+		return PIGLIT_SKIP;
+
+	drm_buf = calloc(sizeof(struct piglit_dma_buf), 1);
+	if (!drm_buf)
+		return PIGLIT_FAIL;
+
+	if (!drm_create_dma_buf_modifiers(w, h, fourcc, modifier, src_data,
+					  drm_buf)) {
+		free(drm_buf);
+		return PIGLIT_FAIL;
+	}
+
+	if (!drv->export(drm_buf)) {
+		free(drm_buf);
+		return PIGLIT_FAIL;
+	}
+
+	*buf = drm_buf;
+
+	return PIGLIT_PASS;
+}
+
+
 enum piglit_result
 piglit_drm_create_dma_buf(unsigned w, unsigned h, unsigned fourcc,
 			const void *src_data,  struct piglit_dma_buf **buf)
