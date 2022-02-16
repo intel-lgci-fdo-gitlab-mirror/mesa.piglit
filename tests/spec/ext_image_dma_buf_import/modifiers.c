@@ -140,6 +140,43 @@ modifier_str(EGLuint64KHR mod)
 #undef CASE
 }
 
+static EGLuint64KHR
+str_to_modifier(const char *mod)
+{
+#define TEST(m, x) if (strcmp(m, #x) == 0) return x
+	TEST(mod, DRM_FORMAT_MOD_LINEAR);
+	TEST(mod, I915_FORMAT_MOD_X_TILED);
+	TEST(mod, I915_FORMAT_MOD_Y_TILED);
+	TEST(mod, I915_FORMAT_MOD_Yf_TILED);
+	TEST(mod, I915_FORMAT_MOD_Y_TILED_CCS);
+	TEST(mod, I915_FORMAT_MOD_Yf_TILED_CCS);
+	TEST(mod, I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS);
+	TEST(mod, I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS);
+	TEST(mod, I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS_CC);
+	TEST(mod, DRM_FORMAT_MOD_SAMSUNG_64_32_TILE);
+	TEST(mod, DRM_FORMAT_MOD_SAMSUNG_16_16_TILE);
+	TEST(mod, DRM_FORMAT_MOD_QCOM_COMPRESSED);
+	TEST(mod, DRM_FORMAT_MOD_VIVANTE_TILED);
+	TEST(mod, DRM_FORMAT_MOD_VIVANTE_SUPER_TILED);
+	TEST(mod, DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED);
+	TEST(mod, DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED);
+	TEST(mod, DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED);
+	TEST(mod, DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB);
+	TEST(mod, DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB);
+	TEST(mod, DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB);
+	TEST(mod, DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB);
+	TEST(mod, DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB);
+	TEST(mod, DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB);
+	TEST(mod, DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED);
+	TEST(mod, DRM_FORMAT_MOD_BROADCOM_SAND32);
+	TEST(mod, DRM_FORMAT_MOD_BROADCOM_SAND64);
+	TEST(mod, DRM_FORMAT_MOD_BROADCOM_SAND128);
+	TEST(mod, DRM_FORMAT_MOD_BROADCOM_SAND256);
+	TEST(mod, DRM_FORMAT_MOD_ALLWINNER_TILED);
+#undef TEST
+	return DRM_FORMAT_MOD_INVALID;
+}
+
 /* Shorten fourcc "strings" (e.g., "R8  " -> "R8") */
 static int
 format_no_space(int fmt)
@@ -848,9 +885,15 @@ destroy:
 	return res;
 }
 
+static int arg_fmt = DRM_FORMAT_INVALID;
+static EGLuint64KHR arg_mod = DRM_FORMAT_MOD_INVALID;
+
 static bool
 skip_format(uint32_t format)
 {
+	if (arg_fmt != DRM_FORMAT_INVALID && arg_fmt != format)
+		return true;
+
 	switch (format) {
 	case DRM_FORMAT_R8:
 	case DRM_FORMAT_R16:
@@ -873,6 +916,9 @@ skip_format(uint32_t format)
 static bool
 skip_modifier(EGLuint64KHR mod)
 {
+	if (arg_mod != DRM_FORMAT_MOD_INVALID && arg_mod != mod)
+		return true;
+
 	return false;
 }
 
@@ -953,6 +999,33 @@ piglit_display(void)
 void
 piglit_init(int argc, char **argv)
 {
+	for (int i = 1; i < argc; i++) {
+
+		/* Init with spaces for codes with less than four chars. */
+		int tmp_fmt = fourcc_code(' ',' ',' ',' ');
+		if (sscanf(argv[i], "-fmt=%4c", (char *)&tmp_fmt) > 0) {
+
+			arg_fmt = tmp_fmt;
+
+			/* The invalid format is reserved for this test */
+			assert(arg_fmt != DRM_FORMAT_INVALID);
+			continue;
+		}
+
+		char mod_str[4096] = {0};
+		if (sscanf(argv[i], "-mod=%4096s", mod_str) > 0) {
+			arg_mod = str_to_modifier(mod_str);
+
+			/* The invalid modifier is reserved for this test */
+			assert(arg_mod != DRM_FORMAT_MOD_INVALID);
+			continue;
+		}
+
+		fprintf(stderr,"e.g., %s [-fmt=AR24] "
+			       "[-mod=DRM_FORMAT_MOD_LINEAR]\n", argv[0]);
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
 	EGLDisplay egl_dpy = eglGetCurrentDisplay();
 
 	piglit_require_egl_extension(
