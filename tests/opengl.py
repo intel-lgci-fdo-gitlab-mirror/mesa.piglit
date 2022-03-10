@@ -904,6 +904,7 @@ with profile.test_list.group_manager(
     g(['gl-2.1-pbo'], 'pbo')
     g(['gl-2.1-polygon-stipple-fs'], 'polygon-stipple-fs')
     g(['gl-2.1-fbo-mrt-alphatest-no-buffer-zero-write'], 'fbo-mrt-alphatest-no-buffer-zero-write')
+    g(['gl-2.1-point_smooth'])
 
 with profile.test_list.group_manager(
         PiglitGLTest,
