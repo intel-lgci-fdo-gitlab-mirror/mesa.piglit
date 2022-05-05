@@ -324,7 +324,7 @@ check_info(const struct piglit_cl_api_test_env* env,
 		case CL_DEVICE_IMAGE_MAX_BUFFER_SIZE:
 			valid = check_size(sizeof(size_t), param_value_size, result);
 			if (valid && device_config->has_image) {
-				check_min_int(65536, *(size_t*)param_value, result);
+				valid = check_min_int(65536, *(size_t*)param_value, result);
 			}
 
 			if (valid) {
@@ -335,7 +335,7 @@ check_info(const struct piglit_cl_api_test_env* env,
 		case CL_DEVICE_IMAGE2D_MAX_HEIGHT:
 			valid = check_size(sizeof(size_t), param_value_size, result);
 			if (valid && device_config->has_image) {
-				check_min_int(8192, *(size_t*)param_value, result);
+				valid = check_min_int(8192, *(size_t*)param_value, result);
 			}
 
 			if (valid) {
@@ -348,7 +348,7 @@ check_info(const struct piglit_cl_api_test_env* env,
 		case CL_DEVICE_IMAGE3D_MAX_DEPTH:
 			valid = check_size(sizeof(size_t), param_value_size, result);
 			if (valid && device_config->has_image) {
-				check_min_int(2048, *(size_t*)param_value, result);
+				valid = check_min_int(2048, *(size_t*)param_value, result);
 			}
 
 			if (valid) {
