@@ -436,7 +436,7 @@ crashing does not crash the whole suite), and access to piglit's reporting
 tools.
 
 Most integration is done through the use of piglit.conf, or through environment
-variables, with piglit.conf being the preferred method.
+variables, with `piglit.conf` being the preferred method.
 
 
 ### 6.1 dEQP
@@ -444,18 +444,9 @@ variables, with piglit.conf being the preferred method.
 Piglit provides a generic layer for dEQP based test suites, and specific
 integration for several suites.
 
-I suggest using Chad Versace's repo of dEQP, which contains a gbm target.
-https://github.com/chadversary/deqp
-
-It should be built as follows:
-
-    cmake . -DDEQP_TARGET=gbm -GNinja
-
-Additional targets are available in the targets directory. gbm isn't compatible
-for most (any?) blob driver, so another target might be necessary if that is a
-requirement. One of the x11_* targets or drm is probably a good choice.
-
-The use of ninja is optional.
+Use the upstream dEQP repo (maintained by Khronos members), which
+contains the official conformance tests (CTS):
+https://github.com/KhronosGroup/VK-GL-CTS
 
 Once dEQP is built add the following information to piglit.conf, which can
 either be located in the root of the piglit repo, or in `$XDG_CONFIG_HOME`
