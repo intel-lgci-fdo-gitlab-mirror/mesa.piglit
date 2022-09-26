@@ -179,6 +179,7 @@ piglit_display(void)
 void piglit_init(int argc, char **argv)
 {
 	GLuint vs_prog, tcs_prog, tes_prog, gs_prog, fs_prog;
+	bool pass = true;
 
 	piglit_require_gl_version(32);
 	piglit_require_extension("GL_ARB_separate_shader_objects");
@@ -187,23 +188,23 @@ void piglit_init(int argc, char **argv)
 
 	vs_prog = glCreateShaderProgramv(GL_VERTEX_SHADER, 1,
 					 (const GLchar *const*)&vs_code);
-	piglit_link_check_status(vs_prog);
+	pass = piglit_link_check_status(vs_prog) && pass;
 
 	tcs_prog = glCreateShaderProgramv(GL_TESS_CONTROL_SHADER, 1,
 					  (const GLchar *const *)&tcs_code);
-	piglit_link_check_status(tcs_prog);
+	pass = piglit_link_check_status(tcs_prog) && pass;
 
 	tes_prog = glCreateShaderProgramv(GL_TESS_EVALUATION_SHADER, 1,
 					  (const GLchar *const *)&tes_code);
-	piglit_link_check_status(tes_prog);
+	pass = piglit_link_check_status(tes_prog) && pass;
 
 	gs_prog = glCreateShaderProgramv(GL_GEOMETRY_SHADER, 1,
 					 (const GLchar *const *)&gs_code);
-	piglit_link_check_status(gs_prog);
+	pass = piglit_link_check_status(gs_prog) && pass;
 
 	fs_prog = glCreateShaderProgramv(GL_FRAGMENT_SHADER, 1,
 					 (const GLchar *const *)&fs_code);
-	piglit_link_check_status(fs_prog);
+	pass = piglit_link_check_status(fs_prog) && pass;
 
 	glGenProgramPipelines(1, &pipeline);
 	glUseProgramStages(pipeline, GL_VERTEX_SHADER_BIT, vs_prog);
@@ -211,8 +212,10 @@ void piglit_init(int argc, char **argv)
 	glUseProgramStages(pipeline, GL_TESS_EVALUATION_SHADER_BIT, tes_prog);
 	glUseProgramStages(pipeline, GL_GEOMETRY_SHADER_BIT, gs_prog);
 	glUseProgramStages(pipeline, GL_FRAGMENT_SHADER_BIT, fs_prog);
-	piglit_program_pipeline_check_status(pipeline);
+	pass = piglit_program_pipeline_check_status(pipeline) && pass;
 
-	if (!piglit_check_gl_error(0))
+	pass = piglit_check_gl_error(0) && pass;
+
+	if (!pass)
 		piglit_report_result(PIGLIT_FAIL);
 }
