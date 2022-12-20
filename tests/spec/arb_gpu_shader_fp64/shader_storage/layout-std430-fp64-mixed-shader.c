@@ -291,6 +291,8 @@ piglit_init(int argc, char **argv)
 
 	piglit_draw_rect(-1, -1, 2, 2);
 
+	glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
 	map_f = glMapBuffer(GL_SHADER_STORAGE_BUFFER,  GL_READ_ONLY);
 
