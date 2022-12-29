@@ -140,6 +140,8 @@ piglit_wgl_framework_create(const struct piglit_gl_test_config *test_config)
 	winsys_fw->enter_event_loop = enter_event_loop;
 	gl_fw->destroy = destroy;
 
+	winsys_fw->need_redisplay = true;
+
 	return gl_fw;
 
 fail:
