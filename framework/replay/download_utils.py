@@ -126,9 +126,11 @@ def download(url: str, file_path: str, headers: Dict[str, str], attempts: int = 
     :param attempts: Number of attempts
     """
     retries = Retry(
+        backoff_factor=30,
         connect=attempts,
         read=attempts,
         redirect=attempts,
+        status_forcelist=[429, 500, 502, 503, 504],
         raise_on_redirect=False
     )
     session = requests.Session()
