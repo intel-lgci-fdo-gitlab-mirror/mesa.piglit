@@ -116,7 +116,7 @@ test_invalid_target_dmabuf(EGLDisplay dpy)
 	 */
 
 	if (!piglit_is_egl_extension_supported(dpy,
-			"EGL_MESA_image_dma_buf_export") &&
+			"EGL_MESA_image_dma_buf_export") ||
 			!piglit_is_egl_extension_supported(dpy,
 			"EGL_EXT_image_dma_buf_import")) {
 		piglit_logi("dma_buf export and/or import ext not available\n");
