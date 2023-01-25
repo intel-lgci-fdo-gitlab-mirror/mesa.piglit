@@ -26,24 +26,26 @@
 
 """Tests for replayer's frame_times module."""
 
-import pytest
-
 import contextlib
 import io
-
 from os import path
+from subprocess import CompletedProcess
+
+import pytest
 
 from framework import exceptions, status
-from framework.replay import backends
-from framework.replay import frame_times
+from framework.replay import backends, frame_times
 from framework.replay.options import OPTIONS
 
 
 class TestFrameTimes(object):
     """Tests for frame_times methods."""
 
-    @staticmethod
-    def mock_profile(trace_path):
+    def mock_run(self, *args, **kwargs) -> CompletedProcess:
+        return self._cmd
+
+    def mock_profile(self, trace_path):
+        backends.apitrace._run_command(self._cmd.args, self._env)
         if trace_path.endswith('KhronosGroup-Vulkan-Tools/amd/polaris10/vkcube.gfxr'):
             return None
         elif trace_path.endswith('pathfinder/demo.trace'):
@@ -110,9 +112,16 @@ class TestFrameTimes(object):
         self.m_ensure_file = mocker.patch(
             'framework.replay.frame_times.ensure_file',
             return_value=None)
+        self._cmd = CompletedProcess(["command", "args"], 0, "stdout", "stderr")
+        self._env = {}
+        self.m_subprocess_run = mocker.patch(
+            "framework.replay.backends.apitrace.subprocess.run",
+            side_effect=self.mock_run,
+        )
         self.m_profile = mocker.patch(
-            'framework.replay.frame_times.APITraceBackend.profile',
-            side_effect=TestFrameTimes.mock_profile)
+            "framework.replay.frame_times.APITraceBackend.profile",
+            side_effect=self.mock_profile,
+        )
         self.tmpdir = tmpdir
 
     def test_from_yaml_empty(self):
@@ -126,31 +135,18 @@ class TestFrameTimes(object):
         s = f.getvalue()
         assert s == ''
 
-    def test_from_yaml_one_trace(self):
-        """frame_times.from_yaml: profile using a YAML with just one trace path"""
+    @pytest.mark.parametrize("trace_path", ["one-trace.yml", "two-traces.yml"])
+    def test_from_yaml_traces(self, trace_path):
+        """frame_times.from_yaml: profile using a YAML files with one or more trace path"""
 
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
-            assert (frame_times.from_yaml('one-trace.yml')
-                    is status.PASS)
+            assert frame_times.from_yaml(trace_path) is status.PASS
         self.m_qty_load_yaml.assert_called_once()
         self.m_ensure_file.assert_called_once()
         self.m_profile.assert_called_once()
-        s = f.getvalue()
-        assert s == ('[frame_times] ' + str(len(self.exp_frame_times)) + '\n')
-
-    def test_from_yaml_two_traces(self):
-        """frame_times.from_yaml: profile using a YAML with more than one trace path"""
-
-        f = io.StringIO()
-        with contextlib.redirect_stdout(f):
-            assert (frame_times.from_yaml('two-traces.yml')
-                    is status.PASS)
-        self.m_qty_load_yaml.assert_called_once()
-        assert self.m_ensure_file.call_count == 1
-        assert self.m_profile.call_count == 1
-        s = f.getvalue()
-        assert s == ('[frame_times] ' + str(len(self.exp_frame_times)) + '\n')
+        s: list[str] = f.getvalue().splitlines()
+        assert s[-1] == f"[frame_times] {len(self.exp_frame_times)}"
 
     def test_trace_success(self):
         """frame_times.trace: profile a trace successfully"""
@@ -186,3 +182,19 @@ class TestFrameTimes(object):
                           '"image_desc": "' + fail_trace_path + '", '
                           '"frame_times": null'
                           '}], "result": "crash"}\n')
+
+    def test_trace_crash_log_output(self, tmp_path):
+        """frame_times.trace: profile a trace with a crash, check for inner
+        command output logs"""
+        stderr_msg = b"stderr message"
+        stdout_msg = b"stdout message"
+
+        self._cmd = CompletedProcess(self._cmd.args, 1, stdout_msg, stderr_msg)
+
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f), pytest.raises(RuntimeError):
+            assert frame_times.trace(self.trace_path) is status.CRASH
+
+        s = f.getvalue()
+        assert stderr_msg.decode() in s
+        assert stdout_msg.decode() in s

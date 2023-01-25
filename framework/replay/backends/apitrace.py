@@ -67,16 +67,21 @@ def _collect_frame_times(stream):
     return frame_times[-int(_LOOP_TIMES):]
 
 
-def _run_command(cmd, env):
-    ret = subprocess.run(cmd, stdout=subprocess.PIPE,
-                         stderr=subprocess.DEVNULL, env=env)
-    logoutput = '[profile_trace] Running: {}\n'.format(
-        ' '.join(cmd)).encode()
+def _run_command(cmd: str, env: dict) -> subprocess.CompletedProcess:
+    ret: subprocess.CompletedProcess = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
+    )
+    logoutput = f"[profile_trace] Running: {' '.join(cmd)}\n".encode()
     print(logoutput.decode(errors='replace'))
     if ret.returncode:
+        # Print the command logs if the process returns with an error code.
+        stdout = ret.stdout.decode(errors="replace")
+        print(f"[profile_trace] {stdout}")
+        stderr = ret.stderr.decode(errors="replace")
+        print(f"[profile_trace] {stderr}")
         raise RuntimeError(
-            '[profile_trace] Process failed with error code: {}'.format(
-                ret.returncode))
+            f'[profile_trace] Process failed with error code: {ret.returncode}'
+        )
     return ret
 
 
