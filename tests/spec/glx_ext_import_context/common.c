@@ -98,8 +98,7 @@ void GLX_EXT_import_context_setup(void)
 
 		if (!piglit_is_extension_in_string(client_extensions,
 						   "GLX_EXT_import_context")) {
-			fprintf(stderr,
-				"Test requires GLX_EXT_import_context.\n");
+			printf("Test requires GLX_EXT_import_context.\n");
 			piglit_report_result(PIGLIT_SKIP);
 		}
 	} else {

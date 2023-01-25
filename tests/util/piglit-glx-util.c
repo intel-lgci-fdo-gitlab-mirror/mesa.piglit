@@ -163,7 +163,7 @@ void
 piglit_require_glx_extension(Display *dpy, const char *name)
 {
 	if (!piglit_is_glx_extension_supported(dpy, name)) {
-		fprintf(stderr, "Test requires %s\n", name);
+		printf("Test requires %s\n", name);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 }
@@ -181,8 +181,8 @@ piglit_require_glx_version(Display *dpy, int major, int minor)
 	}
 
 	if (glxMajor != major || glxMinor < minor) {
-		fprintf(stderr, "Test requires GLX %d.%d.  Got %d.%d.\n",
-			major, minor, glxMajor, glxMinor);
+		printf("Test requires GLX %d.%d.  Got %d.%d.\n",
+		       major, minor, glxMajor, glxMinor);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 }
