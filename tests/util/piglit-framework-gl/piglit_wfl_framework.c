@@ -477,16 +477,24 @@ make_context_current_singlepass(struct piglit_wfl_framework *wfl_fw,
 	wfl_fw->config = waffle_config_choose(wfl_fw->display, attrib_list);
 	free(attrib_list);
 	if (!wfl_fw->config) {
-		wfl_log_error("waffle_config_choose");
-		fprintf(stderr, "piglit: error: Failed to create "
+		/* Log this a little more quietly, as we expect this failure for
+		 * BAD_MATCH from trying to create (for example) ES1 contexts
+		 * when they're unsupported.
+		 */
+		wfl_log_error_stdout("waffle_config_choose");
+		fprintf(stdout, "piglit: error: Failed to create "
 			"waffle_config for %s\n", ctx_desc);
 		goto fail;
 	}
 
 	wfl_fw->context = waffle_context_create(wfl_fw->config, NULL);
 	if (!wfl_fw->context) {
-		wfl_log_error("waffle_context_create");
-		fprintf(stderr, "piglit: error: Failed to create "
+		/* Log this a little more quietly, as we expect this failure for
+		 * BAD_MATCH from trying to create unsupported context versions,
+		 * and stderr means it gets spammed to deqp-runner stderr.
+		 */
+		wfl_log_error_stdout("waffle_context_create");
+		fprintf(stdout, "piglit: error: Failed to create "
 			"waffle_context for %s\n", ctx_desc);
 		goto fail;
 	}

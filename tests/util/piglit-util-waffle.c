@@ -28,19 +28,20 @@
 #include "piglit-util-waffle.h"
 
 static void
-wfl_log(const char *tag, const char *func_name)
+wfl_log(FILE *out, const char *tag, const char *func_name)
 {
 	const struct waffle_error_info *info = waffle_error_get_info();
 
 	assert(tag != NULL);
 	assert(info->code != WAFFLE_NO_ERROR);
 
-	fflush(stdout);
-	fprintf(stderr, "piglit: %s: %s failed due to %s",
+	if (out != stdout)
+		fflush(stdout);
+	fprintf(out, "piglit: %s: %s failed due to %s",
 	        tag, func_name, waffle_error_to_string(info->code));
 	if (info->message_length > 0)
-		fprintf(stderr, ": %s", info->message);
-	fprintf(stderr, "\n");
+		fprintf(out, ": %s", info->message);
+	fprintf(out, "\n");
 }
 
 void
@@ -64,13 +65,19 @@ wfl_log_debug(const char *func_name)
 	}
 
 	if (debug == 1)
-		wfl_log("debug", func_name);
+		wfl_log(stderr, "debug", func_name);
 }
 
 void
 wfl_log_error(const char *func_name)
 {
-	wfl_log("error", func_name);
+	wfl_log(stderr, "error", func_name);
+}
+
+void
+wfl_log_error_stdout(const char *func_name)
+{
+	wfl_log(stdout, "error", func_name);
 }
 
 void

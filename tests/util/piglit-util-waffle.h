@@ -42,6 +42,14 @@ void
 wfl_log_error(const char *func_name);
 
 /**
+ * \brief Print the current Waffle error to stdout.
+ *
+ * The \a func_name is the name of most recently called Waffle function.
+ */
+void
+wfl_log_error_stdout(const char *func_name);
+
+/**
  * \brief Print the current Waffle error if PIGLIT_DEBUG=1.
  *
  * The \a func_name is the name of most recently called Waffle function.
