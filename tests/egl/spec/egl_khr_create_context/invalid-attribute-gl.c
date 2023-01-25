@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 	unsigned i;
 
 	if (!EGL_KHR_create_context_setup(EGL_OPENGL_BIT)) {
-		fprintf(stderr, "Desktop GL not available.\n");
+		printf("Desktop GL not available.\n");
 		piglit_report_result(PIGLIT_SKIP);
 	}
 	eglBindAPI(EGL_OPENGL_API);
