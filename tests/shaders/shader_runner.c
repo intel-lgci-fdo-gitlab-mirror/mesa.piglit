@@ -5415,10 +5415,10 @@ piglit_display(void)
 		} else if (parse_str(line, "link error", &rest)) {
 			link_error_expected = true;
 			if (link_ok) {
-				printf("shader link error expected, but it was successful!\n");
+				fprintf(stderr, "shader link error expected, but it was successful!\n");
 				piglit_report_result(PIGLIT_FAIL);
 			} else {
-				fprintf(stderr, "Failed to link:\n%s\n", prog_err_info);
+				printf("Failed to link (as expected):\n%s\n", prog_err_info);
 			}
 		} else if (parse_str(line, "link success", &rest)) {
 			result = program_must_be_in_use();
