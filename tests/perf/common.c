@@ -69,7 +69,7 @@ measure_rate(perf_rate_func f, double duration, unsigned initial_iterations,
 static double
 measure_cpu_time(perf_rate_func f, unsigned iterations)
 {
-	intptr_t t0 = piglit_time_get_nano();
+	int64_t t0 = piglit_time_get_nano();
 	f(iterations); /* call the rendering function */
 	glFinish();
 	return (piglit_time_get_nano() - t0) * 0.000000001;
