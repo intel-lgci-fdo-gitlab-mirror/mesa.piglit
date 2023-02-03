@@ -196,6 +196,7 @@ piglit_gbm_buf_create(unsigned w, unsigned h, unsigned fourcc,
 	 * for U/V.
 	 */
 	case DRM_FORMAT_NV12:
+	case DRM_FORMAT_NV21:
 		format = GBM_FORMAT_GR88;
 		buf_w = w / 2;
 		buf_h = h * 3 / 2;
@@ -251,6 +252,7 @@ piglit_gbm_buf_create(unsigned w, unsigned h, unsigned fourcc,
 
 	switch (fourcc) {
 	case DRM_FORMAT_NV12:
+	case DRM_FORMAT_NV21:
 	case DRM_FORMAT_P010:
 	case DRM_FORMAT_P012:
 	case DRM_FORMAT_P016:

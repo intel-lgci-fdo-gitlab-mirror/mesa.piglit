@@ -169,6 +169,15 @@ piglit_display(void)
 		/* UV */
 		120, 130, 140, 130,
 		120, 160, 140, 160,
+	}, nv21[] = {
+		/* Y */
+		 50,  70,  90, 110,
+		 50,  70,  90, 110,
+		 50,  70,  90, 110,
+		 50,  70,  90, 110,
+		/* VU */
+		130, 120, 130, 140,
+		160, 120, 160, 140,
 	}, yuv420[] = {
 		/* Y */
 		 50,  70,  90, 110,
@@ -310,6 +319,9 @@ piglit_display(void)
 #endif
 	case DRM_FORMAT_NV12:
 		t = nv12;
+		break;
+	case DRM_FORMAT_NV21:
+		t = nv21;
 		break;
 	case DRM_FORMAT_YUV420:
 		t = yuv420;

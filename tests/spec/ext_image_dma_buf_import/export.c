@@ -42,6 +42,7 @@ static const int format_table[] = {
 	 DRM_FORMAT_P012,
 	 DRM_FORMAT_P016,
 	 DRM_FORMAT_NV12,
+	 DRM_FORMAT_NV21,
 	 DRM_FORMAT_XRGB8888,
 	 DRM_FORMAT_ARGB8888,
 	 DRM_FORMAT_YUV420,
@@ -61,6 +62,7 @@ fourcc_num_planes(int fourcc)
 	case DRM_FORMAT_P012:
 	case DRM_FORMAT_P016:
 	case DRM_FORMAT_NV12:
+	case DRM_FORMAT_NV21:
 		return 2;
 	case DRM_FORMAT_XRGB8888:
 	case DRM_FORMAT_ARGB8888:
