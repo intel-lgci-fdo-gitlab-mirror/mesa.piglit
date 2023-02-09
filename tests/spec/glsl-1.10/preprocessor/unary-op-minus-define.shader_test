@@ -1,0 +1,19 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader passthrough]
+
+[fragment shader]
+#version 110
+
+#define VALUE -1.0
+const float x = -VALUE;
+
+void main()
+{
+	gl_FragColor = vec4(0.0, x, 0.0, 1.0);
+}
+
+[test]
+draw rect -1 -1 2 2
+probe all rgba 0.0 1.0 0.0 1.0
