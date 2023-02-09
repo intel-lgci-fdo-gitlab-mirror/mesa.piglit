@@ -233,6 +233,16 @@ piglit_display(void)
 		90, 140, 110, 160,
 		50, 121,  70, 161,
 		90, 140, 110, 160,
+	}, yvyu[] = {
+		/* YVYU */
+		50, 130,  70, 120,
+		89, 130, 110, 140,
+		50, 130,  70, 120,
+		89, 130, 110, 140,
+		50, 161,  70, 121,
+		90, 160, 110, 140,
+		50, 161,  70, 121,
+		90, 160, 110, 140,
 	}, uyvy[] = {
 		/* UYVY */
 		120, 50, 130, 70,
@@ -335,6 +345,9 @@ piglit_display(void)
 		break;
 	case DRM_FORMAT_YUYV:
 		t = yuyv;
+		break;
+	case DRM_FORMAT_YVYU:
+		t = yvyu;
 		break;
 	case DRM_FORMAT_UYVY:
 		t = uyvy;

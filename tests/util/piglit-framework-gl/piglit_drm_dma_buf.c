@@ -145,6 +145,7 @@ piglit_gbm_buf_create(unsigned w, unsigned h, unsigned fourcc,
 	case DRM_FORMAT_GR88:
 	case DRM_FORMAT_RG88:
 	case DRM_FORMAT_YUYV:
+	case DRM_FORMAT_YVYU:
 	case DRM_FORMAT_UYVY:
 		format = GBM_FORMAT_GR88;
 		cpp = 2;
