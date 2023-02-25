@@ -1,7 +1,7 @@
 # coding=utf-8
 #
 # Copyright © 2020 Valve Corporation.
-# Copyright © 2022 Collabora Ltd
+# Copyright © 2022 ‒ 2023 Collabora Ltd
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -216,6 +216,7 @@ class TestDownloadUtils(object):
             with expectation:
                 download_utils.ensure_file(self.trace_path)
 
+
     @pytest.mark.raises(exception=exceptions.PiglitFatalError)
     def test_download_with_invalid_content_length(self,
                                                   requests_mock,
@@ -248,6 +249,7 @@ class TestDownloadUtils(object):
 
         assert not self.trace_file.check()
         download_utils.download(self.full_url, self.trace_file, None)
+        assert Path.exists(self.trace_file)
 
     def test_download_without_content_length(self,
                                              requests_mock,
@@ -262,6 +264,7 @@ class TestDownloadUtils(object):
 
         assert not self.trace_file.check()
         download_utils.download(self.full_url, self.trace_file, None)
+        assert Path.exists(self.trace_file)
 
     def test_minio_authorization(self, requests_mock):
         """download_utils.ensure_file: Check we send the authentication headers to MinIO"""

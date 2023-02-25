@@ -28,7 +28,7 @@ import hashlib
 import hmac
 import xml.etree.ElementTree as ET
 from email.utils import formatdate
-from os import path
+from os import path, remove
 from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import urlparse
@@ -188,9 +188,10 @@ def verify_file_integrity(file_path: str, headers: Any, local_file_checksums: An
     try:
         remote_file_checksum: str = headers["etag"].strip('\"').lower()
         if remote_file_checksum not in local_file_checksums:
+            remove(file_path)
             raise exceptions.PiglitFatalError(
                     f"MD5 checksum {local_file_checksums} "
-                    f"doesn't match remote ETag MD5 {remote_file_checksum}"
+                    f"doesn't match remote ETag MD5 {remote_file_checksum}, removing file..."
             )
     except KeyError:
         print("ETag is missing from the HTTPS header. "
@@ -203,10 +204,12 @@ def verify_file_integrity(file_path: str, headers: Any, local_file_checksums: An
               "Skipping file size check.")
         return
 
-    if remote_file_size != path.getsize(file_path):
+    local_file_size = path.getsize(file_path)
+    if remote_file_size != local_file_size:
+        remove(file_path)
         raise exceptions.PiglitFatalError(
                 f"Invalid filesize src {remote_file_size} "
-                f"doesn't match {path.getsize(file_path)}"
+                f"doesn't match {local_file_size}, removing file..."
         )
 
 
