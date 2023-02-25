@@ -167,9 +167,9 @@ tox:
   extends:
     - .ci-run-policy
   before_script:
-    - pip install tox==3.27.1  # 4.0 is broken for now
+    - pip install tox==4.4.6
   script:
-    - tox -e "py${PY_MAJVER}${PY_MINVER}-{generator,noaccel,accel-nix,streams,functional}"
+    - tox run -e "py${PY_MAJVER}${PY_MINVER}-generator, py${PY_MAJVER}${PY_MINVER}-noaccel, py${PY_MAJVER}${PY_MINVER}-accel-nix, py${PY_MAJVER}${PY_MINVER}-streams, py${PY_MAJVER}${PY_MINVER}-functional"
   parallel:
     matrix:
       - PY_MAJVER: 3
