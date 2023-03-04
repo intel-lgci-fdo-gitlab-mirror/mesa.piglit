@@ -255,8 +255,13 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 if (NOT MSVC)
 	if (PIGLIT_SSE2 AND CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)")
+		# enables SSE2 and precision used on x86-64 by default
 		SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2 -mfpmath=sse")
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -mfpmath=sse")
+	else()
+		# degrade performance a bit, but enforce required precision
+		SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffloat-store")
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffloat-store")
 	endif()
 	CHECK_C_COMPILER_FLAG("-Wall" C_COMPILER_FLAG_WALL)
 	IF (C_COMPILER_FLAG_WALL)
