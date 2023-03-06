@@ -37,38 +37,42 @@
 
 int piglit_width = 50, piglit_height = 50;
 static Display *dpy;
-static Window win_one, win_two;
+#define NUM_WINDOWS 3
+static Window wins[NUM_WINDOWS];
 static XVisualInfo *visinfo;
 
 enum piglit_result
 draw(Display *dpy)
 {
 	GLXContext ctx;
-	float green[] = {0.0, 1.0, 0.0, 0.0};
+	float color[] = {
+		(float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX, 0.0
+	};
 	GLboolean pass = GL_TRUE;
 
 	ctx = piglit_get_glx_context(dpy, visinfo);
-	glXMakeCurrent(dpy, win_one, ctx);
+	glXMakeCurrent(dpy, wins[0], ctx);
 	piglit_dispatch_default_init(PIGLIT_DISPATCH_GL);
-
-	glClearColor(0.0, 1.0, 0.0, 1.0);
+	glClearColor(color[0], color[1], color[2], 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glXMakeCurrent(dpy, win_two, ctx);
+	for (int i = 1; i < NUM_WINDOWS; i++) {
+		glXMakeCurrent(dpy, wins[i], ctx);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
 
-	glClear(GL_COLOR_BUFFER_BIT);
+	for (int i = 0; i < NUM_WINDOWS; i++) {
+		glXMakeCurrent(dpy, wins[i], ctx);
+		if (!piglit_probe_pixel_rgb(1, 1, color)) {
+			printf("  (test failed for window %d)\n", i);
+			pass = false;
+		}
+	}
 
-
-	glXMakeCurrent(dpy, win_one, ctx);
-	pass &= piglit_probe_pixel_rgb(1, 1, green);
-
-	glXMakeCurrent(dpy, win_two, ctx);
-	pass &= piglit_probe_pixel_rgb(1, 1, green);
-
-	glXMakeCurrent(dpy, win_one, ctx);
-	glXSwapBuffers(dpy, win_one);
-	glXMakeCurrent(dpy, win_two, ctx);
-	glXSwapBuffers(dpy, win_two);
+	for (int i = 0; i < NUM_WINDOWS; i++) {
+		glXMakeCurrent(dpy, wins[i], ctx);
+		glXSwapBuffers(dpy, wins[i]);
+	}
 
 	return pass ? PIGLIT_PASS : PIGLIT_FAIL;
 }
@@ -91,8 +95,8 @@ main(int argc, char **argv)
 		piglit_report_result(PIGLIT_FAIL);
 	}
 	visinfo = piglit_get_glx_visual(dpy);
-	win_one = piglit_get_glx_window(dpy, visinfo);
-	win_two = piglit_get_glx_window(dpy, visinfo);
+	for (int i = 0; i < NUM_WINDOWS; i++)
+		wins[i] = piglit_get_glx_window(dpy, visinfo);
 
 	piglit_glx_event_loop(dpy, draw);
 
