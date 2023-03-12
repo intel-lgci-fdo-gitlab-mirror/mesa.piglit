@@ -197,7 +197,7 @@ def verify_file_integrity(file_path: str, headers: Any, local_file_checksums: An
               "Fall back to Content-length verification.")
 
     try:
-        remote_file_size = int(headers["Content-length"])
+        remote_file_size = int(headers["Content-Length"])
     except KeyError:
         print("Error getting Content-Length from server. "
               "Skipping file size check.")

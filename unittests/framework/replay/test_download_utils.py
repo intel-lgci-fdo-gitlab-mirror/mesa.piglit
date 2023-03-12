@@ -69,12 +69,12 @@ class MockedResponse:
         binary_data_md5: str = md5(MockedResponseData.binary_data).hexdigest()
         etag: dict[str, str] = {"etag": binary_data_md5}
         length: dict[str, Any] = {
-            "ContextLength": str(len(MockedResponseData.binary_data))
+            "Content-Length": str(len(MockedResponseData.binary_data))
         }
         return {
-            "With ContextLength": length,
+            "With Content-Length": length,
             "With etag": etag,
-            "With ContextLength and etag": {**length, **etag},
+            "With Content-Length and etag": {**length, **etag},
             "Without integrity headers": {},
         }
 
