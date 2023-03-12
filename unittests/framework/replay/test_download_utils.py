@@ -219,6 +219,7 @@ class TestDownloadUtils(object):
 
     @pytest.mark.raises(exception=exceptions.PiglitFatalError)
     def test_download_with_invalid_content_length(self,
+                                                  mocker,
                                                   requests_mock,
                                                   prepare_trace_file):
         """download_utils.download: Check if an exception raises
@@ -230,7 +231,10 @@ class TestDownloadUtils(object):
                           text="Binary file content")
 
         assert not self.trace_file.check()
-        download_utils.download(self.full_url, self.trace_file, None)
+        with mocker.patch('os.remove') as mock_remove:
+            download_utils.download(self.full_url, self.trace_file, None)
+            mock_remove.assert_called_once_with(self.trace_file)
+
 
     def test_download_works_at_last_retry(self,
                                           requests_mock,
