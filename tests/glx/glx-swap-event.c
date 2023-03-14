@@ -42,21 +42,16 @@ current_time(void)
     return (double) piglit_time_get_nano() / 1000000000.0;
 }
 
-PFNGLXSWAPINTERVALMESAPROC pglXSwapIntervalMESA;
-PFNGLXGETSWAPINTERVALMESAPROC pglXGetSwapIntervalMESA;
-
 #define STACK_L 10
 
 static GLboolean fullscreen = GL_FALSE;    /* Create a fullscreen window */
 static GLboolean verbose = GL_FALSE;    /* Disable verbose.  */
 static GLboolean Automatic = GL_FALSE;    /* Test automatically.  */
-static GLboolean test_events = GL_FALSE;    /* Test event can be received.  */
-static GLboolean interval_diff = GL_FALSE;    /* Test interval can be set.  */
+static GLboolean interval_0 = GL_FALSE;   /* Test with swap interval 0.  */
 int event_base, Glx_event, count=0, swap_count=0, event_count=0;
-int  event_count_total=0, frames_total=0, message_count=0;
+int  event_count_total=0, frames_total=0;
 static double time_call=0.0, time_fin=0.0;
 double swap_start[STACK_L],swap_returned[STACK_L];
-int interval=0;
 char * swap_event_type=NULL;
 
 /** Draw single frame, do SwapBuffers, compute FPS */
@@ -65,72 +60,23 @@ draw_frame(Display *dpy, Window win)
 {
     static int frames = 0;
     static double tRate0 = -1.0;
-    static double swap_freq[2];
     double t = current_time();
-    int tem, ret;
-    
+
     if (tRate0 < 0.0)
         tRate0 = t;
     if (t - tRate0 >= 3.0) {
         GLfloat seconds;
-        if (interval_diff) {
-            if (message_count & 0x1) {
-                ret = (*pglXSwapIntervalMESA)(1);
-                if ( ret ) {
-		    printf("Failed to set swap interval to 1 (%d).\n", ret);
-                    piglit_report_result(PIGLIT_FAIL);
-                }
-            } else{
-		ret = (*pglXSwapIntervalMESA)(0);
-                if ( ret ) {
-                    printf("Failed to set swap interval to 0.\n");
-                    piglit_report_result(PIGLIT_FAIL);
-                }
-            }
-        }
-        message_count++;
         seconds = t - tRate0;
-        interval=1-interval;
-        swap_freq[interval] = frames / seconds;
         if (Automatic) {
-            if (message_count==2) {
-                if (test_events) {
-                        printf("glXSwapBuffers is called %d times and there were"
-			       "%d swap events received in past %3.1f seconds.\n",
-			       swap_count, event_count, seconds);
-                    if ( event_count != 0 ) {
-                        printf("swap type was %s.\n", swap_event_type);
-                        piglit_report_result(PIGLIT_PASS);
-                    } else{
-                        piglit_report_result(PIGLIT_FAIL);
-                    }
-                    
-                }
-                if (interval_diff) {
-                    tem = 1.5 * swap_freq[1];
-                    if ( swap_freq[0] >= tem ) {
-                        if (verbose) {
-                            printf("The swap frequency of no swap interval is \
-much larger than swap interval being 1.\n");
-                        }
-                        piglit_report_result(PIGLIT_PASS);
-                    } else{
-			if(fullscreen)
-			{
-			   if(verbose)
-			        printf("In fullscreen mode, the swap frequency of \
-no swap interval is limited under fresh rate.\n");
-			   piglit_report_result(PIGLIT_PASS);
-			}
-                        if (verbose) {
-                            printf("The swap frequency of no swap interval is \
-not much larger than swap interval being 1. They are %lf and %lf.\n",
-swap_freq[0], swap_freq[1]);
-                        }
-                        piglit_report_result(PIGLIT_FAIL);
-                    }
-                }
-            }    
+		printf("glXSwapBuffers is called %d times and there were "
+		       "%d swap events received in past %3.1f seconds.\n",
+		       swap_count, event_count, seconds);
+		if (event_count != 0) {
+			printf("swap type was %s.\n", swap_event_type);
+			piglit_report_result(PIGLIT_PASS);
+		} else {
+			piglit_report_result(PIGLIT_FAIL);
+		}
         }
         tRate0 = t;
         frames = 0;
@@ -381,9 +327,7 @@ usage(void)
     printf("  -fullscreen             run in fullscreen mode\n");
     printf("  -v       verbose mode, have more log\n");
     printf("  -auto       test automatically \n");
-    printf(" --event         test whether we can get swap events\n");
-    printf(" --interval      we expect that swap interval set to 0 should \
-have higher swap frequency than interval to 1\n");
+    printf(" --interval-0    test swap event delivery with swap interval 0\n");
 }
  
 
@@ -409,21 +353,13 @@ main(int argc, char *argv[])
         else if (strcmp(argv[i], "-fullscreen") == 0) {
             fullscreen = GL_TRUE;
         }
-        else if (strcmp(argv[i], "--event") == 0) {
-            test_events=GL_TRUE;
-        }
-        else if (strcmp(argv[i], "--interval") == 0) {
-            interval_diff = GL_TRUE;
+        else if (strcmp(argv[i], "--interval-0") == 0) {
+            interval_0 = GL_TRUE;
         }
         else {
             usage();
             piglit_report_result(PIGLIT_SKIP);
         }
-    }
-    if (!( interval_diff || test_events )) {
-       printf("Which do you want to test, events or swap interval?\n");
-       usage();
-       piglit_report_result(PIGLIT_SKIP);
     }
     
     dpy = XOpenDisplay(dpyName);
@@ -439,16 +375,14 @@ main(int argc, char *argv[])
     
     glXQueryExtension(dpy, &error_base, &event_base);
     
-    if (interval_diff) {
+    if (interval_0) {
         piglit_require_glx_extension(dpy, "GLX_INTEL_swap_event");
-        pglXGetSwapIntervalMESA = (PFNGLXGETSWAPINTERVALMESAPROC)
-            glXGetProcAddressARB((const GLubyte *)"glXGetSwapIntervalMESA");
-        pglXSwapIntervalMESA = (PFNGLXSWAPINTERVALMESAPROC)
+        PFNGLXSWAPINTERVALMESAPROC pglXSwapIntervalMESA = (PFNGLXSWAPINTERVALMESAPROC)
             glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalMESA");
 
-        ret = (*pglXSwapIntervalMESA)(1);
+        ret = (*pglXSwapIntervalMESA)(0);
         if ( ret ) {
-	    printf("Failed to set swap interval to 1 (%d).\n", ret);
+	    printf("Failed to set swap interval to 0 (%d).\n", ret);
             piglit_report_result(PIGLIT_FAIL);
         }
     }

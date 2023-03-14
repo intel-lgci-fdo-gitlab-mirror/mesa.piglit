@@ -383,10 +383,8 @@ with profile.test_list.group_manager(
     g(['glx-multithread-shader-compile'], run_concurrent=False)
     g(['glx-shader-sharing'], run_concurrent=False)
     g(['glx-swap-exchange'], run_concurrent=False)
-    g(['glx-swap-event', '--event'], 'glx-swap-event_event',
-      run_concurrent=False)
-    g(['glx-swap-event', '--interval'], 'glx-swap-event_interval',
-      run_concurrent=False)
+    g(['glx-swap-event', '--event'], 'glx-swap-event')
+    g(['glx-swap-event', '--interval-0'], 'glx-swap-event-interval-0')
     g(['glx-swap-pixmap'], run_concurrent=False)
     g(['glx-swap-pixmap-bad'], run_concurrent=False)
     g(['glx-swap-singlebuffer'], run_concurrent=False)
