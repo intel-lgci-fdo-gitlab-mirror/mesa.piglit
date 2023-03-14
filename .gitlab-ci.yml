@@ -16,6 +16,11 @@ variables:
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$FDO_UPSTREAM_REPO/windows/x64_build:$WINDOWS_TAG"
   GIT_DEPTH: 100
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push'
+
 include:
   - project: 'freedesktop/ci-templates'
     ref: ffe4d1b10aab7534489f0c4bbc4c5899df17d3f2
