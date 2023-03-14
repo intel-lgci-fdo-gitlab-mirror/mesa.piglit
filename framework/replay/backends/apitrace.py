@@ -151,6 +151,8 @@ class APITraceBackend(DumpBackend):
                                               path.basename(self._trace_path)))
         if not self._calls:
             self._calls = [str(self._get_last_frame_call())]
+        if core.get_option('PIGLIT_REPLAY_OPTIONS', ('replay', 'options'), default=None) is not None:
+            self._retrace_cmd += [core.get_option('PIGLIT_REPLAY_OPTIONS', ('replay', 'options'))]
         cmd = self._retrace_cmd + ['--headless',
                                    '--snapshot=' + ','.join(self._calls),
                                    '--snapshot-prefix=' + outputprefix,
