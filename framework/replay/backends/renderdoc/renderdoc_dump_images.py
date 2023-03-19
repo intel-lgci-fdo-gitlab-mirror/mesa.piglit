@@ -44,6 +44,11 @@ RENDERDOC_DEBUG_FILE = TMP_DIR + "/renderdoc.log"
 os.environ['RENDERDOC_DEBUG_LOG_FILE'] = RENDERDOC_DEBUG_FILE
 import renderdoc as rd  # noqa: E402
 
+try:
+    from renderdoc import ResultCode
+except ImportError:
+    from renderdoc import ReplayStatus as ResultCode
+
 
 def find_draw_with_event_id(controller, event_id):
     for d in controller.GetDrawcalls():
@@ -92,14 +97,14 @@ def load_capture(filename):
 
     status = cap.OpenFile(filename, '', None)
 
-    if status != rd.ReplayStatus.Succeeded:
+    if status != ResultCode.Succeeded:
         raise RuntimeError("Couldn't open file: " + str(status))
     if not cap.LocalReplaySupport():
         raise RuntimeError("Capture cannot be replayed")
 
     status, controller = cap.OpenCapture(rd.ReplayOptions(), None)
 
-    if status != rd.ReplayStatus.Succeeded:
+    if status != ResultCode.Succeeded:
         if os.path.exists(RENDERDOC_DEBUG_FILE):
             print(open(RENDERDOC_DEBUG_FILE, "r").read())
         raise RuntimeError("Couldn't initialise replay: " + str(status))
