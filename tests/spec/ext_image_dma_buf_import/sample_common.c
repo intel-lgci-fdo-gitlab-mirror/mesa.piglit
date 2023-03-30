@@ -170,7 +170,6 @@ egl_image_for_dma_buf_fd(struct piglit_dma_buf *buf, int fd, int fourcc, EGLImag
 	img = eglCreateImageKHR(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
 				 EGL_LINUX_DMA_BUF_EXT, (EGLClientBuffer)0,
 				 attr);
-	*out_img = img;
 
 	error = eglGetError();
 
