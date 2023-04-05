@@ -43,4 +43,8 @@ IF(PIGLIT_BUILD_CL_TESTS)
 	add_subdirectory (cl)
 ENDIF(PIGLIT_BUILD_CL_TESTS)
 
+if(PIGLIT_USE_WAYLAND)
+	add_subdirectory (wayland)
+ENDIF(PIGLIT_USE_WAYLAND)
+
 piglit_include_target_api()

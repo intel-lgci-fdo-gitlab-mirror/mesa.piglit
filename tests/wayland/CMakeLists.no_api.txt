@@ -1,0 +1,28 @@
+link_libraries (
+	${WAYLAND_LDFLAGS}
+	${WAYLAND_LIBRARIES}
+	${LIBDRM_LDFLAGS}
+	piglitutil
+)
+
+include_directories(
+	${WAYLAND_INCLUDE_DIRS}
+	${LIBDRM_INCLUDE_DIRS}
+	${CMAKE_CURRENT_BINARY_DIR}
+)
+
+set(WaylandDmaBuf_PATH "${WaylandProtocols_DATADIR}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml")
+
+add_custom_command(PRE_BUILD
+		   OUTPUT linux-dmabuf-unstable-v1-protocol.c
+		   COMMAND WaylandScannerExe private-code ${WaylandDmaBuf_PATH} linux-dmabuf-unstable-v1-protocol.c)
+add_custom_command(PRE_BUILD
+		   OUTPUT linux-dmabuf-unstable-v1-client-protocol.h
+		   COMMAND WaylandScannerExe client-header ${WaylandDmaBuf_PATH} linux-dmabuf-unstable-v1-client-protocol.h)
+
+if(PIGLIT_HAS_DRM_GET_DEVICE_BY_DEVID)
+	piglit_add_executable(wayland-dmabuf-target
+			      wayland-dmabuf-target.c
+			      linux-dmabuf-unstable-v1-protocol.c
+			      linux-dmabuf-unstable-v1-client-protocol.h)
+endif(PIGLIT_HAS_DRM_GET_DEVICE_BY_DEVID)

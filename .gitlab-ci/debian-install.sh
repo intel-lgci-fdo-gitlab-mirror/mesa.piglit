@@ -88,6 +88,7 @@ do
     rm /tmp/waffle-$target.zip
 done
 
+.gitlab-ci/build-wayland.sh
 
 apt-get purge -y $EPHEMERAL
 apt-get autoremove -y --purge
