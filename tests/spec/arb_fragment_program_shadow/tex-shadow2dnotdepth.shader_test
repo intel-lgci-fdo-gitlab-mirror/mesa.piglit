@@ -1,0 +1,41 @@
+[require]
+GL_ARB_texture_rectangle
+GL_ARB_fragment_program_shadow
+
+[vertex program]
+!!ARBvp1.0
+TEMP texcoord;
+
+ADD texcoord.xyz, vertex.position.xyyy, {1}.x;
+MUL texcoord.xyz, texcoord, {0.5}.x;
+MOV texcoord.w, {0}.x;
+
+MOV result.position, vertex.position;
+MOV result.texcoord[0], texcoord;
+END
+
+[fragment program]
+!!ARBfp1.0
+OPTION ARB_fragment_program_shadow;
+TEX result.color, fragment.texcoord[0], texture[0], SHADOW2D;
+END
+
+[test]
+texture rgbw 0 (8, 8)
+draw rect -1 -1 2 2
+
+# Test fallback to a not shadow sampler for a not depth texture
+# It is how AMD and NVIDIA work on Windows, and games might abuse this:
+# https://gitlab.freedesktop.org/mesa/mesa/-/issues/8425
+
+relative probe rgba (0.0, 0.0) (1.0, 0.0, 0.0, 1.0)
+relative probe rgba (0.4, 0.4) (1.0, 0.0, 0.0, 1.0)
+
+relative probe rgba (1.0, 0.0) (0.0, 1.0, 0.0, 1.0)
+relative probe rgba (0.6, 0.4) (0.0, 1.0, 0.0, 1.0)
+
+relative probe rgba (0.0, 1.0) (0.0, 0.0, 1.0, 1.0)
+relative probe rgba (0.4, 0.6) (0.0, 0.0, 1.0, 1.0)
+
+relative probe rgba (1.0, 1.0) (1.0, 1.0, 1.0, 1.0)
+relative probe rgba (0.6, 0.6) (1.0, 1.0, 1.0, 1.0)
