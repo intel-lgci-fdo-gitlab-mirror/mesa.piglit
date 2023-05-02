@@ -250,6 +250,9 @@ piglit_display(void)
   assert(piglit_height == 256);
   assert(piglit_width == 256);
 
+  float *pixels = malloc(piglit_width * piglit_height * 3 * sizeof(float));
+  glReadPixels(0, 0, piglit_width, piglit_height, GL_RGB, GL_FLOAT, pixels);
+
   for (y = 0; y < piglit_height; y++)
   {
     for (x = 0; x < piglit_width; x++)
@@ -260,10 +263,12 @@ piglit_display(void)
       color[1] = (float)pixel_data[(y*256+x)*3 +1] / 256.0F;
       color[2] = (float)pixel_data[(y*256+x)*3 +2] / 256.0F;
 
-      if(piglit_probe_pixel_rgb(x, 255-y, color))
+      if (piglit_compare_pixels(x, 255-y, color, pixels + ((255-y) * piglit_width + x) * 3, piglit_tolerance, 3))
         passed_cnt++;
     }
   }
+
+  free(pixels);
 
   piglit_present_results();
 
