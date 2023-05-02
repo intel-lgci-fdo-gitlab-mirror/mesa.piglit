@@ -7,7 +7,7 @@ def main():
     args = parser.parse_args()
 
     with open(args.input, 'rb') as f:
-        print('static const char {}[] = {{'.format(args.symbol))
+        print('static const unsigned char {}[] = {{'.format(args.symbol))
         while True:
             bytes = f.read(12)
             if not bytes:
