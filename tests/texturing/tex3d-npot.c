@@ -82,7 +82,6 @@ render_and_check(int w, int h, int d, GLenum format, float q,
     int layer;
     GLubyte *readback;
     const GLubyte *texp;
-    GLubyte *readp;
     int ncomp = 0;
 
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -109,22 +108,16 @@ render_and_check(int w, int h, int d, GLenum format, float q,
         }
     }
 
-    readback = (unsigned char*)malloc(w*h*d*4);
-    x = y = 0;
-    for(layer = 0; layer < d; ++layer) {
-        glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, readback+layer*w*h*4);
-        x += w;
-        if (x+w >= piglit_width) {
-            y += h;
-            x = 0;
-        }
-    }
+    /* Read back the bounding box of the screen we drew to in a single readpixels */
+    readback = (unsigned char*)malloc(piglit_width * (y + h) * 4);
+    glReadPixels(0, 0, piglit_width, y + h, GL_RGBA, GL_UNSIGNED_BYTE, readback);
 
     texp = data;
-    readp = readback;
     ncomp = nrcomponents(format);
+    int screen_x = 0, screen_y = 0;
     for(z = 0; z < d; ++z) {
         for(y = 0; y < h; ++y) {
+            GLubyte *readp = readback + ((screen_y + y) * piglit_width + screen_x) * 4;
             for(x = 0; x < w; ++x, readp += 4, texp += ncomp) {
                 unsigned char expected[4];
                 int i;
@@ -141,6 +134,12 @@ render_and_check(int w, int h, int d, GLenum format, float q,
                     }
                 }
             }
+        }
+
+        screen_x += w;
+        if (screen_x + w >= piglit_width) {
+                screen_y += h;
+                screen_x = 0;
         }
     }
     free(readback);
