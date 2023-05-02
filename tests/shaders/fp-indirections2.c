@@ -189,16 +189,24 @@ static enum piglit_result test(unsigned int dim, unsigned int samples)
 
 	free(program_text);
 
+	float *pixels = malloc(draw_height * TEXTURE_SIZE * 3 * sizeof(float));
+	glReadPixels(0, 0, TEXTURE_SIZE, draw_height, GL_RGB, GL_FLOAT, pixels);
+
 	for(y = 0; y < draw_height; ++y) {
 		for(x = 0; x < TEXTURE_SIZE; ++x) {
 			float expected[3];
 			texture_follow(dim, x, y, 0, samples, expected);
-			if (!piglit_probe_pixel_rgb(x, y, expected)) {
+			if (!piglit_compare_pixels(x, y, expected,
+						   pixels + (y * TEXTURE_SIZE + x) * 3,
+						   piglit_tolerance, 3)) {
 				fprintf(stderr, "Failure in dim = %i, samples = %i\n", dim, samples);
+				free(pixels);
 				return PIGLIT_FAIL;
 			}
 		}
 	}
+
+	free(pixels);
 
 	return PIGLIT_PASS;
 }
