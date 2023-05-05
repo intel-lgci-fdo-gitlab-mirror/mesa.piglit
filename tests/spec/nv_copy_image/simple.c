@@ -41,7 +41,10 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 
 PIGLIT_GL_TEST_CONFIG_END
 
-static const float green[3] = {0.0, 1.0, 0.0};
+/* Note that the act of clearing and copying with the red and reddish colors
+ * helps to demonstrate bugs on some drivers.
+ */
+static const float red[3] = {1.0, 0.0, 0.0};
 static const float reddish[3] = {0.5, 0.0, 0.0};
 static const float blue[3] = {0.0, 0.0, 1.0};
 
@@ -157,7 +160,7 @@ piglit_display(void)
 	image_init(&images[0], images[0].target, GL_RGB);
 	image_init(&images[1], images[1].target, GL_RGB);
 
-	image_fill(&images[0], green);
+	image_fill(&images[0], red);
 	image_fill(&images[1], reddish);
 
 	glCopyImageSubDataNV(images[0].name, images[0].target, 0, 0, 0, 0,
@@ -165,9 +168,9 @@ piglit_display(void)
 			   32, 32, 1);
 	pass &= piglit_check_gl_error(GL_NO_ERROR);
 
-	/* We should now have a green square on red */
+	/* We should now have a bright red square on a darker one */
 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, images[1].fbo);
-	pass &= piglit_probe_rect_rgb(17, 11, 32, 32, green);
+	pass &= piglit_probe_rect_rgb(17, 11, 32, 32, red);
 	pass &= piglit_probe_rect_rgb(0, 0, 64, 11, reddish);
 	pass &= piglit_probe_rect_rgb(0, 11, 17, 32, reddish);
 	pass &= piglit_probe_rect_rgb(49, 11, 15, 32, reddish);
@@ -182,9 +185,9 @@ piglit_display(void)
 			   32, 32, 1);
 	pass &= piglit_check_gl_error(GL_NO_ERROR);
 
-	/* This should be a green square on blue (no red!) */
+	/* This should be a red square on blue */
 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, images[0].fbo);
-	pass &= piglit_probe_rect_rgb(0, 32, 32, 32, green);
+	pass &= piglit_probe_rect_rgb(0, 32, 32, 32, red);
 	pass &= piglit_probe_rect_rgb(0, 0, 64, 32, blue);
 	pass &= piglit_probe_rect_rgb(32, 32, 32, 32, blue);
 
@@ -193,11 +196,11 @@ piglit_display(void)
 			   32, 32, 1);
 	pass &= piglit_check_gl_error(GL_NO_ERROR);
 
-	/* This should be a blue/green checkerboard */
+	/* This should be a blue/red checkerboard */
 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, images[0].fbo);
 	pass &= piglit_probe_rect_rgb(0, 0, 32, 32, blue);
-	pass &= piglit_probe_rect_rgb(0, 32, 32, 32, green);
-	pass &= piglit_probe_rect_rgb(32, 0, 32, 32, green);
+	pass &= piglit_probe_rect_rgb(0, 32, 32, 32, red);
+	pass &= piglit_probe_rect_rgb(32, 0, 32, 32, red);
 	pass &= piglit_probe_rect_rgb(32, 32, 32, 32, blue);
 
 	if (!piglit_automatic) {
