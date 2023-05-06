@@ -51,9 +51,14 @@ except ImportError:
 
 
 def find_draw_with_event_id(controller, event_id):
-    for d in controller.GetDrawcalls():
-        if d.eventId == event_id:
-            return d
+    try:
+        for root_action in controller.GetRootActions():
+            if root_action.eventId == event_id:
+                return root_action
+    except AttributeError:
+        for root_drawcall in controller.GetDrawcalls():
+            if root_drawcall.eventId == event_id:
+                return root_drawcall
 
     return None
 
@@ -78,8 +83,12 @@ def dump_image(controller, event_id, output_dir, tracefile):
     filepath.mkdir(parents=True, exist_ok=True)
     filepath = filepath / (tracefile + "-" + str(int(draw.eventId)) + ".png")
 
-    print("Saving image at event ID %d: %s to %s" % (draw.eventId,
-                                                     draw.name, filepath))
+    try:
+        filename: str = draw.GetName(controller.GetStructuredFile())
+    except AttributeError:
+        filename: str = draw.name
+
+    print(f"Saving image at event ID {draw.eventId}: {filename} to {filepath}")
 
     # Most formats can only display a single image per file, so we select the
     # first mip and first slice
@@ -122,7 +131,10 @@ def renderdoc_dump_images(filename, event_ids, output_dir):
     tracefile = Path(filename).name
 
     if not event_ids:
-        event_ids.append(controller.GetDrawcalls()[-1].eventId)
+        try:
+            event_ids.append(controller.GetRootActions()[-1].eventId)
+        except AttributeError:
+            event_ids.append(controller.GetDrawcalls()[-1].eventId)
 
     for event_id in event_ids:
         dump_image(controller, event_id, output_dir, tracefile)
