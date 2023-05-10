@@ -1168,14 +1168,12 @@ piglit_init(int argc, char **argv)
          */
         if ((g_debugMask & DEBUG_DONT_CLAMP_MAX_VARYINGS) == 0) {
                 g_maxVaryingFloats = MIN2(g_maxVaryingFloats, 32);
-                fprintf(stderr, "Clamped max varying floats to %u.\n",
-                g_maxVaryingFloats);
+                printf("Clamped max varying floats to %u.\n", g_maxVaryingFloats);
         }
 
         if (g_drawMode == DRAW_IMMEDIATE) {
                 g_maxVertexAttribs = 1;
-                fprintf(stderr,
-                        "Immediate mode selected, using only one vertex attrib.\n");
+                printf("Immediate mode selected, using only one vertex attrib.\n");
         }
 
         /*
