@@ -51,7 +51,7 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 PIGLIT_GL_TEST_CONFIG_END
 
 static unsigned gpu_freq_mhz;
-static GLint progs[3];
+static GLint progs[4];
 
 void
 piglit_init(int argc, char **argv)
@@ -64,14 +64,18 @@ piglit_init(int argc, char **argv)
 	piglit_require_gl_version(32);
 
 	progs[0] = piglit_build_simple_program(
-			  "#version 120 \n"
+			  "#version 150 compatibility \n"
+			  "varying vec4 v[2]; \n"
+			  "attribute vec4 a[2]; \n"
 			  "void main() { \n"
+			  "  for (int i = 0; i < 2; i++) v[i] = a[i]; \n"
 			  "  gl_Position = gl_Vertex; \n"
 			  "}",
 
-			  "#version 120 \n"
+			  "#version 150 compatibility \n"
+			  "varying vec4 v[2]; \n"
 			  "void main() { \n"
-			  "  gl_FragColor = vec4(1.0); \n"
+			  "  gl_FragColor = vec4(dot(v[0] * v[1], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
 			  "}");
 
 	progs[1] = piglit_build_simple_program(
@@ -86,10 +90,25 @@ piglit_init(int argc, char **argv)
 			  "#version 150 compatibility \n"
 			  "varying vec4 v[4]; \n"
 			  "void main() { \n"
-			  "  gl_FragColor = vec4(dot(v[0] + v[1] + v[2] + v[3], vec4(1.0)) == 1.0 ? 0.0 : 1.0); \n"
+			  "  gl_FragColor = vec4(dot(v[0] * v[1] * v[2] * v[3], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
 			  "}");
 
 	progs[2] = piglit_build_simple_program(
+			  "#version 150 compatibility \n"
+			  "varying vec4 v[6]; \n"
+			  "attribute vec4 a[6]; \n"
+			  "void main() { \n"
+			  "  for (int i = 0; i < 6; i++) v[i] = a[i]; \n"
+			  "  gl_Position = gl_Vertex; \n"
+			  "}",
+
+			  "#version 150 compatibility \n"
+			  "varying vec4 v[6]; \n"
+			  "void main() { \n"
+			  "  gl_FragColor = vec4(dot(v[0] * v[1] * v[2] * v[3] * v[4] * v[5], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
+			  "}");
+
+	progs[3] = piglit_build_simple_program(
 			  "#version 150 compatibility \n"
 			  "varying vec4 v[8]; \n"
 			  "attribute vec4 a[8]; \n"
@@ -101,7 +120,7 @@ piglit_init(int argc, char **argv)
 			  "#version 150 compatibility \n"
 			  "varying vec4 v[8]; \n"
 			  "void main() { \n"
-			  "  gl_FragColor = vec4(dot(v[0] + v[1] + v[2] + v[3] + v[4] + v[5] + v[6] + v[7], vec4(1.0)) == 1.0 ? 0.0 : 1.0); \n"
+			  "  gl_FragColor = vec4(dot(v[0] * v[1] * v[2] * v[3] * v[4] * v[5] * v[6] * v[7], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
 			  "}");
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -111,7 +130,7 @@ piglit_init(int argc, char **argv)
 
 static void
 gen_triangle_tile(unsigned num_quads_per_dim, double prim_size_in_pixels,
-		  unsigned cull_percentage,
+		  unsigned cull_percentage, unsigned vertices_per_prim,
 		  bool back_face_culling, bool view_culling, bool degenerate_prims,
 		  unsigned max_vertices, unsigned *num_vertices, float *vertices,
 		  unsigned max_indices, unsigned *num_indices, unsigned *indices)
@@ -176,12 +195,24 @@ gen_triangle_tile(unsigned num_quads_per_dim, double prim_size_in_pixels,
 
 				int base_index = *num_vertices;
 
-				*num_vertices += 2;
+				*num_vertices += vertices_per_prim == 2 ? 4 : 2;
 				assert(*num_vertices <= max_vertices);
+
+				if (vertices_per_prim == 2) {
+					vertices[elem++] = xoffset + first + d * x;
+					vertices[elem++] = yoffset + first + d * (y + 1);
+					vertices[elem++] = zoffset;
+				}
 
 				vertices[elem++] = xoffset + first + d * (x + 1);
 				vertices[elem++] = yoffset + first + d * y;
 				vertices[elem++] = zoffset;
+
+				if (vertices_per_prim == 2) {
+					vertices[elem++] = xoffset + first + d * (x + 1);
+					vertices[elem++] = yoffset + first + d * y;
+					vertices[elem++] = zoffset;
+				}
 
 				vertices[elem++] = xoffset + first + d * (x + 1);
 				vertices[elem++] = yoffset + first + d * (y + 1);
@@ -192,13 +223,23 @@ gen_triangle_tile(unsigned num_quads_per_dim, double prim_size_in_pixels,
 				*num_indices += 6;
 				assert(*num_indices <= max_indices);
 
-				indices[idx++] = base_index - 2;
-				indices[idx++] = base_index;
-				indices[idx++] = base_index - 1;
+				if (vertices_per_prim == 2) {
+					indices[idx++] = base_index - 2;
+					indices[idx++] = base_index + 1;
+					indices[idx++] = base_index;
 
-				indices[idx++] = base_index - 1;
-				indices[idx++] = base_index;
-				indices[idx++] = base_index + 1;
+					indices[idx++] = base_index - 1;
+					indices[idx++] = base_index + 2;
+					indices[idx++] = base_index + 3;
+				} else {
+					indices[idx++] = base_index - 2;
+					indices[idx++] = base_index;
+					indices[idx++] = base_index - 1;
+
+					indices[idx++] = base_index - 1;
+					indices[idx++] = base_index;
+					indices[idx++] = base_index + 1;
+				}
 
 				if (cull && back_face_culling) {
 					/* switch the winding order */
@@ -383,6 +424,7 @@ gen_triangle_strip_tile(unsigned num_quads_per_dim, double prim_size_in_pixels,
 
 enum draw_method {
 	INDEXED_TRIANGLES,
+	INDEXED_TRIANGLES_2VTX, /* every triangle adds 2 new vertices and reuses 1 vertex */
 	TRIANGLES,
 	TRIANGLE_STRIP,
 	INDEXED_TRIANGLE_STRIP,
@@ -400,7 +442,8 @@ static void
 run_draw(unsigned iterations)
 {
 	for (unsigned i = 0; i < iterations; i++) {
-		if (global_draw_method == INDEXED_TRIANGLES) {
+		if (global_draw_method == INDEXED_TRIANGLES ||
+		    global_draw_method == INDEXED_TRIANGLES_2VTX) {
 			glDrawElements(GL_TRIANGLES, count,
 				       GL_UNSIGNED_INT,
 				       (void*)(long)(ib_size * duplicate_index));
@@ -445,6 +488,7 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 	unsigned *indices = NULL;
 
 	if (draw_method == INDEXED_TRIANGLES ||
+	    draw_method == INDEXED_TRIANGLES_2VTX ||
 	    draw_method == INDEXED_TRIANGLE_STRIP ||
 	    draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART)
 		indices = (unsigned*)malloc(max_indices * 4);
@@ -463,6 +507,7 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 	} else {
 		gen_triangle_tile(num_quads_per_dim, quad_size_in_pixels,
 				  cull_percentage,
+				  draw_method == INDEXED_TRIANGLES_2VTX ? 2 : 1,
 				  cull_method == BACK_FACE_CULLING,
 				  cull_method == VIEW_CULLING,
 				  cull_method == DEGENERATE_PRIMS,
@@ -473,10 +518,19 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 	vb_size = num_vertices * 12;
 	ib_size = num_indices * 4;
 
-	/* Duplicate buffers and switch between them, so that no data is cached
-	 * between draws. 32 MB should be greater than any cache.
-	 */
-	num_duplicates = MAX2(1, 32*1024*1024 / vb_size);
+	bool cached = true; /* TODO: test both cached and uncached vertices */
+
+	if (cached) {
+		num_duplicates = 1;
+	} else {
+		/* Duplicate buffers and switch between them, so that no data is cached
+		 * between draws. 256 MB should be greater than any cache.
+		 *
+		 * TODO: Varyings are sourced from zero-stride vertex attribs, so they don't
+		 * consume any bandwidth.
+		 */
+		num_duplicates = MAX2(1, 256*1024*1024 / vb_size);
+	}
 
 	/* Create buffers. */
 	GLuint vb, ib;
@@ -524,7 +578,7 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 	if (debug_num_iterations)
 		run_draw(debug_num_iterations);
 	else
-		rate = perf_measure_gpu_rate(run_draw, 0.05);
+		rate = perf_measure_gpu_rate(run_draw, 0.01);
 
 	if (cull_method == RASTERIZER_DISCARD)
 		glDisable(GL_RASTERIZER_DISCARD);
@@ -544,7 +598,7 @@ run(enum draw_method draw_method, enum cull_method cull_method,
     unsigned num_prim_sets)
 {
 	unsigned num_subtests = 1;
-	static unsigned cull_percentages[] = {100, 75, 50, 25};
+	static unsigned cull_percentages[] = {100, 75, 50};
 	static double quad_sizes_in_pixels[] = {1.0 / 7, 0.25, 0.5};
 
 	if (cull_method == BACK_FACE_CULLING ||
@@ -568,11 +622,12 @@ run(enum draw_method draw_method, enum cull_method cull_method,
 		}
 
 		printf("  %-14s, ",
-		       draw_method == INDEXED_TRIANGLES ? "glDrawElements" :
-		       draw_method == TRIANGLES ? "glDrawArraysT" :
-		       draw_method == TRIANGLE_STRIP ? "glDrawArraysTS" :
-		       draw_method == INDEXED_TRIANGLE_STRIP ? "glDrawElemsTS" :
-		       "glDrawTS_PrimR");
+		       draw_method == INDEXED_TRIANGLES ? "DrawElems1Vtx" :
+		       draw_method == INDEXED_TRIANGLES_2VTX ? "DrawElems2Vtx" :
+		       draw_method == TRIANGLES ? "DrawArraysT" :
+		       draw_method == TRIANGLE_STRIP ? "DrawArraysTS" :
+		       draw_method == INDEXED_TRIANGLE_STRIP ? "DrawElemsTS" :
+		       "DrawTS_PrimR");
 
 		if (cull_method == NONE ||
 		    cull_method == RASTERIZER_DISCARD) {
@@ -605,9 +660,9 @@ run(enum draw_method draw_method, enum cull_method cull_method,
 
 				if (gpu_freq_mhz) {
 					rate /= gpu_freq_mhz * 1000000.0;
-					printf(",%7.4f", rate);
+					printf(",%6.3f", rate);
 				} else {
-					printf(",%7.4f", rate / 1000000000);
+					printf(",%6.3f", rate / 1000000000);
 				}
 				fflush(stdout);
 			}
@@ -624,50 +679,49 @@ piglit_display(void)
 	/* for debugging */
 	if (getenv("ONE")) {
 		glUseProgram(progs[0]);
-		run_test(1, INDEXED_TRIANGLE_STRIP, BACK_FACE_CULLING, ceil(sqrt(0.5 * 512000)), 2, 50);
+		run_test(1, INDEXED_TRIANGLES_2VTX, BACK_FACE_CULLING, ceil(sqrt(0.5 * 512000)), 2, 50);
 		piglit_swap_buffers();
 		return PIGLIT_PASS;
 	}
 
 	const unsigned num_quads_per_dim[] = {
 		/* The second number is the approx. number of primitives. */
-		ceil(sqrt(0.5 * 1000)),
 		ceil(sqrt(0.5 * 2000)),
-		ceil(sqrt(0.5 * 4000)),
-		ceil(sqrt(0.5 * 6000)),
 		ceil(sqrt(0.5 * 8000)),
-		ceil(sqrt(0.5 * 16000)),
 		ceil(sqrt(0.5 * 32000)),
 		ceil(sqrt(0.5 * 128000)),
 		ceil(sqrt(0.5 * 512000)),
-		/* 512000 is the maximum number when everything fits into the window */
-		/* After that, the prim size decreases, so you'll get subpixel prims. */
-		ceil(sqrt(0.5 * 2000000)),
-		ceil(sqrt(0.5 * 8000000)),
 	};
 
 	unsigned num_prims[ARRAY_SIZE(num_quads_per_dim)];
 	for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim); i++)
 		num_prims[i] = num_quads_per_dim[i] * num_quads_per_dim[i] * 2;
 
-	printf("  Measuring %-27s,    0 Varying                                                                       4 Varyings                                                                      8 Varyings\n",
-	       gpu_freq_mhz ? "Prims/clock," : "GPrims/second,");
-	printf("  Draw Call     ,  Cull Method         ");
+	printf("  Measuring %-27s,    ", gpu_freq_mhz ? "Prims/clock," : "GPrims/second,");
+	for (unsigned prog = 0; prog < ARRAY_SIZE(progs); prog++)
+		printf("%u Varyings %27s", 2 + prog * 2, " ");
+	printf("\n");
 
+	printf("  Draw Call     ,  Cull Method         ");
 	for (unsigned prog = 0; prog < ARRAY_SIZE(progs); prog++) {
 		if (prog)
 			printf("   ");
 		for (int i = 0; i < ARRAY_SIZE(num_prims); i++)
-			printf(",  %4uK", num_prims[i] / 1000);
+			printf(",  %3uK", num_prims[i] / 1000);
 	}
 	printf("\n");
 
-	for (int cull_method = 0; cull_method < NUM_CULL_METHODS; cull_method++)
+	for (int cull_method = 0; cull_method < RASTERIZER_DISCARD; cull_method++)
+		run(INDEXED_TRIANGLES, cull_method, num_quads_per_dim, num_prims, ARRAY_SIZE(num_prims));
+	for (int cull_method = 0; cull_method < RASTERIZER_DISCARD; cull_method++)
+		run(INDEXED_TRIANGLES_2VTX, cull_method, num_quads_per_dim, num_prims, ARRAY_SIZE(num_prims));
+
+	for (int cull_method = RASTERIZER_DISCARD; cull_method < NUM_CULL_METHODS; cull_method++)
 		run(INDEXED_TRIANGLES, cull_method, num_quads_per_dim, num_prims, ARRAY_SIZE(num_prims));
 
-	/* glDrawArrays: Only test NONE, BACK_FACE_CULLING, and RASTERIZER_DISCARD. */
+	/* glDrawArrays: Only test NONE and BACK_FACE_CULLING. */
 	for (int draw_method = TRIANGLES; draw_method < NUM_DRAW_METHODS; draw_method++) {
-		for (int cull_method = 0; cull_method <= RASTERIZER_DISCARD; cull_method++)
+		for (int cull_method = 0; cull_method <= BACK_FACE_CULLING; cull_method++)
 			run(draw_method, cull_method, num_quads_per_dim, num_prims, ARRAY_SIZE(num_prims));
 	}
 
