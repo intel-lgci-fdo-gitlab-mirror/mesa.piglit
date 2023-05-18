@@ -1848,6 +1848,7 @@ with profile.test_list.group_manager(
         PiglitGLTest,
         grouptools.join('spec', 'ARB_fragment_program')) as g:
     g(['arb_fragment_program-minmax'], 'minmax')
+    g(['fog-modes', '-arbfp'], 'fog-modes')
     g(['fp-abs-01'])
     g(['fp-fog'])
     g(['fp-formats'])

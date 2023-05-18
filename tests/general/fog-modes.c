@@ -36,6 +36,8 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 
 PIGLIT_GL_TEST_CONFIG_END
 
+static bool arbfp = false;
+
 enum piglit_result
 piglit_display(void)
 {
@@ -46,28 +48,68 @@ piglit_display(void)
 
 	glEnable(GL_FOG);
 	glFogfv(GL_FOG_COLOR, fogcolor);
-	glColor4f(0, 0, 0, 0.5);
+
+	/* Set the color coming out of the FF fragment stage -- red (unused) for when we should
+	 * be using an ARB program, black otherwise.
+	 */
+	if (arbfp)
+		glColor4f(0, 1, 0, 0);
+	else
+		glColor4f(0, 0, 0, 0.5);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, 1, 0, 1, -zNear, -zFar);
 
+	GLuint arb_program = 0;
+	if (arbfp) {
+		glGenProgramsARB(1, &arb_program);
+		glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, arb_program);
+		glEnable(GL_FRAGMENT_PROGRAM_ARB);
+	}
+
 	for (mode = 0; mode < 3; mode++) {
 		float y = mode / 3.0;
 		float h = 1.0 / 3.0;
 
+		if (arbfp) {
+			static const char *fog_modes[] = {
+			    "ARB_fog_linear",
+			    "ARB_fog_exp",
+			    "ARB_fog_exp2",
+			};
+			char *fp_source = NULL;
+			int ret = asprintf(&fp_source,
+					   "!!ARBfp1.0\n"
+					   "OPTION %s;\n"
+					   "MOV result.color, {0.0, 0.0, 0.0, 0.5};\n"
+					   "END\n",
+					   fog_modes[mode]);
+			if (ret < 0)
+				return PIGLIT_FAIL;
+
+			glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
+					GL_PROGRAM_FORMAT_ASCII_ARB,
+					strlen(fp_source),
+					(const GLubyte *) fp_source);
+
+		}
+
 		switch (mode) {
 		case 0:
-			glFogi(GL_FOG_MODE, GL_LINEAR);
+			if (!arbfp)
+				glFogi(GL_FOG_MODE, GL_LINEAR);
 			glFogf(GL_FOG_START, zNear);
 			glFogf(GL_FOG_END, zFar);
 			break;
 		case 1:
-			glFogi(GL_FOG_MODE, GL_EXP);
+			if (!arbfp)
+				glFogi(GL_FOG_MODE, GL_EXP);
 			glFogf(GL_FOG_DENSITY, 2);
 			break;
 		case 2:
-			glFogi(GL_FOG_MODE, GL_EXP2);
+			if (!arbfp)
+				glFogi(GL_FOG_MODE, GL_EXP2);
 			glFogf(GL_FOG_DENSITY, 2);
 			break;
 		}
@@ -80,6 +122,9 @@ piglit_display(void)
 			piglit_draw_rect_z(z, x, y, w, h);
 		}
 	}
+
+	if (arbfp)
+		glDeleteProgramsARB(1, &arb_program);
 
 	for (mode = 0; mode < 3; mode++) {
 		float y = (mode + 0.5) / 3.0 * piglit_height;
@@ -121,4 +166,10 @@ piglit_display(void)
 
 void piglit_init(int argc, char**argv)
 {
+	for (int i = 0; i < argc; i++) {
+		if (strcmp(argv[i], "-arbfp") == 0) {
+			piglit_require_extension("GL_ARB_fragment_program");
+			arbfp = true;
+		}
+	}
 }
