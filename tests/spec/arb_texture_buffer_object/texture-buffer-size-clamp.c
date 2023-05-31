@@ -277,7 +277,11 @@ piglit_init(int argc, char **argv)
 	GLuint prog_sampler = piglit_build_simple_program(vert, frag);
 
 	GLuint prog_image = 0;
-	if (piglit_is_extension_supported("GL_ARB_compute_shader")) {
+
+	bool es;
+	int major, minor;
+	piglit_get_glsl_version(&es, &major, &minor);
+	if (piglit_is_extension_supported("GL_ARB_compute_shader") && major * 100 + minor >= 420) {
 		GLuint shader =
 			piglit_compile_shader_text(GL_COMPUTE_SHADER, comp);
 
