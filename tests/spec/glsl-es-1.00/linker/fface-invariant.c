@@ -66,10 +66,13 @@ piglit_init(int argc, char **argv)
 	if (!fs_shader)
 		piglit_report_result(PIGLIT_PASS);
 
-	prog = piglit_link_simple_program(vs_shader, fs_shader);
+	prog = glCreateProgram();
+	glAttachShader(prog, vs_shader);
+	glAttachShader(prog, fs_shader);
+	glLinkProgram(prog);
 
-	/* A link error is allowed. */
-	if (!prog)
+	/* A link error is allowed, and must be present if a compile error wasn't thrown. */
+	if (!piglit_link_check_status_quiet(prog))
 		piglit_report_result(PIGLIT_PASS);
 
 	piglit_report_result(PIGLIT_FAIL);
