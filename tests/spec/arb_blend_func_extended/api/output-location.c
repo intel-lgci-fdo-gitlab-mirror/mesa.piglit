@@ -114,7 +114,7 @@ void piglit_init(int argc, char **argv)
 	/* Linking should fail as the location set is too big. */
 	glLinkProgram(prog);
 
-	if (piglit_link_check_status(prog))
+	if (piglit_link_check_status_quiet(prog))
 		piglit_report_result(PIGLIT_FAIL);
 
 	piglit_report_result(PIGLIT_PASS);
