@@ -1,7 +1,5 @@
-
-
-\ Initial design decisions
- -------------------------
+Initial design decisions
+------------------------
 
 Before I started working on Piglit, I asked around for OpenGL testing methods.
 There were basically two kinds of tests:
@@ -63,8 +61,8 @@ entirely new project. The most important reasons are:
 
 
 
-\ Coding style
- -------------
+Coding style
+------------
 
 Basic formatting:
 
@@ -132,14 +130,13 @@ rolling your own.
 
 Python framework:
 
-Piglit uses python's PEP8 standard for formatting of python code; using only
-spaces with no tabs for indenting.  See
-http://www.python.org/dev/peps/pep-0008/ for more information.
+Piglit uses python's [PEP8](http://www.python.org/dev/peps/pep-0008/) standard for formatting of python code; using only
+spaces with no tabs for indenting.
 
 
 
-\ Release Philosophy
- -------------------
+Release Philosophy
+------------------
 
 Since Piglit is a test suite, it is "production software" at all times.
 Test case might be incorrect, but despite that it is not useful to speak of
@@ -147,10 +144,10 @@ Test case might be incorrect, but despite that it is not useful to speak of
 a relatively small rate of change like Piglit.
 
 For this reason, developers of OpenGL drivers and related software, and even
-testers are encouraged to follow the git repository on freedesktop.org at all
-times. A web interface to this repository can be found here:
+testers are encouraged to follow the [git
+repository](https://gitlab.freedesktop.org/mesa/piglit).
 
-       https://gitlab.freedesktop.org/mesa/piglit
+       
 
 Nevertheless, for purposes of marking a specific point in time for packaging
 in an environment where non-developers do tests on a wide range of hardware,
@@ -163,11 +160,11 @@ This tag is the official way of marking a release, so the tarballs provided
 automatically by the cgit frontend are official release tarballs.
 
 
-\ Contributing Patches
- ---------------------
+Contributing Patches
+--------------------
 
-If you want to contribute patches, please submit an MR
-(https://gitlab.freedesktop.org/mesa/piglit/-/merge_requests/new)
+If you want to contribute patches, please submit an
+[MR](https://gitlab.freedesktop.org/mesa/piglit/-/merge_requests/new)
 
 Patches should not mix code changes with code formatting changes (except,
 perhaps, in very trivial cases.)
@@ -183,11 +180,11 @@ Reviewers may use the "Approve" button to indicate that they think the whole MR
 is acceptable for merge, but want to let the submitter collect more review.
 
 Note that Piglit reviewers use the terms "Reviewed-by", "Tested-by", and
-"Acked-by" in the same way as they are used for Linux kernel patches (see
-https://www.kernel.org/doc/Documentation/SubmittingPatches).  They are not
-required to be squashed into commit messages, given that marge-bot will include
-a link to the MR discussion in each commit message.  You are also welcome to add
-a "Signed-off-by" line to your patch, but it is not required.
+"Acked-by" in the same way as they are used for [Linux kernel
+patches](https://www.kernel.org/doc/Documentation/SubmittingPatches).  They are
+not required to be squashed into commit messages, given that marge-bot will
+include a link to the MR discussion in each commit message.  You are also
+welcome to add a "Signed-off-by" line to your patch, but it is not required.
 
 Please be patient -- most of us develop graphics drivers (such as Mesa) as our
 primary job, so we have limited time to respond to your MRs.  If your MR hasn't
