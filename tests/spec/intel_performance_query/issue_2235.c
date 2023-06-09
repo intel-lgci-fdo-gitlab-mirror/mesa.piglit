@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 	EGLContext ctx1;
 	EGLint attr[] = {
 		EGL_CONTEXT_MAJOR_VERSION_KHR, 3,
-		EGL_CONTEXT_MINOR_VERSION_KHR, 2,
+		EGL_CONTEXT_MINOR_VERSION_KHR, 0,
 		EGL_NONE
 	};
 	GLuint query, query_handle;
