@@ -1,0 +1,46 @@
+# Verify an optimization pattern that was added in mesa!19968
+
+[require]
+GLSL >= 1.50
+GL_ARB_gpu_shader5
+
+[vertex shader passthrough]
+
+[fragment shader]
+#extension GL_ARB_gpu_shader5 : enable
+
+out vec4 color;
+
+uniform vec2 expected[4] = vec2[](vec2(0.0, 0.0),
+				  vec2(16384.0, 0.0),
+				  vec2(0.0, 4096.0),
+				  vec2(16384.0, 4096.0));
+
+void main()
+{
+	vec4 c = vec4(0.0, 1.0, 0.0, 1.0);
+	uint i = (uint(gl_FragCoord.x) & 1) + ((uint(gl_FragCoord.y) & 1) << 1);
+
+	/* Result of bitfieldInsert(0, X, Y, 1) is either 0 or (1 << Y)
+	 * depending on whether X is even or odd, respectively.
+	 */
+
+	if (float(bitfieldInsert(0, uint(gl_FragCoord.x), 14, 1)) !=
+	    expected[i].x) {
+		c.x = 1.0;
+		c.y = 0.0;
+	}
+
+	if (float(bitfieldInsert(0, uint(gl_FragCoord.y), 12, 1)) !=
+	    expected[i].y) {
+		c.y = 0.0;
+		c.z = 1.0;
+	}
+
+	color = c;
+}
+
+[test]
+clear
+draw rect -1 -1 2 2
+probe all rgba 0.0 1.0 0.0 1.0
