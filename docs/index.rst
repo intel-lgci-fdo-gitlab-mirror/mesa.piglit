@@ -15,7 +15,7 @@ To check out piglit, use::
 
 To build piglit, see the `README`_.
 
-.. _README: https://gitlab.freedesktop.org/mesa/piglit/blob/master/README.md
+.. _README: https://gitlab.freedesktop.org/mesa/piglit/blob/main/README.md
 
 License
 -------
