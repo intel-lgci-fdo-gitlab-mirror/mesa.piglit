@@ -411,6 +411,7 @@ do_test(const struct test_desc *test)
 		break;
 	}
 
+	glEndTransformFeedback();
 	return pass;
 }
 
