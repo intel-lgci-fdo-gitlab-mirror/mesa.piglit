@@ -31,7 +31,7 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 
 PIGLIT_GL_TEST_CONFIG_END
 
-bool compile_simple_program(const char* vs_text, const char* fs_text)
+bool compile_simple_program(const char* vs_text, const char* fs_text, bool err_to_stderr)
 {
 	GLuint vs;
 	GLuint fs;
@@ -40,8 +40,8 @@ bool compile_simple_program(const char* vs_text, const char* fs_text)
 
 	prog = glCreateProgram();
 
-	vs = piglit_compile_shader_text_nothrow(GL_VERTEX_SHADER, vs_text, true);
-	fs = piglit_compile_shader_text_nothrow(GL_FRAGMENT_SHADER, fs_text, true);
+	vs = piglit_compile_shader_text_nothrow(GL_VERTEX_SHADER, vs_text, err_to_stderr);
+	fs = piglit_compile_shader_text_nothrow(GL_FRAGMENT_SHADER, fs_text, err_to_stderr);
 
 	if (!vs || !fs)
 		return false;
@@ -89,26 +89,26 @@ void piglit_init(int argc, char **argv)
 	snprintf(fs_text, 256, fs_template,
 	         "gl_FragColor",
 		   "gl_SecondaryFragColorEXT");
-	pass = compile_simple_program(vs_text, fs_text) && pass;
+	pass = compile_simple_program(vs_text, fs_text, true) && pass;
 
 	// Regular FragData
 	snprintf(fs_text, 256, fs_template,
 	         "gl_FragData[0]",
 		   "gl_SecondaryFragDataEXT[0]");
-	pass = compile_simple_program(vs_text, fs_text) && pass;
+	pass = compile_simple_program(vs_text, fs_text, true) && pass;
 
 	// Tests that should fail
 	// FragColor & SecondaryFragData
 	snprintf(fs_text, 256, fs_template,
 	         "gl_FragColor",
 		   "gl_SecondaryFragDataEXT[0]");
-	pass = !compile_simple_program(vs_text, fs_text) && pass;
+	pass = !compile_simple_program(vs_text, fs_text, false) && pass;
 
 	// FragData & SecondaryFragColor
 	snprintf(fs_text, 256, fs_template,
 	         "gl_FragData[0]",
 		   "gl_SecondaryFragColorEXT");
-	pass = !compile_simple_program(vs_text, fs_text) && pass;
+	pass = !compile_simple_program(vs_text, fs_text, false) && pass;
 
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);
 
