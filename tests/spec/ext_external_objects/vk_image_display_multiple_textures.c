@@ -115,10 +115,7 @@ void piglit_init(int argc, char **argv)
 
 	atexit(cleanup);
 
-	w = piglit_width;
-	h = piglit_height;
-
-	if (!vk_init(w, h, d, num_samples, num_levels, num_layers,
+	if (!vk_init(piglit_width, piglit_height, 1, num_samples, num_levels, num_layers,
 				color_format, depth_format,
 				color_tiling, depth_tiling,
 				color_in_layout, depth_in_layout,
@@ -136,7 +133,7 @@ void piglit_init(int argc, char **argv)
 
 	struct vk_image_att images[] = { vk_color_att, vk_depth_att };
 	vk_draw(&vk_core, 0, &vk_rnd, vk_fb_color, 4, 0,
-		false, false, images, ARRAY_SIZE(images), 0, 0, w, h);
+		false, false, images, ARRAY_SIZE(images), 0, 0, piglit_width, piglit_height);
 
 	/* generate NUM_TEX textures */
 	for (i = 0; i < NUM_TEX; i++) {

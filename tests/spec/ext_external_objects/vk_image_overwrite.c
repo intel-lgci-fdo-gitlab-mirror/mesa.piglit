@@ -167,7 +167,7 @@ run_subtest(int case_num)
 	const float color_prb[] = { 0.0, 1.0, 0.0, 1.0 };
 	GLint loc = -1;
 
-	if (!vk_set_image_props(piglit_width, piglit_height, d,
+	if (!vk_set_image_props(piglit_width, piglit_height, 1,
 				num_samples, num_levels,
 			        vk_gl_format[case_num].vkformat,
 				vk_gl_format[case_num].tiling)) {

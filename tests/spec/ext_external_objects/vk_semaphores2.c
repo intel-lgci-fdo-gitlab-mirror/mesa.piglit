@@ -144,10 +144,7 @@ void piglit_init(int argc, char **argv)
 
 	atexit(cleanup);
 
-	w = piglit_width;
-	h = piglit_height;
-
-	if (!vk_init(w, h, d, num_samples, num_levels, num_layers,
+	if (!vk_init(piglit_width, piglit_height, 1, num_samples, num_levels, num_layers,
 				color_format, depth_format,
 				color_tiling, depth_tiling,
 				color_in_layout, depth_in_layout,
@@ -215,7 +212,7 @@ piglit_display(void)
 	struct vk_image_att images[] = { vk_color_att, vk_depth_att };
 	vk_draw(&vk_core, 0, &vk_rnd, vk_fb_color, 4, &vk_sem,
 		vk_sem_has_wait, vk_sem_has_signal, images, ARRAY_SIZE(images),
-		0, 0, w, h);
+		0, 0, piglit_width, piglit_height);
 
 	layout = gl_get_layout_from_vk(color_end_layout);
 	if (vk_sem_has_signal) {

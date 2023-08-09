@@ -136,9 +136,6 @@ piglit_init(int argc, char **argv)
 
 	atexit(cleanup);
 
-	w = piglit_width;
-	h = piglit_height;
-
 	if (!vk_init()) {
 		fprintf(stderr, "Failed to initialize Vulkan, skipping the test.\n");
 		piglit_report_result(PIGLIT_SKIP);
@@ -187,7 +184,7 @@ run_subtest(int case_num)
 	vk_draw(&vk_core,
 		0, &vk_rnd,
 		vk_fb_color,
-		4, 0, false, false, &vk_depth_att, 1, 0, 0, w, h);
+		4, 0, false, false, &vk_depth_att, 1, 0, 0, piglit_width, piglit_height);
 
 	/* interoperability */
 	if (!gl_create_mem_obj_from_vk_mem(&vk_core, &vk_depth_att.obj.mobj,
@@ -223,7 +220,7 @@ run_subtest(int case_num)
 
 	/* the result must be: a blue quad that has the green framebuffer
 	 * color in the middle */
-	if (!piglit_probe_pixel_rgb(w / 2, h / 2, green))
+	if (!piglit_probe_pixel_rgb(piglit_width / 2, piglit_height / 2, green))
 		goto fail;
 
 	if (!piglit_probe_pixel_rgb(0, 0, blue) ||
@@ -281,7 +278,7 @@ static bool
 vk_subtest_init(int case_num)
 {
 	if (!vk_fill_ext_image_props(&vk_core,
-				     w, h, d,
+				     piglit_width, piglit_height, 1,
 				     num_samples,
 				     num_levels,
 				     num_layers,
@@ -300,7 +297,7 @@ vk_subtest_init(int case_num)
 	}
 
 	if (!vk_fill_ext_image_props(&vk_core,
-				     w, h, d,
+				     piglit_width, piglit_height, 1,
 				     num_samples,
 				     num_levels,
 				     num_layers,

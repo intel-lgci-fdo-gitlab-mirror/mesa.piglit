@@ -142,10 +142,7 @@ void piglit_init(int argc, char **argv)
 
 	atexit(cleanup);
 
-	w = piglit_width;
-	h = piglit_height;
-
-	if (!vk_init(w, h, d, num_samples, num_levels, num_layers,
+	if (!vk_init(piglit_width, piglit_height, 1, num_samples, num_levels, num_layers,
 				color_format, depth_format,
 				color_tiling, depth_tiling,
 				color_in_layout, depth_in_layout,
@@ -205,7 +202,7 @@ piglit_display(void)
 
 	vk_draw(&vk_core, 0, &vk_rnd, vk_fb_color, 4, &vk_sem,
 		vk_sem_has_wait, vk_sem_has_signal, images, ARRAY_SIZE(images),
-		0, 0, w, h);
+		0, 0, piglit_width, piglit_height);
 
 	layout = gl_get_layout_from_vk(color_end_layout);
 	if (vk_sem_has_signal) {
@@ -221,7 +218,7 @@ piglit_display(void)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glFinish();
 
-	vk_copy_image_to_buffer(&vk_core, &vk_color_att, &vk_bo, w, h);
+	vk_copy_image_to_buffer(&vk_core, &vk_color_att, &vk_bo, piglit_width, piglit_height);
 	if (vkMapMemory(vk_core.dev, vk_bo.mobj.mem, 0,
 					vk_bo.mobj.mem_sz, 0, &pixels) != VK_SUCCESS) {
 		fprintf(stderr, "Failed to map Vulkan image memory.\n");
@@ -232,7 +229,7 @@ piglit_display(void)
 	 * pixels we've just read from Vulkan memory as texture data
 	 * in a new OpenGL texture */
 	glBindTexture(gl_target, gl_disp_tex);
-	glTexSubImage2D(gl_target, 0, 0, 0, w, h, GL_RGBA, GL_FLOAT, pixels);
+	glTexSubImage2D(gl_target, 0, 0, 0, piglit_width, piglit_height, GL_RGBA, GL_FLOAT, pixels);
 	glFinish();
 
 	vkUnmapMemory(vk_core.dev, vk_bo.mobj.mem);
@@ -419,7 +416,7 @@ gl_init()
 	glBindTexture(gl_target, gl_disp_tex);
 	glTexParameteri(gl_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(gl_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(gl_target, 0, gl_tex_storage_format, w, h, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexImage2D(gl_target, 0, gl_tex_storage_format, piglit_width, piglit_height, 0, GL_RGBA, GL_FLOAT, 0);
 	glBindTexture(gl_target, 0);
 
 	glClearColor(0.1, 0.1, 0.1, 1.0);

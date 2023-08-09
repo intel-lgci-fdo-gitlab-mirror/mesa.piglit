@@ -112,10 +112,7 @@ piglit_init(int argc, char **argv)
 
 	atexit(cleanup);
 
-	w = piglit_width;
-	h = piglit_height;
-
-	if (!vk_init(w, h, d, num_samples, num_levels, num_layers,
+	if (!vk_init(piglit_width, piglit_height, 1, num_samples, num_levels, num_layers,
 		     color_format, depth_format,
 		     color_tiling, depth_tiling,
 		     color_in_layout, depth_in_layout,
@@ -135,9 +132,9 @@ piglit_init(int argc, char **argv)
 	}
 
 	vk_draw(&vk_core, 0, &vk_rnd, vk_fb_color, 4, 0,
-		false, false, NULL, 0, 0, 0, w, h);
+		false, false, NULL, 0, 0, 0, piglit_width, piglit_height);
 
-	vk_copy_image_to_buffer(&vk_core, &vk_color_att, &vk_bo, w, h);
+	vk_copy_image_to_buffer(&vk_core, &vk_color_att, &vk_bo, piglit_width, piglit_height);
 
 	if (!gl_init()) {
 		fprintf(stderr, "Failed to initialize OpenGL.\n");
@@ -294,7 +291,7 @@ gl_init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER, gl_bo);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, piglit_width, piglit_height, 0, GL_RGBA, GL_FLOAT, 0);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 	glBindTexture(GL_TEXTURE_2D, 0);

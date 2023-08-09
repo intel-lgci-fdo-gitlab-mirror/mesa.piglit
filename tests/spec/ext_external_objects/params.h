@@ -29,9 +29,6 @@
 
 #include "interop.h"
 
-uint32_t w;
-uint32_t h;
-uint32_t d = 1;
 uint32_t num_samples = 1;
 uint32_t num_levels = 1;
 uint32_t num_layers = 1;
