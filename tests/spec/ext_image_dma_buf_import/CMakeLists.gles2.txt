@@ -23,6 +23,9 @@ if(PIGLIT_BUILD_DMA_BUF_TESTS)
 	piglit_add_executable(ext_image_dma_buf_import-export export.c sample_common.c image_common.c)
 	piglit_add_executable(ext_image_dma_buf_import-export-tex export-tex.c sample_common.c image_common.c)
 	piglit_add_executable(ext_image_dma_buf_import-reimport-bug reimport-bug.c sample_common.c image_common.c)
+
+	piglit_add_executable(ext_image_dma_buf_import-refcount-multithread refcount-multithread.c sample_common.c image_common.c)
+	target_link_libraries(ext_image_dma_buf_import-refcount-multithread pthread)
 endif()
 
 # vim: ft=cmake:

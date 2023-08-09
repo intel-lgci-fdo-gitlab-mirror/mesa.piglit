@@ -3223,6 +3223,7 @@ with profile.test_list.group_manager(
     g(['ext_image_dma_buf_import-export'], run_concurrent=False)
     g(['ext_image_dma_buf_import-export-tex'], run_concurrent=False)
     g(['ext_image_dma_buf_import-reimport-bug'], run_concurrent=False)
+    g(['ext_image_dma_buf_import-refcount-multithread'], run_concurrent=False)
 
 with profile.test_list.group_manager(
         PiglitGLTest,
