@@ -12,7 +12,7 @@
 f16vec3 test() {
 
 	float16_t x = 0.999HF;
-	float16_t i = 0.567HF;
+	f16vec3 i = f16vec3(0.567HF);
 
-	return modf(f16vec3(x), f16vec3(i));
+	return modf(f16vec3(x), i);
 }

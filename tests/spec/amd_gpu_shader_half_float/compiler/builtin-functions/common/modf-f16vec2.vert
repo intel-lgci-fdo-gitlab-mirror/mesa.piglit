@@ -12,7 +12,7 @@
 f16vec2 test() {
 
 	float16_t x = 0.999HF;
-	float16_t i = 0.567HF;
+	f16vec2 i = f16vec2(0.567HF);
 
-	return modf(f16vec2(x), f16vec2(i));
+	return modf(f16vec2(x), i);
 }
