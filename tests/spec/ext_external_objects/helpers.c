@@ -55,22 +55,7 @@ check_bound_fbo_status(void)
 {
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
-		switch(status) {
-		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-			fprintf(stderr, "GL FBO status: GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT\n");
-			break;
-		case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-			fprintf(stderr, "GL FBO status: GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS\n");
-			break;
-		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-			fprintf(stderr, "GL FBO status: GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT\n");
-			break;
-		case GL_FRAMEBUFFER_UNSUPPORTED:
-			fprintf(stderr, "GL FBO status: GL_FRAMEBUFFER_UNSUPPORTED\n");
-			break;
-		default:
-			fprintf(stderr, "GL FBO status: Unknown\n");
-		}
+		fprintf(stderr, "GL FBO status: %s\n", piglit_get_gl_enum_name(status));
 		return false;
 	}
 	return true;
