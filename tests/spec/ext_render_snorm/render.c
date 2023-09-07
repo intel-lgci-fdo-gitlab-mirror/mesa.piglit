@@ -107,18 +107,18 @@ value_for_format(const struct fmt_test *test, void *value)
 
 	char *v = value;
 	/* red */
-	v[0] = val;
+	v[0] = -val;
 	/* green */
 	if (test->bpp > 1) {
 		v[0] = 0;
-		v[1] = val;
+		v[1] = -val;
 	}
 	/* blue */
 	if (test->bpp > 2) {
-		v[0] = 0;
+		v[0] = -val;
 		v[1] = 0;
 		v[2] = val;
-		v[3] = val;
+		v[3] = -val;
 	}
 }
 
