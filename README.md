@@ -42,7 +42,7 @@ Optionally, you can install the following:
   - jsonstreams. A JSON stream writer for python.
     (https://jsonstreams.readthedocs.io/en/stable/)
   - VkRunner. A shader script testing tool for Vulkan.
-    (https://github.com/igalia/vkrunner)
+    (https://gitlab.freedesktop.org/mesa/vkrunner/)
 
 For testing the python framework using `py.test unittests/framework`
   - py.test. A python test framework, used for running the python framework
