@@ -4647,7 +4647,7 @@ piglit_display(void)
 					glFramebufferTexture2D(
 						target, attachments[num_attachments],
 						GL_TEXTURE_2D,
-						get_texture_binding(tex)->obj, 0);
+						tex == -1 ? 0 : get_texture_binding(tex)->obj, 0);
 
 					if (!piglit_check_gl_error(GL_NO_ERROR)) {
 						fprintf(stderr,
@@ -4656,13 +4656,15 @@ piglit_display(void)
 					}
 
 					num_attachments++;
+					if (tex != -1) {
+						w = get_texture_binding(tex)->width;
+						h = get_texture_binding(tex)->height;
+					}
 				}
 
 				if (target != GL_READ_FRAMEBUFFER)
 					glDrawBuffers(num_attachments, attachments);
 
-				w = get_texture_binding(tex)->width;
-				h = get_texture_binding(tex)->height;
 
 			} else if (parse_str(rest, "tex slice ", &rest)) {
 				GLenum tex_target;
