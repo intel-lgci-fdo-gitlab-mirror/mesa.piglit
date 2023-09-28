@@ -54,6 +54,7 @@ void
 piglit_init(int argc, char **argv)
 {
 	piglit_require_GLSL_version(120);
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS, 2);
 
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
