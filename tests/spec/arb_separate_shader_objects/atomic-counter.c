@@ -104,6 +104,7 @@ piglit_init(int argc, char **argv)
 	bool pass = true;
 	uint32_t counter = 0;
 
+	piglit_require_GLSL_version(150);
 	piglit_require_extension("GL_ARB_shader_atomic_counters");
 	piglit_require_extension("GL_ARB_separate_shader_objects");
 
