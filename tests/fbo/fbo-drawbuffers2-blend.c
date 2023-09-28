@@ -141,16 +141,11 @@ piglit_display(void)
 void
 piglit_init(int argc, char **argv)
 {
-	GLint num;
-
 	piglit_ortho_projection(piglit_width, piglit_height, GL_FALSE);
 
 	piglit_require_extension("GL_EXT_framebuffer_object");
 	piglit_require_extension("GL_ARB_draw_buffers");
 	piglit_require_extension("GL_EXT_draw_buffers2");
 	piglit_require_extension("GL_ARB_texture_non_power_of_two");
-
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS_ARB, &num);
-	if (num < 2)
-		piglit_report_result(PIGLIT_SKIP);
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS_ARB, 2);
 }

@@ -423,8 +423,6 @@ print_usage_and_exit(void)
 void
 piglit_init(int argc, char **argv)
 {
-	int max_draw_bufs;
-
 	prog_name = malloc((strlen(argv[0]) + 1));
 	assert(prog_name);
 	strcpy(prog_name, argv[0]);
@@ -438,12 +436,7 @@ piglit_init(int argc, char **argv)
 
 	piglit_require_gl_version(21);
 	piglit_require_extension("GL_ARB_framebuffer_object");
-
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS_ARB, &max_draw_bufs);
-	if (max_draw_bufs < 4) {
-		puts("At least 4 draw buffers are required.");
-		piglit_report_result(PIGLIT_SKIP);
-	}
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS_ARB, 4);
 
 	if (streq(test_name, "glClear")) {
 		run_test = &test_glClear;

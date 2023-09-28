@@ -131,13 +131,7 @@ piglit_display(void)
 void
 piglit_init(int argc, char **argv)
 {
-	GLint i;
-
 	piglit_require_extension("GL_EXT_framebuffer_object");
 	piglit_require_extension("GL_ARB_draw_buffers");
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS_ARB, &i);
-	if (i < 2) {
-		printf("2 draw buffers required, %d reported.\n", i);
-		piglit_report_result(PIGLIT_SKIP);
-	}
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS_ARB, 2);
 }

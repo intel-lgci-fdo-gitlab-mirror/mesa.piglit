@@ -90,7 +90,7 @@ test_buffers(GLuint rb0, GLuint samples0,
 void
 piglit_init(int argc, char **argv)
 {
-	GLint max_samples, max_draw_buffers;
+	GLint max_samples;
 	GLuint *rb, fb;
 	GLint *rb_samples;
 	bool pass = true;
@@ -102,12 +102,7 @@ piglit_init(int argc, char **argv)
 
 	piglit_require_extension("GL_EXT_framebuffer_multisample");
 	piglit_require_extension("GL_ARB_draw_buffers");
-
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &max_draw_buffers);
-	if (max_draw_buffers < 2) {
-		printf("test requires 2 draw buffers.\n");
-		piglit_report_result(PIGLIT_SKIP);
-	}
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS, 2);
 
 	glGetIntegerv(GL_MAX_SAMPLES, &max_samples);
 

@@ -138,16 +138,11 @@ piglit_display(void)
 void
 piglit_init(int argc, char **argv)
 {
-	GLint num;
-
 	piglit_require_extension("GL_EXT_framebuffer_object");
 	piglit_require_extension("GL_ATI_draw_buffers");
 	piglit_require_extension("GL_ARB_fragment_program");
 	piglit_require_extension("GL_ARB_vertex_program");
-
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS_ARB, &num);
-	if (num < 2)
-		piglit_report_result(PIGLIT_SKIP);
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS_ARB, 2);
 
 	piglit_compile_program(GL_FRAGMENT_PROGRAM_ARB, mrt_fp_string);
 }

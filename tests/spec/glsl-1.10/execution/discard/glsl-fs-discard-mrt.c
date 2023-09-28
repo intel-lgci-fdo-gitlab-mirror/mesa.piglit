@@ -180,16 +180,9 @@ piglit_display(void)
 void
 piglit_init(int argc, char **argv)
 {
-	GLint max_buffers;
-
 	piglit_require_GLSL();
 	piglit_require_extension("GL_ARB_explicit_attrib_location");
 	piglit_require_extension("GL_EXT_framebuffer_object");
-
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &max_buffers);
-	if (max_buffers == 1) {
-		fprintf(stderr, "Test requires 2 draw buffers\n");
-		piglit_report_result(PIGLIT_SKIP);
-	}
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS, 2);
 }
 

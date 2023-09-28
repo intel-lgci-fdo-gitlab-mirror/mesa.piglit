@@ -132,17 +132,10 @@ test()
 unsigned
 init()
 {
-	GLint num;
-
 	piglit_require_extension("GL_ARB_vertex_program");
 	piglit_require_extension("GL_ARB_fragment_program");
 	piglit_require_extension("GL_ARB_draw_buffers");
-
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS_ARB, &num);
-	if (num < 2) {
-		printf("Test requires 2 draw buffers, found %d\n", num);
-		piglit_report_result(PIGLIT_SKIP);
-	}
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS_ARB, 2);
 
 	mrt_vp = piglit_compile_program(GL_VERTEX_PROGRAM_ARB, mrt_vp_string);
 	mrt_fp = piglit_compile_program(GL_FRAGMENT_PROGRAM_ARB, mrt_fp_string);
