@@ -154,12 +154,13 @@ void piglit_require_not_extension(const char *name)
 	}
 }
 
-void piglit_require_draw_buffers(int count)
+void piglit_require_minimum_getinteger(GLenum pname, GLint req)
 {
-	GLint max_targets;
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &max_targets);
-	if (max_targets < 2) {
-		printf("Test requires GL_MAX_DRAW_BUFFERS >= %d\n", count);
+	GLint value = 0;
+	glGetIntegerv(pname, &value);
+	if (value < req) {
+		printf("Test requires %s >= %d, driver reports %d\n",
+		       piglit_get_gl_enum_name(pname), req, value);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 }

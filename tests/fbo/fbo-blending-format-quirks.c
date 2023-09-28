@@ -183,7 +183,7 @@ enum piglit_result piglit_display(void)
 void piglit_init(int argc, char **argv)
 {
 	piglit_require_extension("GL_EXT_framebuffer_object");
-	piglit_require_draw_buffers(2);
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS, 2);
 
 	glDisable(GL_DITHER);
 }
