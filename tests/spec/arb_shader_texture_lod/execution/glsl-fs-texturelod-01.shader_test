@@ -1,6 +1,6 @@
 [require]
 GLSL >= 1.20
-require GL_ARB_shader_texture_lod
+GL_ARB_shader_texture_lod
 
 [vertex shader]
 #version 120
