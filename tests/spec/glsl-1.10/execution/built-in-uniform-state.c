@@ -458,19 +458,27 @@ piglit_display(void)
 	       pass;
 
 	val[0] = DRAND();
+
+	/* Don't test infinity because shader comparisons with infinity are
+	 * undefined.
+	 */
+	float fog_scale;
+	do {
+		val[1] = DRAND();
+		val[2] = DRAND();
+		fog_scale = 1 / (val[2] - val[1]);
+	} while (isinf(fog_scale));
+
 	glFogf(GL_FOG_DENSITY, val[0]);
 	pass = check_shader_builtin(GL_FLOAT, val, "gl_Fog.density") && pass;
 
-	val[1] = DRAND();
 	glFogf(GL_FOG_START, val[1]);
 	pass = check_shader_builtin(GL_FLOAT, &val[1], "gl_Fog.start") &&
 	       pass;
 
-	val[2] = DRAND();
 	glFogf(GL_FOG_END, val[2]);
 	pass = check_shader_builtin(GL_FLOAT, &val[2], "gl_Fog.end") && pass;
 
-	const float fog_scale = 1 / (val[2] - val[1]);
 	pass = check_shader_builtin(GL_FLOAT, &fog_scale, "gl_Fog.scale") &&
 	       pass;
 
