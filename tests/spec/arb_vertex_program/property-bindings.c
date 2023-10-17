@@ -361,11 +361,19 @@ piglit_display(void)
 	glFogfv(GL_FOG_COLOR, val);
 	pass = check_prg_param(val, "state.fog.color") && pass;
 
-	random_vec4(val);
+	/* Don't test infinity because shader comparisons with infinity are
+	 * undefined.
+	 */
+	float fog_scale;
+	do {
+		random_vec4(val);
+		fog_scale = 1 / (val[2] - val[1]);
+	} while (isinf(fog_scale));
+
 	glFogf(GL_FOG_DENSITY, val[0]);
 	glFogf(GL_FOG_START, val[1]);
 	glFogf(GL_FOG_END, val[2]);
-	val[3] = 1 / (val[2] - val[1]);
+	val[3] = fog_scale;
 	pass = check_prg_param(val, "state.fog.params") && pass;
 
 	/* Clip Plane Property Bindings */
