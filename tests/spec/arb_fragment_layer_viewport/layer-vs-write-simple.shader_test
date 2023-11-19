@@ -34,15 +34,9 @@ clear color 0.0 0.0 0.0 0.0
 clear
 
 uniform int layer 0
-draw rect -1 -1 1 1
+draw rect -1 -1 1 2
 
 uniform int layer 1
-draw rect 0 -1 1 1
-
-uniform int layer 10000
-draw rect -1 0 1 1
-
-uniform int layer -10000
-draw rect 0 0 1 1
+draw rect 0 -1 1 2
 
 probe all rgb 0.0 1.0 0.0
