@@ -1,0 +1,79 @@
+# Simple UBO test with two stages using the same UBO.
+
+[require]
+GL >= 3.1
+GLSL >= 1.40
+GL_ARB_program_interface_query
+
+[vertex shader]
+
+#version 450
+
+layout (location = 0) in vec4 piglit_vertex;
+layout (location = 1) out vec4 vertexColor;
+
+
+layout (std140, binding = 5) uniform ComponentsBlock
+ {
+    vec4 c1;
+    vec2 c2;
+ } components;
+
+void main()
+{
+	vec4 fail_color = vec4(1.0, 0.0, 0.0, 1.0);
+	vertexColor = vec4(0.0, 1.0, 0.0, 1.0);
+
+	if (components.c1 != vec4(4575.7996643, 14191.6120546, -30199.3084764, -31303.4210269))
+	   vertexColor = fail_color;
+
+	if (components.c2 != vec2(-10231.1810483, 11729.6478218))
+	   vertexColor = fail_color;
+
+	gl_Position = piglit_vertex;
+}
+
+[fragment shader]
+
+#version 450
+
+layout (location = 0) out vec4 color;
+layout (location = 1) in vec4 vertexColor;
+layout (std140, binding = 5) uniform ComponentsBlock
+ {
+    vec4 c1;
+    vec2 c2;
+ } components;
+
+void main()
+{
+	vec4 fail_color = vec4(1.0, 0.0, 0.0, 1.0);
+	color = vec4(0.0, 1.0, 0.0, 1.0);
+
+	if (components.c1 != vec4(4575.7996643, 14191.6120546, -30199.3084764, -31303.4210269))
+	   color = fail_color;
+
+	if (components.c2 != vec2(-10231.1810483, 11729.6478218))
+	   color = fail_color;
+
+	if (vertexColor != vec4(0.0, 1.0, 0.0, 1.0))
+	   color = fail_color;
+}
+
+[test]
+clear color 1.0 0.0 0.0 0.0
+clear
+
+block binding 5
+block offset 0
+uniform vec4 ComponentsBlock.c1 4575.7996643 14191.6120546 -30199.3084764 -31303.4210269
+block offset 16
+uniform vec2 ComponentsBlock.c2 -10231.1810483 11729.6478218
+
+verify program_interface_query GL_UNIFORM_BLOCK ComponentsBlock GL_NUM_ACTIVE_VARIABLES 2
+verify program_interface_query GL_UNIFORM_BLOCK ComponentsBlock GL_BUFFER_DATA_SIZE 32
+
+verify program_query GL_ACTIVE_UNIFORMS 2
+
+draw rect -1 -1 2 2
+probe all rgba 0.0 1.0 0.0 1.0
