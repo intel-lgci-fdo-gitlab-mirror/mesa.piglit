@@ -38,14 +38,14 @@
 #include "piglit-util-gl.h"
 
 PIGLIT_GL_TEST_CONFIG_BEGIN
-	config.supports_gl_es_version = 31;
+	config.supports_gl_es_version = 30;
 	config.window_visual = PIGLIT_GL_VISUAL_RGBA;
 PIGLIT_GL_TEST_CONFIG_END
 
 #define PIGLIT_RESULT(x) x ? PIGLIT_PASS : PIGLIT_FAIL
 
 static const char vs_source[] =
-	"#version 310 es\n"
+	"#version 300 es\n"
 	"layout(location = 0) in highp vec4 vertex;\n"
 	"layout(location = 1) in highp vec4 uv;\n"
 	"out highp vec2 tex_coord;\n"
@@ -57,8 +57,8 @@ static const char vs_source[] =
 	"}\n";
 
 static const char fs_source[] =
-	"#version 310 es\n"
-	"layout(location = 0) uniform sampler2D texture;\n"
+	"#version 300 es\n"
+	"uniform sampler2D texture;\n"
 	"in highp vec2 tex_coord;\n"
 	"out highp vec4 color;\n"
 	"void main()\n"
@@ -235,7 +235,7 @@ test_format(const struct fmt_test *test)
 	bool pass = true;
 
 	glUseProgram(prog);
-	glUniform1i(0 /* explicit loc */, 0);
+	glUniform1i(glGetUniformLocation(prog, "texture"), 0);
 
 	/* Test glRenderbufferStorage. */
 	GLuint rbo = create_and_bind_rbo(test);
