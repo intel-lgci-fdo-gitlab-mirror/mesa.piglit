@@ -59,7 +59,7 @@ static enum test_type {
 	test_type_vs_gs,
 } test_type;
 
-static void parse_params();
+static void parse_params(int argc, char **argv);
 
 PIGLIT_GL_TEST_CONFIG_BEGIN
 
