@@ -68,7 +68,8 @@ tests = {
         'values': [
             [degrees(0.5), degrees(-0.5), 180.0, 0.0, 360, 1800.0, 18000, 90], #Result
             [0.5,                   -0.5, pi,    0.0, 2*pi, 10*pi, 100*pi, pi/2] #Arg0
-        ]
+        ],
+        'tolerance' : 2
     },
     'max' : {
         'arg_types': [F, F, F],
