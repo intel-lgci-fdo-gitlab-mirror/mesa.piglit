@@ -177,7 +177,8 @@ initialize_data()
                 glActiveTexture(GL_TEXTURE0 + t);
                 glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RED_INTEGER,
                                 GL_UNSIGNED_INT, tex_data[t]);
-                glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + t, tex[t], 0);
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + t,
+                                       GL_TEXTURE_2D, tex[t], 0);
         }
         assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 }
