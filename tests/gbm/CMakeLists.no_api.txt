@@ -11,4 +11,8 @@ if(PIGLIT_HAS_GBM_BO_GET_FD_FOR_PLANE AND LIBDRM_FOUND)
    piglit_add_executable(gbm-multi-plane gbm-multi-plane.c)
 endif()
 
+if(PIGLIT_HAS_GBM)
+   piglit_add_executable(gbm-device gbm-device.c)
+endif()
+
 # vim: ft=cmake:
