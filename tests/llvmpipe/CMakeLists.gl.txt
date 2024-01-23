@@ -17,7 +17,7 @@ link_libraries (
 
 find_package(Git)
 
-IF( GIT_FOUND )
+IF( EXISTS ${CMAKE_SOURCE_DIR}/.git AND GIT_FOUND )
 	EXECUTE_PROCESS( COMMAND "${GIT_EXECUTABLE}" -C "${CMAKE_SOURCE_DIR}" rev-parse HEAD
                          WORKING_DIRECTORY "${DIR}"
                          RESULT_VARIABLE   GIT_RESULT
