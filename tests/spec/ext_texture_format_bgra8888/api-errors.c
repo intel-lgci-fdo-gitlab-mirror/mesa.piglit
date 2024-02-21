@@ -41,11 +41,13 @@ PIGLIT_GL_TEST_CONFIG_END
 static bool
 run_test(void)
 {
-	GLuint tex;
+	GLuint tex, rb;
 	bool pass = true;
 
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
+	glGenRenderbuffers(1, &rb);
+	glBindRenderbuffer(GL_RENDERBUFFER, tex);
 	if (!piglit_check_gl_error(GL_NO_ERROR))
 		return false;
 
@@ -110,7 +112,13 @@ run_test(void)
 	if (!piglit_check_gl_error(GL_INVALID_OPERATION))
 		pass = false;
 
+	/* glRenderbufferStorage */
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_BGRA_EXT, 2, 2);
+	if (!piglit_check_gl_error(GL_NO_ERROR))
+		pass = false;
+
 	glDeleteTextures(1, &tex);
+	glDeleteRenderbuffers(1, &rb);
 
 	return pass;
 }
