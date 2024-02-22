@@ -39,7 +39,7 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 PIGLIT_GL_TEST_CONFIG_END
 
 static bool
-run_test(void)
+run_test(GLenum internalformat)
 {
 	GLuint tex, rb;
 	bool pass = true;
@@ -52,7 +52,7 @@ run_test(void)
 		return false;
 
 	/* glTexImage2D */
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, 2, 2, 0,
+	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 2, 2, 0,
 		     GL_BGRA_EXT, GL_UNSIGNED_BYTE, NULL);
 	if (!piglit_check_gl_error(GL_NO_ERROR))
 		pass = false;
@@ -66,14 +66,14 @@ run_test(void)
 			pass = false;
 
 		/* glTexImage2D, invalid format */
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, 2, 2, 0,
+		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 2, 2, 0,
 			     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		if (!piglit_check_gl_error(GL_INVALID_OPERATION))
 			pass = false;
 	}
 
 	/* glTexImage2D, invalid type */
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, 2, 2, 0,
+	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 2, 2, 0,
 		     GL_BGRA_EXT, GL_FLOAT, NULL);
 	if (!piglit_check_gl_error(GL_INVALID_OPERATION))
 		pass = false;
@@ -113,7 +113,7 @@ run_test(void)
 		pass = false;
 
 	/* glRenderbufferStorage */
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_BGRA_EXT, 2, 2);
+	glRenderbufferStorage(GL_RENDERBUFFER, internalformat, 2, 2);
 	if (!piglit_check_gl_error(GL_NO_ERROR))
 		pass = false;
 
@@ -126,7 +126,8 @@ run_test(void)
 enum piglit_result
 piglit_display(void)
 {
-	GLboolean pass = run_test();
+	GLboolean pass = run_test(GL_BGRA_EXT) &&
+	                 run_test(GL_BGRA8_EXT);
 
 	return pass ? PIGLIT_PASS : PIGLIT_FAIL;
 }
