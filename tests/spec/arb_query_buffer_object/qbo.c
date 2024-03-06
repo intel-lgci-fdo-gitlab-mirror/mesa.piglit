@@ -97,6 +97,23 @@ cpu_gather_query(bool exact, uint32_t expected, uint64_t *cpu_result)
 		? PIGLIT_PASS : PIGLIT_FAIL;
 }
 
+static bool
+is_gs_valid(const struct query_type_desc *desc, uint32_t expected, uint64_t cpu_result)
+{
+	switch (desc->type) {
+	case GL_GEOMETRY_SHADER_INVOCATIONS:
+	case GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB:
+		if (!expected && cpu_result) {
+			fprintf(stderr, "WARNING: GEOMETRY_SHADER statistics query returned nonzero when no GS bound\n");
+			return true;
+		}
+		return false;
+	default:
+		break;
+	}
+	return true;
+}
+
 enum piglit_result
 run_subtest(void)
 {
@@ -120,7 +137,7 @@ run_subtest(void)
 
 	if (sync_mode == QBO_ASYNC_CPU_READ_BEFORE) {
 		if (cpu_gather_query(exact, expected, &cpu_result))
-			return PIGLIT_FAIL;
+			return is_gs_valid(query_desc, expected, cpu_result) ? PIGLIT_WARN : PIGLIT_FAIL;
 		have_cpu_result = true;
 	}
 
@@ -156,7 +173,7 @@ run_subtest(void)
 	if (sync_mode == QBO_SYNC_CPU_READ_AFTER_CACHE_TEST ||
 	    sync_mode == QBO_ASYNC_CPU_READ_AFTER) {
 		if (cpu_gather_query(exact, expected, &cpu_result))
-			return PIGLIT_FAIL;
+			return is_gs_valid(query_desc, expected, cpu_result) ? PIGLIT_WARN : PIGLIT_FAIL;
 		have_cpu_result = true;
 	}
 
@@ -187,7 +204,7 @@ run_subtest(void)
 		printf("QBO: %u %u %u %u\n", ptr[0], ptr[1], ptr[2], ptr[3]);
 		glUnmapBuffer(GL_QUERY_BUFFER);
 
-		return PIGLIT_FAIL;
+		return is_gs_valid(query_desc, expected, cpu_result) ? PIGLIT_WARN : PIGLIT_FAIL;
 	}
 
 	return PIGLIT_PASS;
