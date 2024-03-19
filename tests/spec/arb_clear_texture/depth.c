@@ -40,10 +40,14 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 PIGLIT_GL_TEST_CONFIG_END
 
 static const struct format
-formats[] = {
+base_formats[] = {
 	{ GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 4 },
 	{ GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 4 },
 	{ GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 4 },
+};
+
+static const struct format
+float_formats[] = {
 	{ GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 4 },
 };
 
@@ -54,7 +58,11 @@ piglit_init(int argc, char **argv)
 
 	piglit_require_extension("GL_ARB_depth_texture");
 
-	pass = test_formats(formats, ARRAY_SIZE(formats));
+	pass = test_formats(base_formats, ARRAY_SIZE(base_formats));
+
+	if (piglit_is_extension_supported("GL_ARB_depth_buffer_float")) {
+		pass &= test_formats(float_formats, ARRAY_SIZE(float_formats));
+	}
 
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);
 }
