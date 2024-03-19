@@ -492,6 +492,7 @@ check_include_file(unistd.h    HAVE_UNISTD_H)
 check_include_file(fcntl.h     HAVE_FCNTL_H)
 check_include_file(linux/sync_file.h HAVE_LINUX_SYNC_FILE_H)
 check_include_file(endian.h    HAVE_ENDIAN_H)
+check_include_file(libgen.h    HAVE_LIBGEN_H)
 
 if(DEFINED PIGLIT_INSTALL_VERSION)
 	set(PIGLIT_INSTALL_VERSION_SUFFIX

@@ -52,8 +52,8 @@ extern "C" {
 #include <math.h>
 #include <float.h>
 
-#if defined(__APPLE__) || defined(__MINGW32__)
-#  include "libgen.h" // for basename
+#ifdef HAVE_LIBGEN_H
+#  include <libgen.h> // for basename
 #elif defined(_MSC_VER)
 
 static inline char *

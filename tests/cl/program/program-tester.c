@@ -31,9 +31,12 @@
 #include <inttypes.h>
 #include <math.h>
 #include <regex.h>
-#include <libgen.h>
 
 #include "piglit-framework-cl-program.h"
+
+#ifdef HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
 
 /* Regexes */
 
