@@ -3273,14 +3273,14 @@ static const char multisample_texture_fs_template[] =
 "#version 130\n"
 "#extension GL_ARB_sample_shading : enable\n"
 "in vec2 tex_coords;\n"
-"uniform sampler2DArray tex;\n"
+"uniform %ssampler2DArray tex;\n"
 "uniform int tex_depth;\n"
 "uniform int z;\n"
 "out %svec4 fragColor;\n"
 "void main()\n"
 "{\n"
 "	int layer = (gl_SampleID * tex_depth) + z;\n"
-"	fragColor = %stexture(tex, vec3(tex_coords, layer));\n"
+"	fragColor = texture(tex, vec3(tex_coords, layer));\n"
 "}\n";
 
 /**
