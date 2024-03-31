@@ -50,6 +50,17 @@ else()
 	message(FATAL_ERROR "Unsupported platform")
 endif()
 
+option(PIGLIT_SSE2 "Build with SSE2 support on 32-bit x86 architecture" ON)
+
+option(PIGLIT_USE_WAFFLE "Use Waffle in place of GLUT" ${DEFAULT_WAFFLE})
+
+option(PIGLIT_BUILD_GL_TESTS "Build tests for OpenGL" ON)
+option(PIGLIT_BUILD_GLES1_TESTS "Build tests for OpenGL ES1" ${DEFAULT_GLES_TESTS_BUILD})
+option(PIGLIT_BUILD_GLES2_TESTS "Build tests for OpenGL ES2" ${DEFAULT_GLES_TESTS_BUILD})
+option(PIGLIT_BUILD_GLES3_TESTS "Build tests for OpenGL ES3" ${DEFAULT_GLES_TESTS_BUILD})
+option(PIGLIT_BUILD_CL_TESTS "Build tests for OpenCL" OFF)
+option(PIGLIT_BUILD_VK_TESTS "Build tests for Vulkan" ${DEFAULT_VK_TESTS_BUILD})
+
 find_package(Threads)
 find_package(PNG)
 if(PNG_FOUND)
@@ -61,20 +72,9 @@ if(X11_FOUND)
 	add_definitions(-DPIGLIT_HAS_X11)
 endif()
 
-option(PIGLIT_SSE2 "Build with SSE2 support on 32-bit x86 architecture" ON)
-
-option(PIGLIT_BUILD_GL_TESTS "Build tests for OpenGL" ON)
-option(PIGLIT_BUILD_GLES1_TESTS "Build tests for OpenGL ES1" ${DEFAULT_GLES_TESTS_BUILD})
-option(PIGLIT_BUILD_GLES2_TESTS "Build tests for OpenGL ES2" ${DEFAULT_GLES_TESTS_BUILD})
-option(PIGLIT_BUILD_GLES3_TESTS "Build tests for OpenGL ES3" ${DEFAULT_GLES_TESTS_BUILD})
-option(PIGLIT_BUILD_CL_TESTS "Build tests for OpenCL" OFF)
-option(PIGLIT_BUILD_VK_TESTS "Build tests for Vulkan" ${DEFAULT_VK_TESTS_BUILD})
-
 if(PIGLIT_BUILD_GL_TESTS)
 	find_package(OpenGL REQUIRED)
 endif()
-
-option(PIGLIT_USE_WAFFLE "Use Waffle in place of GLUT" ${DEFAULT_WAFFLE})
 
 if(PIGLIT_USE_WAFFLE)
 	if (NOT WIN32)
