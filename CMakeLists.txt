@@ -153,20 +153,6 @@ if(PIGLIT_USE_WAFFLE)
 	add_definitions(-DWAFFLE_API_VERSION=0x0103)
 else()
 	find_package(GLUT REQUIRED)
-
-	# The 'REQUIRED' above correctly produces an error for
-	# OpenGL, but there's a bug involving FindGLUT.cmake
-	# that fails to produce the error as of CMake 2.8.5.
-	#
-	# Instead, CMake keeps going and eventually spams
-	# the console with a message for every target that used
-	# e.g. the ${GLUT_INCLUDE_DIR} variable. So it
-	# prints a line for basically every single test in piglit.
-	#
-	# Work around the bug and error out quickly here instead.
-	if (NOT GLUT_FOUND)
-		message(FATAL_ERROR "GLUT library not found")
-	endif()
 endif(PIGLIT_USE_WAFFLE)
 
 if(PIGLIT_BUILD_GLES1_TESTS AND (NOT PIGLIT_USE_WAFFLE OR NOT PIGLIT_BUILD_EGL_TESTS))
