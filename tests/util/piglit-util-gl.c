@@ -307,7 +307,7 @@ piglit_set_tolerance_for_bits(int rbits, int gbits, int bbits, int abits)
 	}
 }
 
-typedef union { GLfloat f; GLint i; } fi_type;
+typedef union { GLfloat f; GLint i; GLuint ui; } fi_type;
 
 /**
  * Convert a 4-byte float to a 2-byte half float.
@@ -396,6 +396,40 @@ piglit_half_from_float(float val)
 	return result;
 }
 
+/**
+ * Convert a 2-byte half float to a 4-byte float.
+ * Based on code from:
+ * http://www.opengl.org/discussion_boards/ubb/Forum3/HTML/008786.html
+ *
+ * Taken from Mesa.
+ */
+float
+piglit_float_from_half(unsigned short val)
+{
+	fi_type infnan;
+	fi_type magic;
+	fi_type f32;
+
+	infnan.ui = 0x8f << 23;
+	infnan.f = 65536.0f;
+	magic.ui  = 0xef << 23;
+
+	/* Exponent / Mantissa */
+	f32.ui = (val & 0x7fff) << 13;
+
+	/* Adjust */
+	f32.f *= magic.f;
+	/* XXX: The magic mul relies on denorms being available */
+
+	/* Inf / NaN */
+	if (f32.f >= infnan.f)
+		f32.ui |= 0xff << 23;
+
+	/* Sign */
+	f32.ui |= (uint32_t)(val & 0x8000) << 16;
+
+	return f32.f;
+}
 
 /**
  * Return block size info for a specific texture compression format.

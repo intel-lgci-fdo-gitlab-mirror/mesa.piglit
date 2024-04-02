@@ -260,6 +260,7 @@ void piglit_draw_rect_from_arrays(const void *verts, const void *tex,
 				  bool use_patches, unsigned instance_count);
 
 unsigned short piglit_half_from_float(float val);
+float piglit_float_from_half(unsigned short val);
 
 /**
  * Wrapper for piglit_half_from_float() which allows using an exact
