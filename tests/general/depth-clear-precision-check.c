@@ -34,6 +34,8 @@ const struct piglit_subtest subtests[];
 enum piglit_result test(void *data);
 static struct piglit_gl_test_config *piglit_config;
 
+#define ftoh(x) (piglit_float_from_half(piglit_half_from_float(x)))
+
 PIGLIT_GL_TEST_CONFIG_BEGIN
 
 	piglit_config = &config;
@@ -216,6 +218,9 @@ test(void *data)
 		float fdepth = depth / (float)maxStoreableValue;
 
 		assert(maxStoreableValue * fdepth == depth);
+
+		if (numOfBits < 32)
+			fdepth = ftoh(depth / (float)maxStoreableValue);
 
 		pass = check_color(fdepth);
 
