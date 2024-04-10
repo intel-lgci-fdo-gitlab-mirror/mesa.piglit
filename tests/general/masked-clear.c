@@ -213,6 +213,48 @@ test_stencil_masking(void)
 	return passed;
 }
 
+static bool
+test_depth_stencil_buffer_masking(void)
+{
+	bool passed = true;
+	GLuint stencil;
+	GLfloat depth;
+
+	/* clear depth and stencil */
+	glDepthMask(GL_TRUE);
+	glClearDepth(1.0);
+	glStencilMask(~0);
+	glClearStencil(1);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	/* clear stencil only */
+	glClearDepth(0.0);
+	glClear(GL_STENCIL_BUFFER_BIT);
+
+	/* read 1x1 image at (x,y)=(4,4); */
+	glReadPixels(4, 4, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+
+	/* check that it does not affect depth */
+	if (depth != 1.0) {
+		passed = false;
+		failZ(1.0, depth);
+	}
+
+	/* clear depth only */
+	glClearStencil(0);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	/* read 1x1 image at (x,y)=(4,4); */
+	glReadPixels(4, 4, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &stencil);
+
+	/* check that it does not affect stencil */
+	if (stencil != 1) {
+		passed = false;
+		failStencil(1, stencil);
+	}
+
+	return passed;
+}
 
 enum piglit_result
 piglit_display(void)
@@ -226,6 +268,8 @@ piglit_display(void)
 	pass = test_depth_masking() && pass;
 
 	pass = test_stencil_masking() && pass;
+
+	pass = test_depth_stencil_buffer_masking() && pass;
 
 	return pass ? PIGLIT_PASS : PIGLIT_FAIL;
 }
