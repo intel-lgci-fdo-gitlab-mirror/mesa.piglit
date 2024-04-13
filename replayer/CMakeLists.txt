@@ -37,6 +37,8 @@ set(piglit_replayer_depends
 	${CMAKE_SOURCE_DIR}/replayer/replayer.py
 	)
 
+file(MAKE_DIRECTORY ${piglit_BINARY_DIR}/bin)
+
 add_custom_command(
 	OUTPUT ${piglit_replayer_outputs}
 	DEPENDS ${piglit_replayer_depends}
