@@ -88,7 +88,7 @@ set_state(int buffer,
 	}
 
 	if (test_dlist) {
-		glEndList(list);
+		glEndList();
 		glCallList(list);
 		glDeleteLists(list, 1);
 	}
@@ -133,7 +133,7 @@ set_state_all_buffers(GLenum srcRGB, GLenum srcA,
 	}
 
 	if (test_dlist) {
-		glEndList(list);
+		glEndList();
 		glCallList(list);
 		glDeleteLists(list, 1);
 	}
