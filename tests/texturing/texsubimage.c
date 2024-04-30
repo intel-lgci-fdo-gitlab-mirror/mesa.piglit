@@ -257,7 +257,8 @@ equal_images(GLenum target,
 	     const GLubyte *testImg,
 	     GLuint w, GLuint h, GLuint d,
 	     GLuint tx, GLuint ty, GLuint tz,
-	     GLuint tw, GLuint th, GLuint td)
+	     GLuint tw, GLuint th, GLuint td,
+             unsigned bits)
 {
 	switch (target) {
 	case GL_TEXTURE_1D:
@@ -274,7 +275,8 @@ equal_images(GLenum target,
 	return piglit_equal_images_update_rgba8(original_ref, updated_ref, testImg,
 						w, h, d,
 						tx, ty, tz, tw, th, td,
-						8);
+                                                /* the function can't handle more than 8 */
+						MIN2(bits, 8));
 }
 
 /**
@@ -342,7 +344,7 @@ create_texture(GLenum target,
 }
 
 static bool
-test_region(GLuint pbo, GLenum target, GLenum internal_format,
+test_region(GLuint pbo, GLenum target, GLenum internal_format, unsigned bits,
 	    const unsigned char *original_img,
 	    const unsigned char *original_ref,
 	    const unsigned char *updated_img,
@@ -399,7 +401,7 @@ test_region(GLuint pbo, GLenum target, GLenum internal_format,
 			  original_ref, updated_ref, test_img,
 			  w, h, d,
 			  region->tx, region->ty, region->tz,
-			  region->tw, region->th, region->td)) {
+			  region->tw, region->th, region->td, bits)) {
 		printf("texsubimage failed\n");
 		printf("  target: %s\n", piglit_get_gl_enum_name(target));
 		printf("  internal format: %s\n",
@@ -432,7 +434,7 @@ test_region(GLuint pbo, GLenum target, GLenum internal_format,
  * \param intFormat  the internal texture format
  */
 static GLboolean
-test_format(GLenum target, GLenum intFormat,
+test_format(GLenum target, GLenum intFormat, unsigned bits,
 	    unsigned w, unsigned h, unsigned d,
 	    const struct sub_region *regions, unsigned num_regions)
 {
@@ -498,7 +500,7 @@ test_format(GLenum target, GLenum intFormat,
 	glDeleteTextures(1, &tex);
 
 	for (t = 0; t < num_regions; t++) {
-		if (!test_region(pbo, target, intFormat,
+		if (!test_region(pbo, target, intFormat, bits,
 				 original_img, original_ref,
 				 updated_img, updated_ref,
 				 w, h, d, &regions[t])) {
@@ -587,6 +589,7 @@ test_formats(GLenum target, unsigned w, unsigned h, unsigned d)
 
 			if (!test_format(target,
 					 set->format[j].internalformat,
+                                         set->format[j].min_bits ? set->format[j].min_bits : 8,
 		                         w, h, d,
 					 regions, ARRAY_SIZE(regions))) {
 				pass = GL_FALSE;
@@ -705,7 +708,7 @@ piglit_display(void)
 
 		if (manual_dispatch.enabled) {
 			pass = test_format(test_targets[i],
-					   manual_dispatch.format,
+					   manual_dispatch.format, 8,
 					   w, h, d,
 					   &manual_dispatch.region, 1);
 		} else {
