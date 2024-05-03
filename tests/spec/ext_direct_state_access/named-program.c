@@ -103,7 +103,7 @@ test_NamedProgramStringEXT(void* data)
 		code);
 
 	if (use_display_list != GL_NONE)
-		glEndList(list);
+		glEndList();
 
 	if (use_display_list == GL_COMPILE) {
 		pass = !glIsProgramARB(program) && pass;
@@ -180,7 +180,7 @@ test_NamedProgramLocalParameter4fEXT(void* data)
 		}
 
 		if (use_display_list != GL_NONE) {
-			glEndList(list);
+			glEndList();
 		}
 
 		/* Re-read values */
@@ -280,7 +280,7 @@ test_NamedProgramLocalParameter4dEXT(void* data)
 		}
 
 		if (use_display_list != GL_NONE) {
-			glEndList(list);
+			glEndList();
 		}
 
 		/* Re-read values */
