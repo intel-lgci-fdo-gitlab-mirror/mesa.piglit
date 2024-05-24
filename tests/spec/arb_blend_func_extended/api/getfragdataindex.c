@@ -119,7 +119,7 @@ piglit_display(void)
 
 void piglit_init(int argc, char **argv)
 {
-	GLint max_draw_buffers, max_dual_source;
+	GLint max_dual_source;
 	GLuint prog;
 	GLuint vs;
 	GLuint fs, fs2, fs3;
@@ -128,22 +128,12 @@ void piglit_init(int argc, char **argv)
 #ifdef PIGLIT_USE_OPENGL
 	piglit_require_gl_version(30);
 	piglit_require_extension("GL_ARB_blend_func_extended");
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS, 8);
 #else // PIGLIT_USE_OPENGL_ES3
 	piglit_require_extension("GL_EXT_blend_func_extended");
+	piglit_require_minimum_getinteger(GL_MAX_DRAW_BUFFERS, 4);
 #endif
 
-	/* This test needs some number of draw buffers, so make sure the
-	 * implementation isn't broken.  This enables the test to generate a
-	 * useful failure message.
-	 */
-	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &max_draw_buffers);
-	if (max_draw_buffers < 8) {
-		fprintf(stderr,
-			"OpenGL 3.0 requires GL_MAX_DRAW_BUFFERS >= 8.  "
-			"Only got %d!\n",
-			max_draw_buffers);
-		piglit_report_result(PIGLIT_FAIL);
-	}
 	glGetIntegerv(GL_MAX_DUAL_SOURCE_DRAW_BUFFERS, &max_dual_source);
 	if (max_dual_source < 1) {
 		fprintf(stderr,
