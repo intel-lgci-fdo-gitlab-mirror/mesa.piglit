@@ -81,7 +81,7 @@ main(int argc, char *argv[])
          * and event_loop never calls draw.
          */
 	if (!draw_called) {
-		fprintf(stderr, "could not init such EGLconfig, skip ...\n");
+		fprintf(stdout, "Could not init such EGLconfig, skipping the test.\n");
 		piglit_report_result(PIGLIT_SKIP);
 	}
 
