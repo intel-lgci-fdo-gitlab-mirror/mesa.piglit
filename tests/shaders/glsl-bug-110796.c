@@ -63,6 +63,11 @@ int main(int argc, char **argv)
 	char frag_shader_text1[256];
 	char frag_shader_text2[386];
 
+	if (!piglit_is_gles() || piglit_get_gl_version() < 32) {
+		printf("Test requires at least ES 3.2.");
+		piglit_report_result(PIGLIT_SKIP);
+	}
+
 	srand(time(NULL));
 
 	snprintf(frag_shader_text1, sizeof(frag_shader_text1),
