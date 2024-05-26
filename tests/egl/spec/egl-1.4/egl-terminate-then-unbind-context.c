@@ -80,8 +80,7 @@ main(int argc, char **argv)
 	 * creating any EGLSurface. To call eglMakeCurrent() without a surface
 	 * requires EGL_KHR_surfaceless_context.
 	 */
-	if (!piglit_is_egl_extension_supported(dpy, "EGL_KHR_surfaceless_context"))
-		piglit_report_result(PIGLIT_SKIP);
+	piglit_require_egl_extension(dpy, "EGL_KHR_surfaceless_context");
 
 	ok = eglChooseConfig(dpy, NULL, &config, 1, &num_configs);
 	if (!ok)
