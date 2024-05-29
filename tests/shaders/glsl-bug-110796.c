@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 	ctx1 = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, attr);
 
 	if (!ctx1) {
-		fprintf(stderr, "glsl-bug-110796: create contexts failed\n");
+		fprintf(stderr, "glsl-bug-110796: first context creation failed\n");
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 	ctx2 = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, attr);
 
 	if (!ctx2) {
-		fprintf(stderr, "glsl-bug-110796: create contexts failed\n");
+		fprintf(stderr, "glsl-bug-110796: second context creation failed\n");
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
