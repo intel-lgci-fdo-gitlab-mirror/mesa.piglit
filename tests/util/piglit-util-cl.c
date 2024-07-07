@@ -666,15 +666,14 @@ piglit_cl_get_device_ids(cl_platform_id platform_id, cl_device_type device_type,
 			                       &num_device_ids);
 			if(errNo == CL_DEVICE_NOT_FOUND) {
 				*device_ids = malloc(0);
-				return 0;
+				goto fail;
 			}
 			if(errNo != CL_SUCCESS) {
-				free(platform_ids);
 				*device_ids = malloc(0);
 				fprintf(stderr,
 				        "Could not get number of devices: %s\n",
 				        piglit_cl_get_error_name(errNo));
-				return 0;
+				goto fail;
 			}
 
 			/* get device list */
@@ -686,13 +685,12 @@ piglit_cl_get_device_ids(cl_platform_id platform_id, cl_device_type device_type,
 				                       *device_ids,
 				                       NULL);
 				if(errNo != CL_SUCCESS) {
-					free(platform_ids);
 					free(device_ids);
 					*device_ids = malloc(0);
 					fprintf(stderr,
 					        "Could not get get device list: %s\n",
 					        piglit_cl_get_error_name(errNo));
-					return 0;
+					goto fail;
 				}
 			}
 
@@ -702,12 +700,13 @@ piglit_cl_get_device_ids(cl_platform_id platform_id, cl_device_type device_type,
 		}
 	}
 
-	free(platform_ids);
-
 	/* received invalid platform_id */
 	fprintf(stderr, "Trying to get a device from invalid platform_id\n");
 
 	*device_ids = malloc(0);
+
+ fail:
+	free(platform_ids);
 	return 0;
 }
 
