@@ -26,6 +26,9 @@
 import argparse
 import os
 import itertools
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules import utils
@@ -64,12 +67,16 @@ def generate_compilation_tests(type_name, shader, ver, names_only):
 
     if not names_only:
         with open(filename, 'w') as test_file:
-            test_file.write(TEMPLATES.get_template(
-                'template.{0}.mako'.format(shader)).render_unicode(
-                    glsl_version='{}.{}'.format(ver[0], ver[1:]),
-                    glsl_version_int=ver,
-                    type_name=type_name,
-                    extra_params=',0.0' if type_name in ['dvec2', 'dvec3'] else ''))
+            try:
+                test_file.write(TEMPLATES.get_template(
+                    'template.{0}.mako'.format(shader)).render_unicode(
+                        glsl_version='{}.{}'.format(ver[0], ver[1:]),
+                        glsl_version_int=ver,
+                        type_name=type_name,
+                        extra_params=',0.0' if type_name in ['dvec2', 'dvec3'] else ''))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 def all_compilation_tests(names_only):

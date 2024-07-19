@@ -22,9 +22,11 @@
 # IN THE SOFTWARE.
 
 import os.path
+import sys
 from textwrap import dedent
 
 from mako.template import Template
+from mako import exceptions
 
 from modules import utils
 
@@ -65,7 +67,11 @@ def gen(src, tests):
         print(t['path'])
         utils.safe_makedirs(os.path.dirname(t['path']))
         with open(t['path'], 'w') as f:
-            f.write(template.render(**t))
+            try:
+                f.write(template.render(**t))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 def gen_execution(src, tests):

@@ -26,6 +26,9 @@
 import argparse
 import os
 import itertools
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules import utils
@@ -80,14 +83,18 @@ def generate(type_name, mode, interface_block, struct, array, ver, names_only):
 
     if not names_only:
         with open(filename, 'w') as test_file:
-            test_file.write(TEMPLATES.get_template(
-                'template.frag.mako').render_unicode(
-                    ver=ver,
-                    mode=mode,
-                    type_name=type_name,
-                    interface_block=interface_block,
-                    struct=struct,
-                    array=array))
+            try:
+                test_file.write(TEMPLATES.get_template(
+                    'template.frag.mako').render_unicode(
+                        ver=ver,
+                        mode=mode,
+                        type_name=type_name,
+                        interface_block=interface_block,
+                        struct=struct,
+                        array=array))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 def create_tests(type_names, glsl_vers, names_only):

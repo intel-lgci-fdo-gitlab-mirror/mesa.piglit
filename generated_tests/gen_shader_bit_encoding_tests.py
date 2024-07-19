@@ -23,7 +23,10 @@
 
 import struct
 import os
+import sys
 from operator import neg
+
+from mako import exceptions
 
 from templates import template_file
 from modules import utils
@@ -161,18 +164,22 @@ def main():
                         in_modifier_func = '-abs'
 
                     with open(filename, 'w') as f:
-                        f.write(TEMPLATE.render_unicode(
-                            version=version,
-                            extensions=extensions,
-                            execution_stage=execution_stage,
-                            func=func,
-                            modifier_func=modifier_func,
-                            in_modifier_func=in_modifier_func,
-                            in_func=attrib['in_func'],
-                            out_func=attrib['out_func'],
-                            input_type=attrib['input'],
-                            output_type=attrib['output'],
-                            test_data=TEST_DATA))
+                        try:
+                            f.write(TEMPLATE.render_unicode(
+                                version=version,
+                                extensions=extensions,
+                                execution_stage=execution_stage,
+                                func=func,
+                                modifier_func=modifier_func,
+                                in_modifier_func=in_modifier_func,
+                                in_func=attrib['in_func'],
+                                out_func=attrib['out_func'],
+                                input_type=attrib['input'],
+                                output_type=attrib['output'],
+                                test_data=TEST_DATA))
+                        except:
+                            print(exceptions.text_error_template().render(), file=sys.stderr)
+                            raise
 
 
 if __name__ == '__main__':

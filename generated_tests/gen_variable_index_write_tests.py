@@ -30,6 +30,9 @@ fragment shader stage or the vertex shader stage.
 import copy
 import itertools
 import os
+import sys
+
+from mako import exceptions
 
 from modules import utils, glsl
 from templates import template_dir
@@ -233,7 +236,11 @@ def make_vs(name, params):
     dirname = _DIRNAME.format(params.formated_version)
     utils.safe_makedirs(dirname)
     with open(os.path.join(dirname, name), 'w') as f:
-        f.write(_VS_TEMPLATE.render_unicode(params=params))
+        try:
+            f.write(_VS_TEMPLATE.render_unicode(params=params))
+        except:
+            print(exceptions.text_error_template().render(), file=sys.stderr)
+            raise
     print(name)
 
 
@@ -242,7 +249,11 @@ def make_fs(name, params):
     dirname = _DIRNAME.format(params.formated_version)
     utils.safe_makedirs(dirname)
     with open(os.path.join(dirname, name), 'w') as f:
-        f.write(_FS_TEMPLATE.render_unicode(params=params))
+        try:
+            f.write(_FS_TEMPLATE.render_unicode(params=params))
+        except:
+            print(exceptions.text_error_template().render(), file=sys.stderr)
+            raise
     print(name)
 
 

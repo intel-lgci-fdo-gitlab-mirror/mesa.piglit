@@ -20,6 +20,9 @@
 # SOFTWARE.
 
 import os
+import sys
+
+from mako import exceptions
 
 from templates import template_file
 from modules import utils
@@ -40,7 +43,11 @@ def main():
         name = os.path.join(dirname, 'outerProduct-{0}.vert'.format(type_))
         print(name)
         with open(name, 'w+') as f:
-            f.write(TEMPLATE.render_unicode(type=type_))
+            try:
+                f.write(TEMPLATE.render_unicode(type=type_))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 if __name__ == '__main__':

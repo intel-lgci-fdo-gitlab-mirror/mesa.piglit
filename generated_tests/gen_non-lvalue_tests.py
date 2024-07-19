@@ -23,6 +23,9 @@
 
 import os
 import itertools
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules import utils
@@ -66,14 +69,18 @@ def generate(dirname, type_name, op, usage, shader_target):
 
     print(filename)
     with open(filename, 'w') as f:
-        f.write(TEMPLATES.get_template(
-            '{0}.glsl_parser_test.mako'.format(usage)).render_unicode(
-                type_name=type_name,
-                mode=mode,
-                dest=dest,
-                components=components,
-                var_as_vec4=var_as_vec4,
-                op=op))
+        try:
+            f.write(TEMPLATES.get_template(
+                '{0}.glsl_parser_test.mako'.format(usage)).render_unicode(
+                    type_name=type_name,
+                    mode=mode,
+                    dest=dest,
+                    components=components,
+                    var_as_vec4=var_as_vec4,
+                    op=op))
+        except:
+            print(exceptions.text_error_template().render(), file=sys.stderr)
+            raise
 
 
 def all_tests():

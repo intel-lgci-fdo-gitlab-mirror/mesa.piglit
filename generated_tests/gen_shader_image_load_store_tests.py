@@ -22,6 +22,9 @@
 # IN THE SOFTWARE.
 
 import os.path
+import sys
+
+from mako import exceptions
 from mako.template import Template
 from textwrap import dedent
 
@@ -147,7 +150,11 @@ def gen(name, src, tests):
         utils.safe_makedirs(dirname)
 
         with open(filename, 'w') as f:
-            f.write(template.render(header = gen_header, **t))
+            try:
+                f.write(template.render(header = gen_header, **t))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 shader_stages = [

@@ -28,7 +28,9 @@ import argparse
 import itertools
 import os
 import struct
+import sys
 
+from mako import exceptions
 import numpy as np
 
 from templates import template_dir
@@ -570,13 +572,17 @@ class RegularTestTuple(TestTuple):
 
         if not self._names_only:
             with open(filename, 'w') as test_file:
-                test_file.write(TEMPLATES.get_template(
-                    'compiler.{}.mako'.format(self._stage)).render_unicode(
-                        ver=self._ver,
-                        extensions=self._extensions,
-                        from_type=from_type,
-                        to_type=to_type,
-                        converted_from=converted_from))
+                try:
+                    test_file.write(TEMPLATES.get_template(
+                        'compiler.{}.mako'.format(self._stage)).render_unicode(
+                            ver=self._ver,
+                            extensions=self._extensions,
+                            from_type=from_type,
+                            to_type=to_type,
+                            converted_from=converted_from))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
 
     def _gen_exec_test(self, from_type, to_type,
                        uniform_from_type, uniform_to_type,
@@ -590,17 +596,21 @@ class RegularTestTuple(TestTuple):
 
         if not self._names_only:
             with open(filename, 'w') as test_file:
-                test_file.write(TEMPLATES.get_template(
-                    'execution.{}.shader_test.mako'.format(self._stage)).render_unicode(
-                        ver=self._ver,
-                        extensions=self._extensions,
-                        amount=self._amount,
-                        from_type=from_type,
-                        to_type=to_type,
-                        converted_from=converted_from,
-                        uniform_from_type=uniform_from_type,
-                        uniform_to_type=uniform_to_type,
-                        conversions=conversions))
+                try:
+                    test_file.write(TEMPLATES.get_template(
+                        'execution.{}.shader_test.mako'.format(self._stage)).render_unicode(
+                            ver=self._ver,
+                            extensions=self._extensions,
+                            amount=self._amount,
+                            from_type=from_type,
+                            to_type=to_type,
+                            converted_from=converted_from,
+                            uniform_from_type=uniform_from_type,
+                            uniform_to_type=uniform_to_type,
+                            conversions=conversions))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
 
     def _gen_to_target(self):
         converted_from = 'from'
@@ -768,18 +778,22 @@ class ZeroSignTestTuple(TestTuple):
 
         if not self._names_only:
             with open(filename, 'w') as test_file:
-                test_file.write(TEMPLATES.get_template(
-                    'execution-zero-sign.{}.shader_test.mako'.format(
-                        self._stage)).render_unicode(
-                            ver=self._ver,
-                            extensions=self._extensions,
-                            amount=self._amount,
-                            from_type=from_type,
-                            to_type=to_type,
-                            converted_from=converted_from,
-                            uniform_from_type=uniform_from_type,
-                            uniform_to_type=uniform_to_type,
-                            conversions=conversions))
+                try:
+                    test_file.write(TEMPLATES.get_template(
+                        'execution-zero-sign.{}.shader_test.mako'.format(
+                            self._stage)).render_unicode(
+                                ver=self._ver,
+                                extensions=self._extensions,
+                                amount=self._amount,
+                                from_type=from_type,
+                                to_type=to_type,
+                                converted_from=converted_from,
+                                uniform_from_type=uniform_from_type,
+                                uniform_to_type=uniform_to_type,
+                                conversions=conversions))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
 
     def _gen_to_target(self):
         if self._ver == '410':

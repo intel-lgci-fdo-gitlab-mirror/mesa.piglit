@@ -39,6 +39,7 @@ import sys
 from collections import namedtuple
 from math import copysign, fabs, fmod, frexp, isinf, isnan, modf
 
+from mako import exceptions
 from numpy import int8, int16, uint8, uint16, uint32, float32
 
 from templates import template_dir
@@ -1030,7 +1031,11 @@ class ShaderTest(object):
         utils.safe_makedirs(dirname)
 
         with open(self.filename, "w") as f:
-            f.write(self.__template.render_unicode(func=self.__func_info))
+            try:
+                f.write(self.__template.render_unicode(func=self.__func_info))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 def main():

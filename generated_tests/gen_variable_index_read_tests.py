@@ -23,6 +23,9 @@
 
 import os
 import itertools
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules.utils import lazy_property, safe_makedirs
@@ -148,7 +151,11 @@ def make_fs(name, params):
     dirname = DIRNAME.format(params.formated_version)
     safe_makedirs(dirname)
     with open(os.path.join(dirname, name), 'w') as f:
-        f.write(FS_TEMPLATE.render_unicode(params=params))
+        try:
+            f.write(FS_TEMPLATE.render_unicode(params=params))
+        except:
+            print(exceptions.text_error_template().render(), file=sys.stderr)
+            raise
     print(name)
 
 
@@ -157,7 +164,11 @@ def make_vs(name, params):
     dirname = DIRNAME.format(params.formated_version)
     safe_makedirs(dirname)
     with open(os.path.join(dirname, name), 'w') as f:
-        f.write(VS_TEMPLATE.render_unicode(params=params))
+        try:
+            f.write(VS_TEMPLATE.render_unicode(params=params))
+        except:
+            print(exceptions.text_error_template().render(), file=sys.stderr)
+            raise
     print(name)
 
 

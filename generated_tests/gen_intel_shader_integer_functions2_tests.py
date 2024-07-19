@@ -22,10 +22,12 @@
 # DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function, division, absolute_import
-import struct
 import os
 import numpy as np
 import random
+import sys
+
+from mako import exceptions
 
 from templates import template_file
 from modules import utils
@@ -784,16 +786,21 @@ def main():
                 extension_list += attrib['extensions']
 
             with open(filename, 'w') as f:
-                f.write(TEMPLATE.render_unicode(
-                    execution_stage=execution_stage,
-                    version=attrib['version'],
-                    extensions=sorted(extension_list),
-                    input_type=attrib['input'],
-                    output_type=attrib['output'],
-                    sources=attrib['sources'](),
-                    results=attrib['results'](attrib['sources'](), attrib['operator']),
-                    func=attrib['func']
-                ))
+                try:
+                    f.write(TEMPLATE.render_unicode(
+                        execution_stage=execution_stage,
+                        version=attrib['version'],
+                        extensions=sorted(extension_list),
+                        input_type=attrib['input'],
+                        output_type=attrib['output'],
+                        sources=attrib['sources'](),
+                        results=attrib['results'](attrib['sources'](), attrib['operator']),
+                        func=attrib['func']
+                    ))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
+
     return
 
 if __name__ == '__main__':

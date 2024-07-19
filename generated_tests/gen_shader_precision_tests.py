@@ -53,6 +53,9 @@ from builtin_function import *
 import os
 import numpy
 import struct
+import sys
+
+from mako import exceptions
 
 from templates import template_file
 
@@ -246,16 +249,20 @@ def main():
                 invocation = signature.template.format( *['arg{0}'.format(i)
                                                         for i in range(len(signature.argtypes))])
                 with open(output_filename, 'w') as f:
-                    f.write(template.render_unicode( signature=signature,
-                                                     is_complex_tolerance=_is_sequence(tolerance),
-                                                     complex_tol_type=signature.rettype,
-                                                     test_vectors=refined_test_vectors,
-                                                     invocation=invocation,
-                                                     num_elements=num_elements,
-                                                     indexers=indexers,
-                                                     shader_runner_type=shader_runner_type,
-                                                     shader_runner_format=shader_runner_format,
-                                                     column_major_values=column_major_values ))
+                    try:
+                        f.write(template.render_unicode( signature=signature,
+                                                        is_complex_tolerance=_is_sequence(tolerance),
+                                                        complex_tol_type=signature.rettype,
+                                                        test_vectors=refined_test_vectors,
+                                                        invocation=invocation,
+                                                        num_elements=num_elements,
+                                                        indexers=indexers,
+                                                        shader_runner_type=shader_runner_type,
+                                                        shader_runner_format=shader_runner_format,
+                                                        column_major_values=column_major_values ))
+                    except:
+                        print(exceptions.text_error_template().render(), file=sys.stderr)
+                        raise
 
 if __name__ == "__main__":
     main()

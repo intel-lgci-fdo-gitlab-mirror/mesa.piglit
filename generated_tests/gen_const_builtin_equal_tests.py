@@ -21,8 +21,11 @@
 
 """ Generate tests for builtin const equality tests """
 
-import re
 import os
+import re
+import sys
+
+from mako import exceptions
 
 from templates import template_file
 from modules import utils
@@ -85,8 +88,12 @@ def main():
         print(name)
 
         with open(name, 'w') as f:
-            f.write(TEMPLATE.render_unicode(
-                func='equal', input=x[0:2], expected=x[2]))
+            try:
+                f.write(TEMPLATE.render_unicode(
+                    func='equal', input=x[0:2], expected=x[2]))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
         # make notEqual tests
         name = os.path.join(
@@ -102,8 +109,12 @@ def main():
         print(name)
 
         with open(name, 'w') as f:
-            f.write(TEMPLATE.render_unicode(
-                func='notEqual', input=x[0:2], expected=expected))
+            try:
+                f.write(TEMPLATE.render_unicode(
+                    func='notEqual', input=x[0:2], expected=expected))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 if __name__ == "__main__":

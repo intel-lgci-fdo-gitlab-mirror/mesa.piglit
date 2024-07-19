@@ -23,6 +23,9 @@
 
 import os
 import os.path
+import sys
+
+from mako import exceptions
 
 from templates import template_file
 from modules import utils
@@ -106,13 +109,17 @@ def main():
                 print(filename)
 
                 with open(filename, "w") as f:
-                    f.write(TEMPLATE.render_unicode(
-                        version=requirement['version'],
-                        extensions=requirements,
-                        execution_stage=execution_stage,
-                        sampler_type=sampler_type,
-                        coord_type=coord_type,
-                        lod=lod))
+                    try:
+                        f.write(TEMPLATE.render_unicode(
+                            version=requirement['version'],
+                            extensions=requirements,
+                            execution_stage=execution_stage,
+                            sampler_type=sampler_type,
+                            coord_type=coord_type,
+                            lod=lod))
+                    except:
+                        print(exceptions.text_error_template().render(), file=sys.stderr)
+                        raise
 
 
 if __name__ == '__main__':

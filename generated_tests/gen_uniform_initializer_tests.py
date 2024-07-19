@@ -22,6 +22,9 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules import utils
@@ -121,10 +124,14 @@ def generate_tests(type_list, base_name, major, minor):
                 api_vectors.append((api_type, name, alt_numbers))
 
             with open(test_file_name, "w") as f:
-                f.write(template.render_unicode(type_list=test_vectors,
-                                                api_types=api_vectors,
-                                                major=major,
-                                                minor=minor))
+                try:
+                    f.write(template.render_unicode(type_list=test_vectors,
+                                                    api_types=api_vectors,
+                                                    major=major,
+                                                    minor=minor))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
 
 
 def generate_array_tests(type_list, base_name, major, minor):
@@ -167,9 +174,13 @@ def generate_array_tests(type_list, base_name, major, minor):
         print(test_file_name)
 
         with open(test_file_name, "w") as f:
-            f.write(template.render_unicode(type_list=vecs,
-                                            major=major,
-                                            minor=minor))
+            try:
+                f.write(template.render_unicode(type_list=vecs,
+                                                major=major,
+                                                minor=minor))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 def main():

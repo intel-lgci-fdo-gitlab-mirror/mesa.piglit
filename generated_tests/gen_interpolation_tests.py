@@ -68,6 +68,9 @@ This program outputs, to stdout, the name of each file it generates.
 """
 
 import os
+import sys
+
+from mako import exceptions
 
 from templates import template_file
 from modules import utils
@@ -269,7 +272,11 @@ class Test(object):
         dirname = os.path.dirname(filename)
         utils.safe_makedirs(dirname)
         with open(filename, 'w') as f:
-            f.write(TEMPLATE.render_unicode(args=self))
+            try:
+                f.write(TEMPLATE.render_unicode(args=self))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
 
 def all_tests():

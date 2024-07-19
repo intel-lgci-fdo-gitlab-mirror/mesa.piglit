@@ -25,6 +25,10 @@
 
 import os
 import argparse
+import sys
+
+from mako import exceptions
+
 from modules import utils
 from textwrap import dedent
 from templates import template_dir
@@ -64,7 +68,7 @@ class BasicType(object):
 
     def has_subtype(self):
         return self.subtype is not None
-    
+
     def is_array(self):
         return self.array_size > 1
 
@@ -201,13 +205,17 @@ class TestEnv(object):
             var_number+=1
 
         templ = TEMPLATES.get_template('basic.shader_test.mako')
-        shadertext = templ.render_unicode(declare_uniform_types=declare_uniform_types,
-                                          declare_vs_output_types=apply_indent(declare_vs_output_types, " " * 4),
-                                          assign_vs_output_types=apply_indent(assign_vs_output_types, " " * 4),
-                                          calc_output_color=apply_indent(calc_output_color, " " * 4),
-                                          calc_color=calc_color_func,
-                                          extensions=extensions,
-                                          layout=get_layout(block_location))
+        try:
+            shadertext = templ.render_unicode(declare_uniform_types=declare_uniform_types,
+                                            declare_vs_output_types=apply_indent(declare_vs_output_types, " " * 4),
+                                            assign_vs_output_types=apply_indent(assign_vs_output_types, " " * 4),
+                                            calc_output_color=apply_indent(calc_output_color, " " * 4),
+                                            calc_color=calc_color_func,
+                                            extensions=extensions,
+                                            layout=get_layout(block_location))
+        except:
+            print(exceptions.text_error_template().render(), file=sys.stderr)
+            raise
         save_shader_text(filename, shadertext)
         print(filename)
 
@@ -292,7 +300,7 @@ def main():
         BasicType("u64vec4", BasicType("uint64_t"), 4, qualifiers=flat_qualifier),
     ]
 
-    
+
     for i in range(0, 3, 1):
         ATTR_TYPES = []
         for j in range(0 + i, 21 + i, 3):
@@ -305,13 +313,13 @@ def main():
         for j in range(0, 4, 1):
             ATTR_TYPES.append(ALL_ATTR_TYPES_64BIT[i + 2 * j])
         TestEnv(["GL_ARB_gpu_shader_int64"]).test_matching(ATTR_TYPES, ("matching_64bit_types_{}").format(i + 1))
-        
+
     for i in range(0, 3, 1):
         ATTR_TYPES = [ALL_ATTR_TYPES_FP64[0],
                       ALL_ATTR_TYPES_FP64[1],
                       ALL_ATTR_TYPES_FP64[2],
                       ALL_ATTR_TYPES_FP64[3]]
-        
+
         ATTR_TYPES.append(ALL_ATTR_TYPES_FP64[4 + i])
         ATTR_TYPES.append(ALL_ATTR_TYPES_FP64[7 + i])
         ATTR_TYPES.append(ALL_ATTR_TYPES_FP64[10 + i])

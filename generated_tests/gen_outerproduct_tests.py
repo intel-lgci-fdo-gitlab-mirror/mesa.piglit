@@ -24,6 +24,9 @@
 import os
 import itertools
 import collections
+import sys
+
+from mako import exceptions
 
 from templates import template_file
 from modules import utils
@@ -65,9 +68,13 @@ def main():
 
             print(name)
             with open(name, 'w+') as f:
-                f.write(TEMPLATE.render_unicode(params=params,
-                                                type=type_,
-                                                shader=shader))
+                try:
+                    f.write(TEMPLATE.render_unicode(params=params,
+                                                    type=type_,
+                                                    shader=shader))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
 
 
 if __name__ == '__main__':

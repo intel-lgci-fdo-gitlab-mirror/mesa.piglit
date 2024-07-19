@@ -23,6 +23,9 @@
 
 import os
 import collections
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules import utils
@@ -87,8 +90,12 @@ def main():
                 coord=params.coord))
         print(name)
         with open(name, 'w+') as f:
-            f.write(TEMPLATES.get_template(
-                'frag_lod.glsl_parser_test.mako').render_unicode(param=params))
+            try:
+                f.write(TEMPLATES.get_template(
+                    'frag_lod.glsl_parser_test.mako').render_unicode(param=params))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
 
     for params in GRAD_TESTS:
         # Generate fragment shader test
@@ -102,10 +109,14 @@ def main():
         for stage in ['frag', 'vert']:
             print('{0}.{1}'.format(name, stage))
             with open('{0}.{1}'.format(name, stage), 'w+') as f:
-                f.write(TEMPLATES.get_template(
-                    'tex_grad.{0}.mako'.format(stage)).render_unicode(
-                        param=params,
-                        extensions=get_extensions(params.mode)))
+                try:
+                    f.write(TEMPLATES.get_template(
+                        'tex_grad.{0}.mako'.format(stage)).render_unicode(
+                            param=params,
+                            extensions=get_extensions(params.mode)))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
 
 
 if __name__ == '__main__':

@@ -28,6 +28,9 @@ import argparse
 import itertools
 import os
 import types
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules import utils
@@ -460,15 +463,19 @@ class RegularTestTuple(TestTuple):
 
         if not self._names_only:
             with open(filename, 'w') as test_file:
-                test_file.write(TEMPLATES.get_template(
-                    'regular.shader_test.mako').render_unicode(
-                        ver=self._ver,
-                        in_types=self._in_types,
-                        gl_types=self._gl_types,
-                        position_order=self._position_order,
-                        arrays=self._arrays,
-                        num_vs_in=self._num_vs_in,
-                        gl_types_values=GL_TYPES_VALUES))
+                try:
+                    test_file.write(TEMPLATES.get_template(
+                        'regular.shader_test.mako').render_unicode(
+                            ver=self._ver,
+                            in_types=self._in_types,
+                            gl_types=self._gl_types,
+                            position_order=self._position_order,
+                            arrays=self._arrays,
+                            num_vs_in=self._num_vs_in,
+                            gl_types_values=GL_TYPES_VALUES))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
 
         print(filename)
 
@@ -515,12 +522,16 @@ class ColumnsTestTuple(TestTuple):
 
         if not self._names_only:
             with open(filename, 'w') as test_file:
-                test_file.write(TEMPLATES.get_template(
-                    'columns.shader_test.mako').render_unicode(
-                        ver=self._ver,
-                        mat=self._mat,
-                        columns=self._columns,
-                        dvalues=GL_TYPES_VALUES['double']))
+                try:
+                    test_file.write(TEMPLATES.get_template(
+                        'columns.shader_test.mako').render_unicode(
+                            ver=self._ver,
+                            mat=self._mat,
+                            columns=self._columns,
+                            dvalues=GL_TYPES_VALUES['double']))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
 
         print(filename)
 

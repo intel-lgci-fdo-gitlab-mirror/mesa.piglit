@@ -1,5 +1,5 @@
 # encoding=utf-8
-# Copyright © 2016 Intel Corporation
+# Copyright © 2016 - 2024 Intel Corporation
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,9 @@ Romanick.
 """
 
 import os
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules import utils
@@ -51,7 +54,11 @@ def main():
             fname = os.path.join(dirname,
                                  "{}-{:0>2d}.txt".format(inst.lower(), i))
             with open(fname, 'w') as f:
-                f.write(template.render_unicode(target=target, inst=inst))
+                try:
+                    f.write(template.render_unicode(target=target, inst=inst))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
             print(fname)
             i += 1
 
@@ -60,7 +67,11 @@ def main():
             fname = os.path.join(dirname,
                                  "{}-{:0>2d}.txt".format(inst.lower(), i))
             with open(fname, 'w') as f:
-                f.write(template.render_unicode(target=target, inst=inst))
+                try:
+                    f.write(template.render_unicode(target=target, inst=inst))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
             print(fname)
             i += 1
 
@@ -69,14 +80,22 @@ def main():
             fname = os.path.join(dirname,
                                  "{}-{:0>2d}.txt".format(inst.lower(), i))
             with open(fname, 'w') as f:
-                f.write(template.render_unicode(target=target, inst=inst))
+                try:
+                    f.write(template.render_unicode(target=target, inst=inst))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
             print(fname)
             i += 1
 
         template = TEMPLATES.get_template('nvvp3.mako')
         fname = os.path.join(dirname, "{}-{:0>2d}.txt".format(inst.lower(), i))
         with open(fname, 'w') as f:
-            f.write(template.render_unicode(target="SHADOWRECT", inst=inst))
+            try:
+                f.write(template.render_unicode(target="SHADOWRECT", inst=inst))
+            except:
+                print(exceptions.text_error_template().render(), file=sys.stderr)
+                raise
         print(fname)
         i += 1
 
@@ -85,7 +104,11 @@ def main():
             fname = os.path.join(dirname,
                                  "{}-{:0>2d}.txt".format(inst.lower(), i))
             with open(fname, 'w') as f:
-                f.write(template.render_unicode(target=target, inst=inst))
+                try:
+                    f.write(template.render_unicode(target=target, inst=inst))
+                except:
+                    print(exceptions.text_error_template().render(), file=sys.stderr)
+                    raise
             print(fname)
             i += 1
 

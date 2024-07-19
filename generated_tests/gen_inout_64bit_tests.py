@@ -27,10 +27,14 @@ import os
 import errno
 import collections
 import copy
-import random_ubo
+import sys
 
 from textwrap import dedent
 from mako.template import Template
+from mako import exceptions
+
+import random_ubo
+
 
 
 class VaryingType(object):
@@ -368,12 +372,16 @@ def do_test(root_types, explicit_locations, glsl_version, extensions,
     draw rect -1 -1 2 2
     probe all rgba 0.0 1.0 0.0 1.0"""))
 
-    shader = t.render(glsl_version=glsl_version,
-                      root_types=root_types,
-                      explicit_locations=explicit_locations,
-                      structures=structs,
-                      extensions=extensions,
-                      instances=instances)
+    try:
+        shader = t.render(glsl_version=glsl_version,
+                        root_types=root_types,
+                        explicit_locations=explicit_locations,
+                        structures=structs,
+                        extensions=extensions,
+                        instances=instances)
+    except:
+        print(exceptions.text_error_template().render(), file=sys.stderr)
+        raise
 
     shader_file.write(shader)
     shader_file.close()

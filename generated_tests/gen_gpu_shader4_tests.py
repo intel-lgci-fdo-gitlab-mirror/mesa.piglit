@@ -24,6 +24,9 @@
 
 import os
 import collections
+import sys
+
+from mako import exceptions
 
 from templates import template_dir
 from modules import utils
@@ -277,11 +280,15 @@ def main():
                 filename = '{0}.{1}'.format(name, stage)
                 print(filename)
                 with open(filename, 'w+') as f:
-                    f.write(TEMPLATES.get_template(
-                        '{0}.{1}.mako'.format('unary_op', stage)).render_unicode(
-                            param=params,
-                            type1=type1,
-                            swizzle=get_swizzle(type1)))
+                    try:
+                        f.write(TEMPLATES.get_template(
+                            '{0}.{1}.mako'.format('unary_op', stage)).render_unicode(
+                                param=params,
+                                type1=type1,
+                                swizzle=get_swizzle(type1)))
+                    except:
+                        print(exceptions.text_error_template().render(), file=sys.stderr)
+                        raise
 
     for params in BINARY_OP_TESTS:
         for types in params.types:
@@ -297,12 +304,16 @@ def main():
                 filename = '{0}.{1}'.format(name, stage)
                 print(filename)
                 with open(filename, 'w+') as f:
-                    f.write(TEMPLATES.get_template(
-                        '{0}.{1}.mako'.format('binary_op', stage)).render_unicode(
-                            param=params,
-                            types=types,
-                            result_type=result_type,
-                            swizzle=get_swizzle(result_type)))
+                    try:
+                        f.write(TEMPLATES.get_template(
+                            '{0}.{1}.mako'.format('binary_op', stage)).render_unicode(
+                                param=params,
+                                types=types,
+                                result_type=result_type,
+                                swizzle=get_swizzle(result_type)))
+                    except:
+                        print(exceptions.text_error_template().render(), file=sys.stderr)
+                        raise
 
     for tests in [('unary', UNARY_TESTS),
                   ('binary', BINARY_TESTS),
@@ -321,13 +332,17 @@ def main():
                     filename = '{0}.{1}'.format(name, stage)
                     print(filename)
                     with open(filename, 'w+') as f:
-                        f.write(TEMPLATES.get_template(
-                            '{0}.{1}.mako'.format(tests[0], stage)).render_unicode(
-                                param=params,
-                                type1=type1,
-                                type2=params.type2 if 'type2' in params._fields else type1,
-                                swizzle=get_swizzle(type1),
-                                bvec=get_bvec(type1)))
+                        try:
+                            f.write(TEMPLATES.get_template(
+                                '{0}.{1}.mako'.format(tests[0], stage)).render_unicode(
+                                    param=params,
+                                    type1=type1,
+                                    type2=params.type2 if 'type2' in params._fields else type1,
+                                    swizzle=get_swizzle(type1),
+                                    bvec=get_bvec(type1)))
+                        except:
+                            print(exceptions.text_error_template().render(), file=sys.stderr)
+                            raise
 
     for tests in [('texture_size', SIZE_TESTS, ''),
                   ('texel_fetch', FETCH_TESTS, ''),
@@ -363,13 +378,17 @@ def main():
                     filename = '{0}.{1}'.format(name, stage)
                     print(filename)
                     with open(filename, 'w+') as f:
-                        f.write(TEMPLATES.get_template(
-                            '{0}.{1}.mako'.format(tests[0], stage)).render_unicode(
-                                param=params,
-                                extensions=get_extensions(params.sampler),
-                                prefix=prefix,
-                                swizzle=get_swizzle(params.coord),
-                                offset=tests[2]))
+                        try:
+                            f.write(TEMPLATES.get_template(
+                                '{0}.{1}.mako'.format(tests[0], stage)).render_unicode(
+                                    param=params,
+                                    extensions=get_extensions(params.sampler),
+                                    prefix=prefix,
+                                    swizzle=get_swizzle(params.coord),
+                                    offset=tests[2]))
+                        except:
+                            print(exceptions.text_error_template().render(), file=sys.stderr)
+                            raise
 
 if __name__ == '__main__':
     main()
