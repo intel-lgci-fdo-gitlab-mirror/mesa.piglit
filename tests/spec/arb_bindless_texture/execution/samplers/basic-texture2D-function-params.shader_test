@@ -1,0 +1,31 @@
+# Basic test to perform a texture lookup with a resident texture.
+[require]
+GL >= 3.3
+GLSL >= 3.30
+GL_ARB_bindless_texture
+
+[vertex shader passthrough]
+
+[fragment shader]
+#version 330
+#extension GL_ARB_bindless_texture: require
+
+layout (bindless_sampler) uniform sampler2D tex;
+out vec4 finalColor;
+
+vec4 func1(in sampler2D tex1)
+{
+   return texture2D(tex1, vec2(0, 0));
+}
+
+void main()
+{
+   finalColor = func1(tex);
+}
+
+[test]
+texture rgbw 0 (16, 16)
+resident texture 0
+uniform handle tex 0
+draw rect -1 -1 2 2
+relative probe rgb (0.0, 0.0) (1.0, 0.0, 0.0)
