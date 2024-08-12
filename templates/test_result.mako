@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="${css}">
   % if value.images:
     <script>module = {}</script>
-    <script src="https://unpkg.com/pixelmatch"></script>
+    <script src="https://unpkg.com/pixelmatch@5.3.0"></script>
     <script>
       var diff_complete = false;
 
