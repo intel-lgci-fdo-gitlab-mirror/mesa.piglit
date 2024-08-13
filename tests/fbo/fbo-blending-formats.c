@@ -300,6 +300,21 @@ static enum piglit_result test_format(const struct format_desc *format)
 		piglit_report_subtest_result(PIGLIT_SKIP, "%s", name);
 		return PIGLIT_SKIP;
 	}
+	/* glGetInternalformativ does not handle well GL 1.0 legacy internal
+	 * formats so just skip the check for the 3 and 4 formats here. */
+	if (format->internalformat != 3 && format->internalformat != 4 &&
+	    piglit_is_extension_supported("GL_ARB_internalformat_query2")) {
+		GLint blending_support;
+		glGetInternalformativ(GL_RENDERBUFFER,
+					format->internalformat,
+					GL_FRAMEBUFFER_BLEND, 1,
+					&blending_support);
+		if (blending_support == GL_NONE) {
+			printf(" - format not supported for blending)\n");
+			piglit_report_subtest_result(PIGLIT_SKIP, "%s", name);
+			return PIGLIT_SKIP;
+		}
+	}
         printf("\n");
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
