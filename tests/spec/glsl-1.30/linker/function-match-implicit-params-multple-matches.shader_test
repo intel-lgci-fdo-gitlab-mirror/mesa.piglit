@@ -1,5 +1,7 @@
-/* Here we test that linking fails if we have more than 1 matching function
- * signature that is not an exact match.
+/* Here we test that linking passes if we have more than 1 potential matching
+ * function signature that is not an exact match so long as only 1 of those
+ * functions can actually result in a non exact match i.e here the function
+ * with the uint param is not recognised as a match due to the glsl version.
  *
  * From page 42 (page 49 of the PDF) of the GLSL 1.20 spec:
  *
@@ -10,6 +12,9 @@
  *  a signature.  In this case, it is a semantic error if there are
  *  multiple ways to apply these conversions to the actual arguments of a
  *  call such that the call can be made to match multiple signatures."
+ *
+ * However unextended glsl 1.30 does not allow implicit int to unit conversions
+ * so the function with the uint param should not be seen as a match.
  */
 
 [require]
@@ -48,4 +53,4 @@ void main()
 
 
 [test]
-link error
+link success
