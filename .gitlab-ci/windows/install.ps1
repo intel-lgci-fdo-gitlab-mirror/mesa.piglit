@@ -20,7 +20,7 @@ Start-Process -NoNewWindow -Wait git -ArgumentList 'config --global core.autocrl
 
 Get-Date
 Write-Host "Installing Python PIP packages"
-pip3 install mako numpy
+pip3 install mako "numpy<2.0"
 if (!$?) {
   Write-Host "Failed to install dependencies from pip"
   Exit 1
