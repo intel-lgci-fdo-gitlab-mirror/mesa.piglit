@@ -1,0 +1,44 @@
+[require]
+GLSL >= 1.50
+
+[vertex shader passthrough]
+
+[fragment shader]
+#version 150
+
+// Test overload resolution where all candidates require implicit
+// conversions. Under unextended GLSL 1.50, resolution is ambiguous,
+// since both functions require implicit conversions and should cause a link 
+// failure.
+
+out vec4 result;
+
+void foo(float x, int y, float z)
+{
+	result = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+void foo(float x, int y, int z)
+{
+	/* better for `z` */
+	result = vec4(0.0, 1.0, 0.0, 1.0);
+}
+
+[fragment shader]
+#version 150
+
+out vec4 result;
+
+void foo(int x, int y, int z);
+
+void main()
+{
+	int a = 0;
+	int b = 1;
+	int c = 2;
+
+	foo(a, b, c);
+}
+
+[test]
+link error
