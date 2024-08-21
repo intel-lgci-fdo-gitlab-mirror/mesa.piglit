@@ -291,7 +291,7 @@ def column_major_values(value):
     """Given a native numpy value, return a list of the scalar values
     comprising it, in column-major order."""
     if isinstance(value, np.ndarray):
-        return list(np.reshape(value, -1, 'F'))
+        return list(np.reshape(value, newshape=-1, order='F'))
     else:
         return [value]
 
@@ -299,7 +299,7 @@ def column_major_values(value):
 def glsl_constant(value):
     """Given a native numpy value, return GLSL code that constructs
     it."""
-    column_major = np.reshape(np.array(value), -1, 'F')
+    column_major = np.reshape(np.array(value), newshape=-1, order='F')
     if column_major.dtype == bool:
         values = ['true' if x else 'false' for x in column_major]
     elif column_major.dtype == np.int64:
