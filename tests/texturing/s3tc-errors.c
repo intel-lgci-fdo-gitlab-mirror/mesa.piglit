@@ -587,6 +587,10 @@ piglit_init(int argc, char **argv)
 	piglit_require_extension("GL_EXT_texture_compression_s3tc");
 
 #ifdef PIGLIT_USE_OPENGL_ES2
+	// we're passing GL_FLOAT to glTexImage2D()...
+	if (piglit_get_gl_version() < 30)
+		piglit_require_extension("GL_OES_texture_float");
+
 	tex_program = piglit_build_simple_program(vs_source, fs_source);
 	proj_loc = glGetUniformLocation(tex_program, "proj");
 #endif

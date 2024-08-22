@@ -187,6 +187,10 @@ piglit_init(int argc, char **argv)
 
 #else // PIGLIT_USE_OPENGL_ES2
 
+	// piglit_rgbw_texture is passing GL_FLOAT to glTexImage2D()...
+	if (piglit_get_gl_version() < 30)
+		piglit_require_extension("GL_OES_texture_float");
+
 	tex_program = piglit_build_simple_program(vs_source, fs_source);
 	glUseProgram(tex_program);
 	GLint proj_loc = glGetUniformLocation(tex_program, "proj");
