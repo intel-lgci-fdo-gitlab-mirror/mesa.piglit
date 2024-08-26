@@ -1360,6 +1360,8 @@ piglit_cl_execute_ND_range_kernel(cl_command_queue command_queue,
 	}
 
 	errNo = clWaitForEvents(1, &ev);
+	clReleaseEvent(ev);
+
 	if(!piglit_cl_check_error(errNo, CL_SUCCESS)) {
 		fprintf(stderr,
 		        "Could not wait for kernel to finish: %s\n",
