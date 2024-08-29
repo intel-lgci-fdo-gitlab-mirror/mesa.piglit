@@ -1,0 +1,34 @@
+[require]
+GLSL >= 1.50
+GL_ARB_gpu_shader5
+
+# This test specifically reproduces GitLab issue #11659.
+
+[vertex shader passthrough]
+
+[fragment shader]
+#extension GL_ARB_gpu_shader5 : enable
+
+out vec4 color;
+
+uniform ivec4 insert;
+uniform ivec4 base;
+uniform ivec4 result;
+
+uniform int offset, bits;
+
+void main()
+{
+	/* Green if both pass. */
+	color = vec4(0.0, 1.0, 0.0, 1.0);
+
+	if (result != bitfieldInsert(base & 3, insert, 2, 2))
+		color = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+[test]
+uniform ivec4 insert 2147483647 2147483646 2147483645 2147483644
+uniform ivec4 base 65532 65533 65534 65535
+uniform ivec4 result 12 9 6 3
+draw rect -1 -1 2 2
+probe all rgba 0.0 1.0 0.0 1.0
