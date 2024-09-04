@@ -85,6 +85,13 @@ char *program_source =
 "	cl_version_defined[3] = 0; \n"
 "#endif \n"
 "\n"
+"#ifdef CL_VERSION_3_0 \n"
+"	cl_version_defined[4] = 1; \n"
+"	cl_version[4] = CL_VERSION_3_0; \n"
+"#else \n"
+"	cl_version_defined[4] = 0; \n"
+"#endif \n"
+"\n"
 "#ifdef __ENDIAN_LITTLE__ \n"
 "	*endian_little_defined = 1; \n"
 "	*endian_little = __ENDIAN_LITTLE__; \n"
@@ -121,7 +128,7 @@ version_from_string(char* string, int *version)
 	return 1;
 }
 
-#define NUM_CL_VERSION 4
+#define NUM_CL_VERSION 5
 
 enum piglit_result
 piglit_cl_test(const int argc,
@@ -414,6 +421,9 @@ piglit_cl_test(const int argc,
 	piglit_report_subtest_result(result_cl_version_defined[3],
 	                             "CL_VERSION_2_0 must be defined for OpenCL 2.0 and later");
 	piglit_merge_result(&result, result_cl_version_defined[3]);
+	piglit_report_subtest_result(result_cl_version_defined[4],
+	                             "CL_VERSION_3_0 must be defined for OpenCL 3.0 and later");
+	piglit_merge_result(&result, result_cl_version_defined[4]);
 	piglit_report_subtest_result(result_cl_version[0],
 	                             "CL_VERSION_1_0 must be 100 if defined");
 	piglit_merge_result(&result, result_cl_version[0]);
@@ -426,6 +436,9 @@ piglit_cl_test(const int argc,
 	piglit_report_subtest_result(result_cl_version[3],
 	                             "CL_VERSION_2_0 must be 200 if defined");
 	piglit_merge_result(&result, result_cl_version[3]);
+	piglit_report_subtest_result(result_cl_version[4],
+	                             "CL_VERSION_3_0 must be 300 if defined");
+	piglit_merge_result(&result, result_cl_version[4]);
 	piglit_report_subtest_result(result_endian_little_defined,
 	                             "__ENDIAN_LITTLE__ must be consistent with host");
 	piglit_merge_result(&result, result_endian_little_defined);

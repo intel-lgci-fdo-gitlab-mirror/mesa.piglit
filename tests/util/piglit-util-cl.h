@@ -31,7 +31,9 @@
 
 /* Define with which version of OpenCL Piglit was compiled */
 
-#if defined(CL_VERSION_2_0)
+#if defined(CL_VERSION_3_0)
+#  define PIGLIT_CL_VERSION 30
+#elif defined(CL_VERSION_2_0)
 #  define PIGLIT_CL_VERSION 20
 #elif defined(CL_VERSION_1_2)
 #  define PIGLIT_CL_VERSION 12
