@@ -201,9 +201,14 @@ check_info(const struct piglit_cl_api_test_env* env,
 			}
 			break;
 		case CL_DEVICE_OPENCL_C_VERSION:
-			if (check_string_not_empty(param_value_size, param_value, result) &&
-			    ((env->version == 12 && check_sub_string("OpenCL C 1.2", param_value, result)) ||
-			      check_sub_string("OpenCL C 1.1", param_value, result))) {
+			if (
+				check_string_not_empty(param_value_size, param_value, result) &&
+				(
+					(env->version == 30 && check_sub_string("OpenCL C 1.2 ", param_value, result)) || /* TODO: vendor part after space */
+					(env->version == 12 && check_sub_string("OpenCL C 1.2", param_value, result)) ||
+					check_sub_string("OpenCL C 1.1", param_value, result)
+				)
+			    ) {
 				print_s(param_value);
 			}
 			break;
