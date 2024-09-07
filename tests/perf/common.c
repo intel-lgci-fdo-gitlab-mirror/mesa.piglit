@@ -27,6 +27,9 @@
 #include "piglit-util-gl.h"
 #include "common.h"
 
+/**
+ * Return iterations/second for the duration.
+ */
 static double
 measure_rate(perf_rate_func f, double duration, unsigned initial_iterations,
 	     double (*measure_time)(perf_rate_func f, unsigned iterations))
@@ -107,6 +110,10 @@ perf_measure_cpu_rate(perf_rate_func f, double duration)
 	return measure_rate(f, duration, 1, measure_cpu_time);
 }
 
+/**
+ * Return iterations/second for the duration.
+ * Use a longer duration if you want more precision.
+ */
 double
 perf_measure_gpu_rate(perf_rate_func f, double duration)
 {

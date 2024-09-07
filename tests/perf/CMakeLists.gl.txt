@@ -17,6 +17,7 @@ piglit_add_executable (fill fill.c common.c)
 piglit_add_executable (genmipmap genmipmap.c common.c)
 piglit_add_executable (pbobench pbobench.c common.c)
 piglit_add_executable (readpixels readpixels.c common.c)
+piglit_add_executable (shader-io-rate shader-io-rate.c common.c)
 piglit_add_executable (teximage teximage.c common.c)
 piglit_add_executable (vbo vbo.c common.c)
 
