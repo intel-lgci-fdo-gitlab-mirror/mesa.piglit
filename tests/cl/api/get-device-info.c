@@ -663,7 +663,7 @@ piglit_cl_test(const int argc,
 
 	const cl_device_info *device_infos = device_infos_enum;
 
-	if (env->version >= 12) {
+	if (num_device_infos && env->version >= 12) {
 		// for some check we need some infos to be read before others
 		// piglit-util-cl-enum could be re ordered partially
 		// the first 10 elements are ok,
@@ -772,7 +772,7 @@ piglit_cl_test(const int argc,
 		piglit_merge_result(&result, PIGLIT_FAIL);
 	}
 
-	if (env->version >= 12) {
+	if (num_device_infos && env->version >= 12) {
 		free((void*)device_infos);
 	}
 
