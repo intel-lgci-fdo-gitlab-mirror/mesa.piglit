@@ -66,6 +66,8 @@ const char* piglit_cl_get_error_name(cl_int error);
             piglit_##name##_num_1_2 :       \
         version == 20 ?                     \
             piglit_##name##_num_2_0 :       \
+        version == 30 ?                     \
+            piglit_##name##_num_3_0 :       \
             0
 
 #define PIGLIT_CL_ENUM_ARRAY(name)          \
@@ -77,6 +79,7 @@ const char* piglit_cl_get_error_name(cl_int error);
         extern const unsigned int piglit_##name##_num_1_1;    \
         extern const unsigned int piglit_##name##_num_1_2;    \
         extern const unsigned int piglit_##name##_num_2_0;    \
+        extern const unsigned int piglit_##name##_num_3_0;    \
         extern const type* piglit_##name;
 
 #define PIGLIT_CL_DEFINE_ENUM_PROTOTYPE_2(name)        \
