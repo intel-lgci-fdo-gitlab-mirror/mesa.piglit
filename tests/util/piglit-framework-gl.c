@@ -215,6 +215,7 @@ piglit_gl_test_run(int argc, char *argv[],
 {
 	piglit_width = config->window_width;
 	piglit_height = config->window_height;
+	atexit(destroy);
 
 	gl_fw = piglit_gl_framework_factory(config);
 	if (gl_fw == NULL) {
@@ -223,7 +224,6 @@ piglit_gl_test_run(int argc, char *argv[],
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	atexit(destroy);
 	gl_fw->run_test(&gl_fw, argc, argv);
 	assert(false);
 }
