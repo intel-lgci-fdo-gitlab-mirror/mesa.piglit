@@ -3,7 +3,7 @@
 # here is 4294967295 with this test we are making sure the compiler doesn't
 # mistakenly think the trip count is 4.
 [require]
-GLSL >= 1.20
+GLSL >= 1.30
 
 [vertex shader]
 #version 130
