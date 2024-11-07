@@ -204,8 +204,14 @@ try(const GLenum *targets, unsigned num_targets,
 
 	for (unsigned i = 0; i < num_targets; i++) {
 		for (unsigned j = 0; j < num_formats; j++) {
-			GLint param;
+			GLint param, is_supported;
 			GLint64 param64;
+
+			glGetInternalformativ(targets[i],
+					      pinternal_formats[j],
+					      GL_INTERNALFORMAT_SUPPORTED,
+					      1,
+					      &is_supported);
 
 			glGetInternalformativ(targets[i],
 					      pinternal_formats[j],
@@ -219,8 +225,10 @@ try(const GLenum *targets, unsigned num_targets,
 						1,
 						&param64);
 
-			bool test = (expected_result == param);
-			bool test64 = (expected_result == param64);
+			bool test = (expected_result == param ||
+				     (is_supported == GL_FALSE && param == GL_NONE));
+			bool test64 = (expected_result == param64 ||
+				       (is_supported == GL_FALSE && param == GL_NONE));
 
 			if (test && test64)
 				continue;
