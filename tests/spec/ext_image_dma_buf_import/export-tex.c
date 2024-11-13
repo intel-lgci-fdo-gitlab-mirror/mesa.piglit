@@ -108,6 +108,10 @@ eglImage_to_dma_buf(EGLDisplay egl_dpy, EGLImageKHR img,
 	if (!piglit_check_egl_error(EGL_SUCCESS))
 		return false;
 
+	if (*num_planes != 1) {
+		fprintf(stderr, "Test only supports single plane\n");
+		piglit_report_result(PIGLIT_SKIP);
+	}
 
 	/* Export the image, verify success. */
 	if (!dmabuf_export(egl_dpy, img, fd, stride, offset))
@@ -182,11 +186,6 @@ test(EGLDisplay egl_dpy, bool glfinish_after_dmabuf_export)
 				 modifiers, &fd, &stride, &offset)) {
 		fprintf(stderr, "image export failed!\n");
 		piglit_report_result(PIGLIT_FAIL);
-	}
-
-	if (num_planes != 1) {
-		fprintf(stderr, "Test only supports single plane\n");
-		piglit_report_result(PIGLIT_SKIP);
 	}
 
 	/* Conditionally finish the clear */
