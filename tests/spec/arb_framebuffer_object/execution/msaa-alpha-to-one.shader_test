@@ -1,0 +1,44 @@
+[require]
+GL >= 3.0
+GLSL >= 1.30
+INT GL_MAX_SAMPLES >= 4
+
+[vertex shader]
+#version 130
+
+in vec4 vertex;
+
+void main()
+{
+    gl_Position = vertex;
+}
+
+[fragment shader]
+#version 130
+
+out vec4 fcolor;
+
+void main()
+{
+    float g = gl_FragCoord.x / 250.0;
+    fcolor = vec4(0, g, 0, g);
+}
+
+[test]
+fb ms GL_RGBA8 250 250 4
+
+clear color 0.1 0.1 0.1 0.1
+clear
+
+enable GL_SAMPLE_ALPHA_TO_ONE
+draw rect -1 -1 2 2
+
+fb draw winsys
+blit color linear
+
+fb read winsys
+relative probe rgba (0,    0)   (0, 0,    0, 1)
+relative probe rgba (0.25, 0)   (0, 0.25, 0, 1)
+relative probe rgba (0.5,  0)   (0, 0.5,  0, 1)
+relative probe rgba (0.75, 0)   (0, 0.75, 0, 1)
+relative probe rgba (1,    0)   (0, 1,    0, 1)
