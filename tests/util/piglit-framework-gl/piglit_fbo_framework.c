@@ -48,8 +48,6 @@ run_test(struct piglit_gl_framework **pgl_fw,
 	enum piglit_result result = PIGLIT_PASS;
 	struct piglit_gl_framework *gl_fw = *pgl_fw;
 
-	piglit_set_destroy_func((void*)destroy, gl_fw);
-
 	if (gl_fw->test_config->init)
 		gl_fw->test_config->init(argc, argv);
 	if (gl_fw->test_config->display)
@@ -166,6 +164,7 @@ piglit_fbo_framework_create(const struct piglit_gl_test_config *test_config)
 		goto fail;
 
 	gl_fw->destroy = destroy;
+	piglit_set_destroy_func((void*)destroy, gl_fw);
 	gl_fw->run_test = run_test;
 
 	return gl_fw;

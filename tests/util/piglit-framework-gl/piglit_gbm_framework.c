@@ -88,6 +88,7 @@ piglit_gbm_framework_create(const struct piglit_gl_test_config *test_config)
 	winsys_fw->show_window = show_window;
 	winsys_fw->enter_event_loop = enter_event_loop;
 	gl_fw->destroy = destroy;
+	piglit_set_destroy_func((void*)destroy, gl_fw);
 
 	return gl_fw;
 

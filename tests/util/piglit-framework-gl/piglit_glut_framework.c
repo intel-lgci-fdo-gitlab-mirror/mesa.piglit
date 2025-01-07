@@ -406,6 +406,7 @@ piglit_glut_framework_create(const struct piglit_gl_test_config *test_config)
 	glut_fw.gl_fw.set_keyboard_func = set_keyboard_func;
 	glut_fw.gl_fw.set_reshape_func = set_reshape_func;
 	glut_fw.gl_fw.destroy = destroy;
+	piglit_set_destroy_func((void*)destroy, &glut_fw.gl_fw);
 
 	return &glut_fw.gl_fw;
 }
