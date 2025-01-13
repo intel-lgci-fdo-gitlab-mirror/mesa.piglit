@@ -57,43 +57,40 @@ static enum piglit_result check_no_error(bool debug, bool robust)
 	ctx = glXCreateContextAttribsARB(dpy, fbconfig, NULL, True, attribs);
 	XSync(dpy, 0);
 
-	if (glx_error_code != -1) {
-		if ((debug || robust)) {
-			/* KHR_no_error doesn't allow the no error mode to be enabled
-			 * with KHR_debug or ARB_robustness, so context creation is
-			 * expected to fail in these cases.
-			 *
-			 * From the ARB_create_context_no_error spec:
-			 *
-			 *    "BadMatch is generated if the GLX_CONTEXT_OPENGL_NO_ERROR_ARB is TRUE at
-			 *    the same time as a debug or robustness context is specified."
-			 */
-			if (!validate_glx_error_code(BadMatch, -1)) {
-				printf("error: incorrect context creation error code\n");
-				result = PIGLIT_FAIL;
-				goto done;
-			}
-
-			printf("info: context creation failed (expected)\n");
-			result = PIGLIT_PASS;
+	/* KHR_no_error doesn't allow the no error mode to be enabled
+	 * with KHR_debug or ARB_robustness, so context creation is
+	 * expected to fail in these cases.
+	 *
+	 * From the ARB_create_context_no_error spec:
+	 *
+	 *    "BadMatch is generated if the GLX_CONTEXT_OPENGL_NO_ERROR_ARB is TRUE at
+	 *    the same time as a debug or robustness context is specified."
+	 */
+	if (debug || robust) {
+		if (ctx) {
+			printf("error: context creation should have failed\n");
+			result = PIGLIT_FAIL;
 			goto done;
 		}
-
-		/* Most likely the API/version is not supported. */
-		result = PIGLIT_SKIP;
+		if (!validate_glx_error_code(BadMatch, -1)) {
+			printf("error: incorrect context creation error code\n");
+			result = PIGLIT_FAIL;
+			goto done;
+		}
+		result = PIGLIT_PASS;
 		goto done;
-	}
-	if (ctx == NULL) {
-		printf("error: context creation failed\n");
-		result = PIGLIT_FAIL;
-		goto done;
-	}
-
-	if (!glXMakeContextCurrent(dpy, glxWin, glxWin, ctx)) {
-		printf("error: created OpenGL context, but could not make it "
-		       "current\n");
-		result = PIGLIT_FAIL;
-		goto done;
+	} else {
+		if (!ctx) {
+			printf("error: context creation failed\n");
+			result = PIGLIT_FAIL;
+			goto done;
+		}
+		if (!glXMakeContextCurrent(dpy, glxWin, glxWin, ctx)) {
+			printf("error: created OpenGL context, but could not make it "
+			       "current\n");
+			result = PIGLIT_FAIL;
+			goto done;
+		}
 	}
 
 	if (!is_dispatch_init) {
