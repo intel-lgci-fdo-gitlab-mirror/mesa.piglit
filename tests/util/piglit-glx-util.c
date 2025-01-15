@@ -284,6 +284,7 @@ piglit_glx_iterate_pixmap_fbconfigs(enum piglit_result (*draw)(Display *dpy,
 	int i, j;
 	bool any_fail = false;
 	bool any_pass = false;
+	bool any_warn = false;
 	Window root_win;
         int *depths, n_depths;
 
@@ -330,7 +331,7 @@ piglit_glx_iterate_pixmap_fbconfigs(enum piglit_result (*draw)(Display *dpy,
                     fprintf(stderr, "fbconfig %d has GLX_PIXMAP_BIT but there "
                                     "is no pixmap format for depth %d, this "
                                     "is a server bug\n", id, depth);
-                    any_fail = true;
+                    any_warn = true;
                     continue;
                 }
 
@@ -357,6 +358,8 @@ piglit_glx_iterate_pixmap_fbconfigs(enum piglit_result (*draw)(Display *dpy,
 
 	if (any_fail)
 		return PIGLIT_FAIL;
+	else if (any_warn)
+		return PIGLIT_WARN;
 	else if (any_pass)
 		return PIGLIT_PASS;
 	else
