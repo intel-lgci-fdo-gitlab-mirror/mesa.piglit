@@ -176,7 +176,7 @@ is_initial_value(const GLubyte *texel, GLsizei texelSize,
 static bool
 check_texels_partial_clear(GLenum format, GLenum type, GLsizei texelSize)
 {
-	const bool is_float = (format == GL_DEPTH_COMPONENT);
+	const bool is_float = (format == GL_DEPTH_COMPONENT) || (type == GL_FLOAT);
 	GLubyte *data, *p;
 	bool success = true;
 	int x, y;
