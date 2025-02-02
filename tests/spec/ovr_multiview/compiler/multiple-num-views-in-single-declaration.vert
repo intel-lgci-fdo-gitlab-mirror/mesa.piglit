@@ -1,6 +1,6 @@
 // [config]
 // expect_result: pass
-// glsl_version: 1.30
+// glsl_version: 3.30
 // require_extensions: GL_OVR_multiview
 // check_link: false
 // [end config]
@@ -12,7 +12,7 @@
 //    compile-time error results."
 //
 
-#version 130
+#version 330
 #extension GL_OVR_multiview : require
 
 layout(num_views = 3) in;

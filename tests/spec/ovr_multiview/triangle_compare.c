@@ -56,7 +56,7 @@
 
 PIGLIT_GL_TEST_CONFIG_BEGIN
 
-	config.supports_gl_compat_version = 30;
+	config.supports_gl_compat_version = 33;
 	config.khr_no_error_support = PIGLIT_NO_ERRORS;
 
 PIGLIT_GL_TEST_CONFIG_END
@@ -179,7 +179,7 @@ struct ShaderModeInfo shader_modes[] = {
 	{ 0 },
 };
 
-#define SHADER_VERSION_STR "#version 130\n"
+#define SHADER_VERSION_STR "#version 330\n"
 
 static const char *vertex_shader_multiview =
 	SHADER_VERSION_STR

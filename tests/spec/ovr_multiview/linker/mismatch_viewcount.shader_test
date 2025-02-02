@@ -3,17 +3,17 @@
 # identical; otherwise a link-time error results.
 
 [require]
-GLSL >= 1.30
+GLSL >= 3.30
 GL_OVR_multiview
 
 [vertex shader]
-#version 130
+#version 330
 #extension GL_OVR_multiview : require
 
 layout(num_views = 2) in;
 
 [vertex shader]
-#version 130
+#version 330
 #extension GL_OVR_multiview : require
 
 layout(num_views = 3) in;

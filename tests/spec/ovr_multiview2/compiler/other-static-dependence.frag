@@ -1,6 +1,6 @@
 // [config]
 // expect_result: pass
-// glsl_version: 1.30
+// glsl_version: 3.30
 // require_extensions: GL_OVR_multiview2
 // check_link: false
 // [end config]
@@ -18,7 +18,7 @@
 //    is also implicitly enabled."
 //
 
-#version 130
+#version 330
 #extension GL_OVR_multiview2 : require
 
 out vec4 fragColor;
