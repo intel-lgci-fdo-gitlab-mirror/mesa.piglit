@@ -5376,6 +5376,10 @@ with profile.test_list.group_manager(
         PiglitGLTest,
         grouptools.join('spec', 'OVR_multiview')) as g:
     g(['ovr_multiview-fb_attachment_params'], 'fb_attachment_params')
+    g(['ovr_multiview-fb_blit_first_view', 'full', '0'], 'fb_blit_first_view_full')
+    g(['ovr_multiview-fb_blit_first_view', 'full', '1'], 'fb_blit_first_view_full_base1')
+    g(['ovr_multiview-fb_blit_first_view', 'partial', '0'], 'fb_blit_first_view_partial')
+    g(['ovr_multiview-fb_blit_first_view', 'partial', '1'], 'fb_blit_first_view_partial_base1')
     g(['ovr_multiview-fb_incomplete_view_range'], 'fb_incomplete_view_range')
     g(['ovr_multiview-fb_incomplete_view_targets'], 'fb_incomplete_view_targets')
     g(['ovr_multiview-fb_read_errors'], 'fb_read_errors')
