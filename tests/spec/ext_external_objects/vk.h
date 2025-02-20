@@ -36,6 +36,9 @@ struct vk_ctx
 	VkPhysicalDevice pdev;
 	VkDevice dev;
 
+	const char **dev_exts;
+	uint32_t n_dev_exts;
+
 	VkCommandPool cmd_pool;
 	VkCommandBuffer cmd_buf;
 
@@ -146,6 +149,9 @@ struct vk_dims
 
 bool
 vk_init_ctx(struct vk_ctx *ctx);
+
+bool
+vk_device_extension_supported(struct vk_ctx *ctx, const char *ext_name);
 
 bool
 vk_init_ctx_for_rendering(struct vk_ctx *ctx);

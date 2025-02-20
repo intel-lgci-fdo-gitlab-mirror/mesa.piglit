@@ -151,8 +151,13 @@ select_physical_device(VkInstance inst)
 static VkDevice
 create_device(struct vk_ctx *ctx, VkPhysicalDevice pdev)
 {
-	const char *deviceExtensions[] = { "VK_KHR_external_memory_fd",
-					   "VK_KHR_external_semaphore_fd" };
+	const char *required_exts[] = {
+		"VK_KHR_external_memory_fd",
+		"VK_KHR_external_semaphore_fd",
+	};
+	const char *optional_exts[] = {
+		"VK_KHR_timeline_semaphore",
+	};
 	VkDeviceQueueCreateInfo dev_queue_info;
 	VkDeviceCreateInfo dev_info;
 	VkDevice dev;
@@ -160,6 +165,36 @@ create_device(struct vk_ctx *ctx, VkPhysicalDevice pdev)
 	VkQueueFamilyProperties *fam_props;
 	uint32_t i;
 	float qprio = 0;
+
+	VkExtensionProperties *ext_props;
+	uint32_t n_ext_props = 0;
+	vkEnumerateDeviceExtensionProperties(pdev, NULL, &n_ext_props, NULL);
+	ext_props = calloc(n_ext_props, sizeof *ext_props);
+	vkEnumerateDeviceExtensionProperties(pdev, NULL, &n_ext_props, ext_props);
+
+	const char *exts[ARRAY_SIZE(required_exts) + ARRAY_SIZE(optional_exts)];
+	uint32_t n_exts = 0;
+
+	/* Unconditionally add these. Device create will fail if one of them
+	 * isn't supported.
+	 */
+	for (uint32_t i = 0; i < ARRAY_SIZE(required_exts); i++)
+		exts[n_exts++] = required_exts[i];
+
+	for (uint32_t i = 0; i < n_ext_props; i++) {
+		for (uint32_t j = 0; j < ARRAY_SIZE(optional_exts); j++) {
+			if (!strcmp(ext_props[i].extensionName, optional_exts[j]))
+				exts[n_exts++] = optional_exts[j];
+		}
+	}
+
+	free(ext_props);
+
+	/* Stash them in the context for extension support checks */
+	ctx->dev_exts = calloc(n_exts, sizeof *ctx->dev_exts);
+	for (uint32_t i = 0; i < n_exts; i++)
+		ctx->dev_exts[i] = exts[i];
+	ctx->n_dev_exts = n_exts;
 
 	ctx->qfam_idx = -1;
 	vkGetPhysicalDeviceQueueFamilyProperties(pdev, &prop_count, 0);
@@ -185,8 +220,8 @@ create_device(struct vk_ctx *ctx, VkPhysicalDevice pdev)
 	dev_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	dev_info.queueCreateInfoCount = 1;
 	dev_info.pQueueCreateInfos = &dev_queue_info;
-	dev_info.enabledExtensionCount = ARRAY_SIZE(deviceExtensions);
-	dev_info.ppEnabledExtensionNames = deviceExtensions;
+	dev_info.enabledExtensionCount = n_exts;
+	dev_info.ppEnabledExtensionNames = exts;
 
 	if (vkCreateDevice(pdev, &dev_info, 0, &dev) != VK_SUCCESS)
 		return VK_NULL_HANDLE;
@@ -1019,6 +1054,17 @@ fail:
 }
 
 bool
+vk_device_extension_supported(struct vk_ctx *ctx, const char *ext_name)
+{
+	for (uint32_t i = 0; i < ctx->n_dev_exts; i++) {
+		if (!strcmp(ctx->dev_exts[i], ext_name))
+			return true;
+	}
+
+	return false;
+}
+
+bool
 vk_init_ctx_for_rendering(struct vk_ctx *ctx)
 {
 	if (!vk_init_ctx(ctx)) {
@@ -1063,6 +1109,12 @@ vk_cleanup_ctx(struct vk_ctx *ctx)
 		vkResetCommandPool(ctx->dev, ctx->cmd_pool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
 		vkDestroyCommandPool(ctx->dev, ctx->cmd_pool, 0);
 		ctx->cmd_pool = VK_NULL_HANDLE;
+	}
+
+	if (ctx->dev_exts != NULL) {
+		free(ctx->dev_exts);
+		ctx->dev_exts = NULL;
+		ctx->n_dev_exts = 0;
 	}
 
 	if (ctx->dev != VK_NULL_HANDLE) {
