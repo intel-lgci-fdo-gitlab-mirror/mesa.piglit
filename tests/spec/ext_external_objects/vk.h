@@ -103,10 +103,33 @@ struct vk_renderer
 	struct vk_vertex_info vertex_info;
 };
 
+struct vk_compute_pipeline
+{
+	VkDescriptorSetLayout set_layout;
+	VkPipelineLayout pipeline_layout;
+	VkShaderModule cs;
+	VkPipeline pipeline;
+	VkDescriptorPool descriptor_pool;
+	VkDescriptorSet descriptor_set;
+};
+
 struct vk_buf
 {
 	VkBuffer buf;
 	struct vk_mem_obj mobj;
+};
+
+struct vk_buf_att
+{
+	struct vk_buf buf;
+	VkDeviceSize offset;
+	VkDeviceSize range;
+};
+
+struct vk_descriptor
+{
+	VkDescriptorType type;
+	struct vk_buf_att *buf_att;
 };
 
 struct vk_semaphores
@@ -182,6 +205,18 @@ vk_create_renderer(struct vk_ctx *ctx,
 void
 vk_destroy_renderer(struct vk_ctx *ctx,
 		    struct vk_renderer *pipeline);
+
+bool
+vk_create_compute_pipeline(struct vk_ctx *ctx,
+			   const char *cs_src,
+			   unsigned int cs_size,
+			   struct vk_descriptor *descriptors,
+			   uint32_t n_descriptors,
+			   struct vk_compute_pipeline *cp);
+
+void
+vk_destroy_compute_pipeline(struct vk_ctx *ctx,
+			    struct vk_compute_pipeline *cp);
 
 bool
 vk_create_buffer(struct vk_ctx *ctx,

@@ -1299,6 +1299,177 @@ vk_destroy_renderer(struct vk_ctx *ctx,
 }
 
 bool
+vk_create_compute_pipeline(struct vk_ctx *ctx,
+			   const char *cs_src,
+			   unsigned int cs_size,
+			   struct vk_descriptor *descriptors,
+			   uint32_t n_descriptors,
+			   struct vk_compute_pipeline *cp)
+{
+	memset(cp, 0, sizeof *cp);
+
+	cp->cs = create_shader_module(ctx, cs_src, cs_size);
+	if (cp->cs == VK_NULL_HANDLE)
+		goto fail;
+
+	VkDescriptorSetLayoutBinding *bindings =
+		calloc(n_descriptors, sizeof(*bindings));
+	for (uint32_t i = 0; i < n_descriptors; i++) {
+		bindings[i].binding = i;
+		bindings[i].descriptorType = descriptors[i].type;
+		bindings[i].descriptorCount = 1;
+		bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+	}
+
+	VkDescriptorSetLayoutCreateInfo s_layout_info;
+	memset(&s_layout_info, 0, sizeof s_layout_info);
+	s_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	s_layout_info.bindingCount = n_descriptors,
+	s_layout_info.pBindings = bindings;
+	if (vkCreateDescriptorSetLayout(ctx->dev, &s_layout_info, NULL, &cp->set_layout) != VK_SUCCESS) {
+		fprintf(stderr, "Failed to create descriptor set layout\n");
+		cp->set_layout = NULL;
+		free(bindings);
+		goto fail;
+	}
+
+	free(bindings);
+	bindings = NULL;
+
+	VkPipelineLayoutCreateInfo p_layout_info;
+	memset(&p_layout_info, 0, sizeof p_layout_info);
+	p_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	p_layout_info.setLayoutCount = 1;
+	p_layout_info.pSetLayouts = &cp->set_layout;
+	if (vkCreatePipelineLayout(ctx->dev, &p_layout_info, NULL, &cp->pipeline_layout) != VK_SUCCESS) {
+		fprintf(stderr, "Failed to create pipeline layout\n");
+		cp->pipeline_layout = NULL;
+		goto fail;
+	}
+
+	VkComputePipelineCreateInfo pipeline_info;
+	memset(&pipeline_info, 0, sizeof pipeline_info);
+	pipeline_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+	pipeline_info.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	pipeline_info.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+	pipeline_info.stage.module = cp->cs;
+	pipeline_info.stage.pName = "main";
+	pipeline_info.layout = cp->pipeline_layout;
+	if (vkCreateComputePipelines(ctx->dev, 0, 1, &pipeline_info, 0, &cp->pipeline) != VK_SUCCESS) {
+		fprintf(stderr, "Failed to create graphics pipeline.\n");
+		cp->pipeline = VK_NULL_HANDLE;
+		goto fail;
+	}
+
+	VkDescriptorPoolSize pool_sizes[16];
+	uint32_t n_pool_sizes = 0;
+	for (uint32_t d = 0; d < n_descriptors; d++) {
+		uint32_t ps;
+		for (ps = 0; ps < n_pool_sizes; ps++) {
+			if (pool_sizes[ps].type == descriptors[d].type)
+				break;
+		}
+		if (ps == n_pool_sizes) {
+			assert(n_pool_sizes < ARRAY_SIZE(pool_sizes));
+			pool_sizes[ps].type = descriptors[d].type;
+			pool_sizes[ps].descriptorCount = 0;
+			n_pool_sizes++;
+		}
+
+		pool_sizes[ps].descriptorCount++;
+	}
+
+	VkDescriptorPoolCreateInfo pool_info;
+	memset(&pool_info, 0, sizeof pool_info);
+	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.maxSets = 1;
+	pool_info.poolSizeCount = n_pool_sizes;
+	pool_info.pPoolSizes = pool_sizes;
+	if (vkCreateDescriptorPool(ctx->dev, &pool_info, NULL, &cp->descriptor_pool) != VK_SUCCESS) {
+		fprintf(stderr, "Failed to create descriptor pool.\n");
+		cp->descriptor_pool = VK_NULL_HANDLE;
+		goto fail;
+	}
+
+	VkDescriptorSetAllocateInfo set_info;
+	memset(&set_info, 0, sizeof set_info);
+	set_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	set_info.descriptorPool = cp->descriptor_pool;
+	set_info.descriptorSetCount = 1;
+	set_info.pSetLayouts = &cp->set_layout;
+	if (vkAllocateDescriptorSets(ctx->dev, &set_info, &cp->descriptor_set) != VK_SUCCESS) {
+		fprintf(stderr, "Failed to allocate descriptor set.\n");
+		cp->descriptor_set = VK_NULL_HANDLE;
+		goto fail;
+	}
+
+	for (uint32_t i = 0; i < n_descriptors; i++) {
+		VkWriteDescriptorSet desc_write;
+		memset(&desc_write, 0, sizeof desc_write);
+		desc_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		desc_write.dstSet = cp->descriptor_set;
+		desc_write.dstBinding = i;
+		desc_write.dstArrayElement = 0;
+		desc_write.descriptorCount = 1;
+		desc_write.descriptorType = descriptors[i].type;
+
+		struct VkDescriptorBufferInfo buffer_info;
+		switch (descriptors[i].type) {
+		case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+		case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+			memset(&buffer_info, 0, sizeof buffer_info);
+			buffer_info.buffer = descriptors[i].buf_att->buf.buf;
+			buffer_info.offset = descriptors[i].buf_att->offset;
+			buffer_info.range = descriptors[i].buf_att->range;
+			desc_write.pBufferInfo = &buffer_info;
+			break;
+
+		default:
+			assert(!"Unknown descriptor type");
+			break;
+		}
+		vkUpdateDescriptorSets(ctx->dev, 1, &desc_write, 0, NULL);
+	}
+
+	return true;
+
+fail:
+	vk_destroy_compute_pipeline(ctx, cp);
+	return false;
+}
+
+void
+vk_destroy_compute_pipeline(struct vk_ctx *ctx,
+			    struct vk_compute_pipeline *cp)
+{
+	if (cp->cs != VK_NULL_HANDLE) {
+		vkDestroyShaderModule(ctx->dev, cp->cs, NULL);
+		cp->cs = VK_NULL_HANDLE;
+	}
+
+	if (cp->pipeline != VK_NULL_HANDLE) {
+		vkDestroyPipeline(ctx->dev, cp->pipeline, NULL);
+		cp->pipeline = VK_NULL_HANDLE;
+	}
+
+	if (cp->descriptor_pool != VK_NULL_HANDLE) {
+		vkDestroyDescriptorPool(ctx->dev, cp->descriptor_pool, NULL);
+		cp->descriptor_pool = VK_NULL_HANDLE;
+		cp->descriptor_set = VK_NULL_HANDLE;
+	}
+
+	if (cp->pipeline_layout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(ctx->dev, cp->pipeline_layout, NULL);
+		cp->pipeline_layout = VK_NULL_HANDLE;
+	}
+
+	if (cp->set_layout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(ctx->dev, cp->set_layout, NULL);
+		cp->set_layout = VK_NULL_HANDLE;
+	}
+}
+
+bool
 vk_create_buffer(struct vk_ctx *ctx,
 		 bool is_external,
 		 uint32_t sz,
