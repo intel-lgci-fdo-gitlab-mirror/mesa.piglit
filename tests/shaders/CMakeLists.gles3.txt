@@ -6,4 +6,7 @@ piglit_add_executable (built-in-constants_${piglit_target_api} built-in-constant
 piglit_add_executable (glsl-bug-110796 glsl-bug-110796.c)
 piglit_add_executable(shader_runner_${piglit_target_api} shader_runner.c parser_utils.c)
 
+piglit_add_executable (mesa-bug11100-fs mesa-bug11100-fs.c)
+piglit_add_executable (mesa-bug11100-cs mesa-bug11100-cs.c)
+
 # vim: ft=cmake:
