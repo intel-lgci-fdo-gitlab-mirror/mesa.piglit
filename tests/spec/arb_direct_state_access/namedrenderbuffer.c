@@ -150,15 +150,23 @@ piglit_display(void)
 			     "height == MAX_RENDER_SIZE(%d) + 1", size);
 
 	/* Test the samples limits */
-	glGetIntegerv(GL_MAX_SAMPLES, &size);
+	bool have_internalformat_query = piglit_get_gl_version() >= 42 ||
+		piglit_is_extension_supported("GL_ARB_internalformat_query");
+
+	if (have_internalformat_query)
+		glGetInternalformativ(GL_TEXTURE_2D_MULTISAMPLE, GL_RGBA, GL_SAMPLES,
+		                      1, &size);
+	else
+		glGetIntegerv(GL_MAX_SAMPLES, &size);
 
 	glNamedRenderbufferStorageMultisample(ids[0], -1, GL_RGBA, 1024, 768);
 	PIGLIT_SUBTEST_ERROR(GL_INVALID_VALUE, pass, "samples < 0");
 
 	glNamedRenderbufferStorageMultisample(ids[0], size + 1, GL_RGBA, 1024,
 					      768);
-	PIGLIT_SUBTEST_ERROR(GL_INVALID_OPERATION, pass,
-			     "samples == MAX_SAMPLES(%d) + 1", size);
+	PIGLIT_SUBTEST_ERROR(have_internalformat_query ? GL_INVALID_OPERATION :
+	                                                 GL_INVALID_VALUE, pass,
+	                     "samples == MAX_SAMPLES(%d) + 1", size);
 
 	/* Misc tests */
 	glNamedRenderbufferStorageMultisample(ids[0], 0, GL_TRUE, 1024, 768);
