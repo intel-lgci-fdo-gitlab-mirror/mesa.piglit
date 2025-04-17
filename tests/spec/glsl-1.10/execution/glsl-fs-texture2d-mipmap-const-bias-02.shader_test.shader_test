@@ -1,0 +1,40 @@
+[require]
+GLSL >= 1.10
+SIZE 32 32
+
+[vertex shader]
+varying vec4 texcoords;
+
+void main()
+{
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    texcoords = gl_MultiTexCoord0;
+}
+
+[fragment shader]
+varying vec4 texcoords;
+uniform sampler2D tex;
+
+void main()
+{
+	gl_FragColor = texture2D(tex, texcoords.xy, -0.5);
+}
+
+[test]
+ortho
+
+uniform int tex 0
+texture miptree 0
+texparameter 2D min linear_mipmap_linear
+draw rect tex 0 0 16 16 0 0 1 1
+draw rect tex 16 0 8 8 0 0 1 1
+draw rect tex 24 0 4 4 0 0 1 1
+draw rect tex 28 0 2 2 0 0 1 1
+draw rect tex 30 0 1 1 0 0 1 1
+
+tolerance 0.05 0.05 0.05 0.05
+probe rgb 0  0 1.0 0.0 0.0
+probe rgb 16 0 1.0 0.0 0.0
+probe rgb 24 0 0.5 0.5 0.0
+probe rgb 28 0 0.0 0.5 0.5
+probe rgb 30 0 0.5 0.5 1.0
