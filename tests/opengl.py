@@ -3502,6 +3502,7 @@ with profile.test_list.group_manager(
     g(['ext_texture_integer-texture_integer_glsl130'],
       'texture_integer_glsl130')
     g(['fbo-integer'], run_concurrent=False)
+    g(['fbo-integer-attachments'])
     # TODO: unsupported for int yet
     # g(['fbo-clear-formats', 'GL_EXT_texture_integer'], 'fbo-clear-formats')
     add_msaa_formats_tests(g, 'GL_EXT_texture_integer')
