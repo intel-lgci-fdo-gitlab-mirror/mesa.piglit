@@ -93,7 +93,7 @@ static void
 gl_cleanup(void);
 
 static void
-cleanup(void);
+cleanup(void *data);
 
 static struct vk_ctx vk_core;
 static struct vk_buf vk_bo;
@@ -118,7 +118,7 @@ void piglit_init(int argc, char **argv)
 	piglit_require_extension("GL_EXT_semaphore");
 	piglit_require_extension("GL_EXT_semaphore_fd");
 
-	atexit(cleanup);
+	piglit_set_destroy_func(cleanup, NULL);
 
 	int single_sem = -1;
 	for (int a = 1; a < argc; a++) {
@@ -445,7 +445,7 @@ gl_cleanup(void)
 }
 
 static void
-cleanup(void)
+cleanup(void *data)
 {
 	gl_cleanup();
 	vk_cleanup();

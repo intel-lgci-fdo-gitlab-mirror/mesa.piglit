@@ -59,7 +59,7 @@ static void
 gl_subtest_cleanup(void);
 
 static void
-cleanup(void);
+cleanup(void *data);
 
 static enum piglit_result
 run_subtest(int case_num);
@@ -131,7 +131,7 @@ piglit_init(int argc, char **argv)
 	piglit_require_extension("GL_EXT_semaphore");
 	piglit_require_extension("GL_EXT_semaphore_fd");
 
-	atexit(cleanup);
+	piglit_set_destroy_func(cleanup, NULL);
 
 	if (!vk_init()) {
 		fprintf(stdout, "Failed to initialize Vulkan, skipping the test.\n");
@@ -405,7 +405,7 @@ vk_cleanup(void)
 }
 
 static void
-cleanup(void)
+cleanup(void *data)
 {
 	vk_cleanup();
 }

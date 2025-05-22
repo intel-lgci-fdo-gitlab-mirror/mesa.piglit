@@ -35,7 +35,7 @@ config.khr_no_error_support = PIGLIT_HAS_ERRORS;
 
 PIGLIT_GL_TEST_CONFIG_END
 
-static void cleanup();
+static void cleanup(void *data);
 static void vk_cleanup();
 
 static bool vk_init();
@@ -86,7 +86,7 @@ piglit_init(int argc, char **argv)
 	piglit_require_extension("GL_ARB_texture_storage");
 	piglit_require_extension("GL_ARB_pixel_buffer_object");
 
-	atexit(cleanup);
+	piglit_set_destroy_func(cleanup, NULL);
 
 	if (!vk_init()) {
 		fprintf(stdout, "Failed to initialize Vulkan, skipping the test.\n");
@@ -194,7 +194,7 @@ vk_cleanup()
 }
 
 static void
-cleanup()
+cleanup(void *data)
 {
 	vk_cleanup();
 }

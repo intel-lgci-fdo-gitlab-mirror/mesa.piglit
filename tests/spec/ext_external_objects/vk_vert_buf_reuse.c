@@ -58,7 +58,7 @@ static struct vk_renderer vk_rnd;
 static GLuint gl_disp_tex;
 static GLuint gl_disp_vk_prog;
 
-static void cleanup();
+static void cleanup(void *data);
 static void vk_cleanup();
 static bool vk_init();
 static bool gl_init();
@@ -120,7 +120,7 @@ piglit_init(int argc, char **argv)
 	piglit_require_extension("GL_ARB_texture_storage");
 	piglit_require_extension("GL_ARB_pixel_buffer_object");
 
-	atexit(cleanup);
+	piglit_set_destroy_func(cleanup, NULL);
 
 	if (!vk_init()) {
 		fprintf(stdout, "Failed to initialize Vulkan, skipping the test.\n");
@@ -232,6 +232,7 @@ static void
 vk_cleanup()
 {
 	vk_destroy_buffer(&vk_core, &vk_vb);
+	vk_destroy_buffer(&vk_core, &vk_tmp_buf);
 	vk_destroy_ext_image(&vk_core, &vk_color_att.obj);
 	vk_destroy_ext_image(&vk_core, &vk_depth_att.obj);
 	vk_destroy_renderer(&vk_core, &vk_rnd);
@@ -239,7 +240,7 @@ vk_cleanup()
 }
 
 static void
-cleanup()
+cleanup(void *data)
 {
 	vk_cleanup();
 }

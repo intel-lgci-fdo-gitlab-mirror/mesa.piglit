@@ -116,7 +116,7 @@ static bool
 gl_draw_texture(enum fragment_type fs_type, uint32_t w, uint32_t h);
 
 static void
-cleanup(void);
+cleanup(void *data);
 
 void
 piglit_init(int argc, char **argv)
@@ -130,7 +130,7 @@ piglit_init(int argc, char **argv)
 	piglit_require_extension("GL_EXT_memory_object");
 	piglit_require_extension("GL_EXT_memory_object_fd");
 
-	atexit(cleanup);
+	piglit_set_destroy_func(cleanup, NULL);
 
 	if (!vk_init())
 		piglit_report_result(PIGLIT_SKIP);
@@ -346,7 +346,7 @@ gl_draw_texture(enum fragment_type fs_type, uint32_t w, uint32_t h)
 }
 
 static void
-cleanup(void)
+cleanup(void *data)
 {
 	vk_cleanup_ctx(&vk_core);
 
