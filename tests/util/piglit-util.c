@@ -222,8 +222,15 @@ piglit_result_to_string(enum piglit_result result)
         return "Unknown result";
 }
 
-static void (*destroy_func)(void*);
-static void *destroy_data;
+#define PIGLIT_MAX_CLEANUP_FUNC 4
+
+/* A generic "cleanup" handler for framework/tests. */
+typedef struct {
+   void (*func)(void*);
+   void *data;
+} piglit_cleanup_function;
+
+static piglit_cleanup_function cleanup_functions[PIGLIT_MAX_CLEANUP_FUNC];
 
 void
 piglit_report_result(enum piglit_result result)
@@ -241,8 +248,11 @@ piglit_report_result(enum piglit_result result)
 	printf("PIGLIT: {\"result\": \"%s\" }\n", result_str);
 	fflush(stdout);
 
-	if (destroy_func)
-		destroy_func(destroy_data);
+	for (int8_t i = 0; i < PIGLIT_MAX_CLEANUP_FUNC; i++) {
+		if (cleanup_functions[i].func)
+			cleanup_functions[i].func(cleanup_functions[i].data);
+	}
+
 	switch(result) {
 	case PIGLIT_PASS:
 	case PIGLIT_SKIP:
@@ -910,6 +920,14 @@ piglit_env_var_as_boolean(const char *var_name, bool default_value)
 void
 piglit_set_destroy_func(void (*destroy)(void*), void *data)
 {
-	destroy_func = destroy;
-	destroy_data = data;
+	int8_t i = PIGLIT_MAX_CLEANUP_FUNC - 1;
+	for (; i > i - PIGLIT_MAX_CLEANUP_FUNC; i--) {
+		if (!cleanup_functions[i].func) {
+			cleanup_functions[i].func = destroy;
+			cleanup_functions[i].data = data;
+			break;
+		}
+	}
+	if (i < 0)
+		assert(!"internal error: max cleanup func count reached");
 }
