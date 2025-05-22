@@ -216,12 +216,20 @@ create_device(struct vk_ctx *ctx, VkPhysicalDevice pdev)
 	dev_queue_info.queueCount = 1;
 	dev_queue_info.pQueuePriorities = &qprio;
 
+	struct VkPhysicalDeviceTimelineSemaphoreFeatures timeline_semaphore_feature = {
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES,
+		.timelineSemaphore = VK_TRUE,
+	};
+
 	memset(&dev_info, 0, sizeof dev_info);
 	dev_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	dev_info.queueCreateInfoCount = 1;
 	dev_info.pQueueCreateInfos = &dev_queue_info;
 	dev_info.enabledExtensionCount = n_exts;
 	dev_info.ppEnabledExtensionNames = exts;
+
+	if (vk_device_extension_supported(ctx, "VK_KHR_timeline_semaphore"))
+		dev_info.pNext = &timeline_semaphore_feature;
 
 	if (vkCreateDevice(pdev, &dev_info, 0, &dev) != VK_SUCCESS)
 		return VK_NULL_HANDLE;
