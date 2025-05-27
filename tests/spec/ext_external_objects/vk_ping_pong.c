@@ -216,10 +216,12 @@ run_test(bool single_sem)
 				submit_info.waitSemaphoreCount = 1;
 				submit_info.pWaitSemaphores = &vk_timeline;
 
+				uint64_t first_wait_value = 6;
+
 				memset(&timeline_info, 0, sizeof timeline_info);
 				timeline_info.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
 				timeline_info.waitSemaphoreValueCount = 1;
-				timeline_info.pWaitSemaphoreValues = &wait_value;
+				timeline_info.pWaitSemaphoreValues = &first_wait_value;
 				submit_info.pNext = &timeline_info;
 			}
 
