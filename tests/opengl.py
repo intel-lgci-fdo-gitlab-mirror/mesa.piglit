@@ -4882,6 +4882,18 @@ with profile.test_list.group_manager(
 
 with profile.test_list.group_manager(
         PiglitGLTest,
+        grouptools.join('spec', 'egl_ext_device_query_name'),
+        exclude_platforms=['glx']) as g:
+    g(['egl_ext_device_query_name'], 'conformance')
+
+with profile.test_list.group_manager(
+        PiglitGLTest,
+        grouptools.join('spec', 'egl_ext_device_persistent_id'),
+        exclude_platforms=['glx']) as g:
+    g(['egl_ext_device_persistent_id'], 'conformance')
+
+with profile.test_list.group_manager(
+        PiglitGLTest,
         grouptools.join('spec', 'egl_ext_device_enumeration'),
         exclude_platforms=['glx']) as g:
     g(['egl_ext_device_enumeration'], 'conformance')
