@@ -147,7 +147,6 @@ void piglit_init(int argc, char **argv)
 	if (vk_sem_has_wait) {
 		glSignalSemaphoreEXT(gl_sem.gl_frame_ready, 0, 0, 1,
 				     &gl_tex, &layout);
-		glFlush();
 	}
 
 	struct vk_image_att images[] = { vk_color_att, vk_depth_att };
@@ -183,7 +182,6 @@ piglit_display(void)
 	if (vk_sem_has_wait) {
 		glSignalSemaphoreEXT(gl_sem.gl_frame_ready, 0, 0, 1,
 				     &gl_tex, &layout);
-		glFlush();
 	}
 
 	struct vk_image_att images[] = { vk_color_att, vk_depth_att };
