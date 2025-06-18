@@ -1863,6 +1863,7 @@ with profile.test_list.group_manager(
     g(['trinity-fp1'])
     g(['arb_fragment_program-sparse-samplers'], 'sparse-samplers')
     g(['arb_fragment_program-no-newline'], 'no-newline')
+    g(['arb_fragment_program-recompile'], 'recompile')
     g(['incomplete-texture', 'arb_fp'], 'incomplete-texture-arb_fp')
 
 with profile.test_list.group_manager(

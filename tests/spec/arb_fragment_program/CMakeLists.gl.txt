@@ -11,5 +11,6 @@ link_libraries (
 piglit_add_executable (arb_fragment_program-minmax minmax.c)
 piglit_add_executable (arb_fragment_program-sparse-samplers sparse-samplers.c)
 piglit_add_executable (arb_fragment_program-no-newline no-newline.c)
+piglit_add_executable (arb_fragment_program-recompile recompile.c)
 
 # vim: ft=cmake:
