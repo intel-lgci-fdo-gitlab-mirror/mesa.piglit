@@ -39,8 +39,8 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 PIGLIT_GL_TEST_CONFIG_END
 
 static const GLfloat colors[4] = { 0.5, 0.25, 0.1, 0.5 };
-static const GLfloat scale[4] = { 2.0, 3.0, 1.0, 1.0 };
-static const GLfloat bias[4] = { -0.25, 0.0, 0.4, 0.0 };
+static const GLfloat scale[4] = { 2.0, 3.0, 1.0, 0.5 };
+static const GLfloat bias[4] = { -0.25, 0.0, 0.4, 0.25 };
 
 static GLuint
 create_texture()
