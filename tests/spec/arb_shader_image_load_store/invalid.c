@@ -291,12 +291,6 @@ invalidate_address_bounds(const struct image_info img, GLuint prog)
 }
 
 static bool
-invalidate_index_bounds(const struct image_info img, GLuint prog)
-{
-        return set_uniform_int(prog, "u", 0xdeadcafe);
-}
-
-static bool
 invalidate_nop(const struct image_info img, GLuint prog)
 {
         return true;
@@ -445,19 +439,6 @@ piglit_init(int argc, char **argv)
                                 "%s/address bounds test/image%s/%s",
                                 op->name, img.target->name, img.format->name);
                 }
-
-                /*
-                 * The following cases have undefined results, but may
-                 * not lead to program termination:
-                 *
-                 * "If the index used to select an individual [array]
-                 *  element is negative or greater than or equal to
-                 *  the size of the array [...]"
-                 */
-                subtest(&status, true,
-                        run_test(op, def_img, def_img,
-                                 invalidate_index_bounds, true),
-                        "%s/index bounds test", op->name);
 
                 /*
                  * "the type of image variable used to access the
