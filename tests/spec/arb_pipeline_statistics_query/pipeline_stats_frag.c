@@ -58,19 +58,20 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 PIGLIT_GL_TEST_CONFIG_END
 
 static const char *vs_src =
-	"#version 110                   \n"
-	"                               \n"
+	"#version 130                   \n"
+	"out vec2 texcoord;             \n"
 	"void main()                    \n"
 	"{                              \n"
 	"   gl_Position = gl_Vertex;    \n"
+	"   texcoord = gl_Vertex.xy;    \n"
 	"}                              \n";
 
 static const char *fs_src =
-	"#version 110			\n"
-	"				\n"
+	"#version 130			\n"
+	"in vec2 texcoord;              \n"
 	"void main()			\n"
 	"{				\n"
-	"   gl_FragColor = vec4(0, 1, 0, 1); \n"
+	"   gl_FragColor = vec4(texcoord, 0, 1); \n"
 	"}				\n";
 
 static struct query queries[] = {
