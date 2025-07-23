@@ -1,6 +1,7 @@
 [require]
 GLSL >= 1.50
 GL_MAX_VERTEX_OUTPUT_COMPONENTS >= 128
+GL_MAX_GEOMETRY_INPUT_COMPONENTS >= 68
 
 [vertex shader]
 #version 150
