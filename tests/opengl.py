@@ -5328,6 +5328,11 @@ with profile.test_list.group_manager(
     g(['ext_shader_image_load_store-image_functions'], 'image_functions')
     g(['ext_shader_image_load_store-bind_image_error'], 'bind_image_error')
 
+with profile.test_list.group_manager(
+        PiglitGLTest,
+        grouptools.join('spec', 'ext_shader_pixel_local_storage')) as g:
+    g(['ext_shader_pixel_local_storage-tests'], 'pixel-local-tests')
+
 # Group ARB_sample_locations
 with profile.test_list.group_manager(
         PiglitGLTest,
