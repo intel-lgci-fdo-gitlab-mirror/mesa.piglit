@@ -71,6 +71,10 @@
 #define strcasecmp _stricmp
 #endif
 
+#ifdef __APPLE__
+#define st_mtim st_mtimespec
+#endif
+
 #include "piglit-util.h"
 
 
