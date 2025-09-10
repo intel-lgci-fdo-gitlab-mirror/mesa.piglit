@@ -1,7 +1,7 @@
 # Simple UBO test with two stages using the same UBO.
 
 [require]
-GL >= 3.1
+GL >= 4.5
 GLSL >= 1.40
 GL_ARB_program_interface_query
 
