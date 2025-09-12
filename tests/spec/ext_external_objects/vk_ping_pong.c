@@ -110,7 +110,7 @@ static VkBufferUsageFlagBits vk_bo_usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 static struct gl_ext_semaphores gl_sem;
 static struct vk_semaphores vk_sem;
 
-static uint64_t vk_signal_value[] = {0, 7};
+static uint64_t vk_signal_value[] = {0, 6};
 static uint64_t vk_wait_value[] = {2, 2};
 
 void piglit_init(int argc, char **argv)
@@ -222,16 +222,16 @@ run_test(bool single_sem)
 				VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO,
 				NULL,
 				i ? 2 : 1, vk_wait_value,
-				2, vk_signal_value
+				vk_timeline && supports_NV_timeline ? 2 : 1, vk_signal_value
 			};
 
 			submit_info.pWaitDstStageMask = stage_flags;
-			/* last submit won't have a GL signal */
-			if (i != NUM_HASH_ITERATIONS - 1)
-				submit_info.waitSemaphoreCount = vk_timeline && i ? 2 : 1;
+			/* last submit won't have a GL timeline signal */
+			submit_info.waitSemaphoreCount =
+				vk_timeline && i && i != NUM_HASH_ITERATIONS - 1 ? 2 : 1;
 			submit_info.pWaitSemaphores = wait_semaphores;
-			/* timeline signal is a no-op without NV_timeline_semaphore but do it anyway for simplicity */
-			submit_info.signalSemaphoreCount = vk_timeline ? 2 : 1;
+			if (i != NUM_HASH_ITERATIONS - 1)
+				submit_info.signalSemaphoreCount = vk_timeline && supports_NV_timeline ? 2 : 1;
 			submit_info.pSignalSemaphores = signal_semaphores;
 			if (vk_timeline)
 				submit_info.pNext = &timeline_info;
@@ -272,7 +272,6 @@ run_test(bool single_sem)
 
 			/* GL timeline wait only applies with NV_timeline_semaphore support */
 			if (vk_timeline && supports_NV_timeline) {
-				/* by spec, this must trigger a synchronous flush */
 				glSemaphoreParameterui64vEXT(gl_sem.gl_timeline,
 						GL_TIMELINE_SEMAPHORE_VALUE_NV, &vk_signal_value[1]);
 				glWaitSemaphoreEXT(gl_sem.gl_timeline,
@@ -292,6 +291,7 @@ run_test(bool single_sem)
 		}
 	}
 	vk_wait_value[0] = vk_wait_value[1];
+	vk_signal_value[1] = vk_wait_value[0] + 4;
 
 	vkQueueWaitIdle(vk_core.queue);
 
