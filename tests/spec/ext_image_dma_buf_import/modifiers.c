@@ -829,7 +829,7 @@ piglit_init(int argc, char **argv)
 		}
 
 		char mod_str[4096] = {0};
-		if (sscanf(argv[i], "-mod=%4096s", mod_str) > 0) {
+		if (sscanf(argv[i], "-mod=%4095s", mod_str) > 0) {
 			arg_mod = str_to_modifier(mod_str);
 
 			/* The invalid modifier is reserved for this test */
