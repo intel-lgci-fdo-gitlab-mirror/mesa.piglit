@@ -1,5 +1,5 @@
 [require]
-GL ES >= 3.10
+GL ES >= 3.1
 GLSL ES >= 3.10
 GL_EXT_shader_realtime_clock
 
