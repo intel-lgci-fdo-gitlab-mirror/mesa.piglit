@@ -34,6 +34,11 @@
 /* this must be a power of two to prevent precision issues */
 #define WINDOW_SIZE 1024
 
+/* This should be low enough to stay cached, so that we are not limited by bandwidth. */
+#define TEST_FBO_SIZE		256
+#define TEST_FBO_SAMPLES	8
+#define TEST_FBO_SAMPLES_STR	"8"
+
 PIGLIT_GL_TEST_CONFIG_BEGIN
 
 	config.supports_gl_compat_version = 10;
@@ -182,9 +187,9 @@ typedef struct {
 
 static fb_info fbs[] = {
 	{"RGBA8 1s", GL_RGBA8, 0},
-	{"RGBA8 4s", GL_RGBA8, 4},
+	{"RGBA8 "TEST_FBO_SAMPLES_STR"s", GL_RGBA8, TEST_FBO_SAMPLES},
 	{"RGBA16F 1s", GL_RGBA16F, 0},
-	{"RGBA16F 4s", GL_RGBA16F, 4},
+	{"RGBA16F "TEST_FBO_SAMPLES_STR"s", GL_RGBA16F, TEST_FBO_SAMPLES},
 };
 
 void
@@ -205,7 +210,7 @@ piglit_init(int argc, char **argv)
 		glGenRenderbuffers(1, &rb);
 		glBindRenderbuffer(GL_RENDERBUFFER, rb);
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, fbs[i].num_samples,
-						 fbs[i].format, 1024, 1024);
+						 fbs[i].format, TEST_FBO_SIZE, TEST_FBO_SIZE);
 
 		glGenFramebuffers(1, &fbs[i].fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbs[i].fbo);
@@ -260,8 +265,7 @@ piglit_display(void)
 			glBindFramebuffer(GL_FRAMEBUFFER, fbs[j].fbo);
 
 			double rate = perf_measure_gpu_rate(run_draw, 0.01);
-			rate *= (double)piglit_width * piglit_height *
-				(progs[i].sample_shading ? fbs[j].num_samples : 1);
+			rate *= (double)TEST_FBO_SIZE * TEST_FBO_SIZE * MAX2(fbs[j].num_samples, 1);
 
 			if (gpu_freq_mhz) {
 				rate /= gpu_freq_mhz * 1000000.0;
