@@ -513,6 +513,21 @@ enum cull_method {
 	NUM_CULL_METHODS,
 };
 
+static const unsigned num_quads_per_dim[] = {
+	/* The second number is the approx. number of primitives. */
+	ceil(sqrt(0.5 * 2000)),
+	ceil(sqrt(0.5 * 8000)),
+	ceil(sqrt(0.5 * 32000)),
+	ceil(sqrt(0.5 * 128000)),
+	ceil(sqrt(0.5 * 512000)),
+};
+
+static unsigned
+get_num_prims(unsigned num_quads_index)
+{
+	return num_quads_per_dim[num_quads_index] * num_quads_per_dim[num_quads_index] * 2;
+}
+
 static double
 run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 	 enum cull_method cull_method, unsigned num_quads_per_dim,
@@ -634,9 +649,7 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 }
 
 static void
-run(enum draw_method draw_method, enum cull_method cull_method,
-    const unsigned *num_quads_per_dim, const unsigned *num_prims,
-    unsigned num_prim_sets)
+run(enum draw_method draw_method, enum cull_method cull_method)
 {
 	unsigned num_subtests = 1;
 	static unsigned cull_percentages[] = {100, 75, 50};
@@ -696,11 +709,11 @@ run(enum draw_method draw_method, enum cull_method cull_method,
 			if (prog)
 				printf("   ");
 
-			for (int i = 0; i < num_prim_sets; i++) {
+			for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim); i++) {
 				double rate = run_test(0, draw_method, cull_method,
 						       num_quads_per_dim[i],
 						       quad_size_in_pixels, cull_percentage);
-				rate *= num_prims[i];
+				rate *= get_num_prims(i);
 
 				if (gpu_freq_mhz) {
 					rate /= gpu_freq_mhz * 1000000.0;
@@ -712,6 +725,24 @@ run(enum draw_method draw_method, enum cull_method cull_method,
 			}
 		}
 		printf("\n");
+	}
+}
+
+static void
+iterate_tests(void)
+{
+	for (int cull_method = 0; cull_method < RASTERIZER_DISCARD; cull_method++)
+		run(INDEXED_TRIANGLES, cull_method);
+	for (int cull_method = 0; cull_method < RASTERIZER_DISCARD; cull_method++)
+		run(INDEXED_TRIANGLES_2VTX, cull_method);
+
+	for (int cull_method = RASTERIZER_DISCARD; cull_method < NUM_CULL_METHODS; cull_method++)
+		run(INDEXED_TRIANGLES, cull_method);
+
+	/* glDrawArrays: Only test NONE and BACK_FACE_CULLING. */
+	for (int draw_method = TRIANGLES; draw_method < NUM_DRAW_METHODS; draw_method++) {
+		for (int cull_method = 0; cull_method <= BACK_FACE_CULLING; cull_method++)
+			run(draw_method, cull_method);
 	}
 }
 
@@ -728,19 +759,6 @@ piglit_display(void)
 		return PIGLIT_PASS;
 	}
 
-	const unsigned num_quads_per_dim[] = {
-		/* The second number is the approx. number of primitives. */
-		ceil(sqrt(0.5 * 2000)),
-		ceil(sqrt(0.5 * 8000)),
-		ceil(sqrt(0.5 * 32000)),
-		ceil(sqrt(0.5 * 128000)),
-		ceil(sqrt(0.5 * 512000)),
-	};
-
-	unsigned num_prims[ARRAY_SIZE(num_quads_per_dim)];
-	for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim); i++)
-		num_prims[i] = num_quads_per_dim[i] * num_quads_per_dim[i] * 2;
-
 	printf("  Measuring %-27s,    ", gpu_freq_mhz ? "Prims/clock," : "GPrims/second,");
 	for (unsigned prog = 0; prog < ARRAY_SIZE(progs); prog++) {
 		if (progs[prog])
@@ -754,24 +772,12 @@ piglit_display(void)
 			continue;
 		if (prog)
 			printf("   ");
-		for (int i = 0; i < ARRAY_SIZE(num_prims); i++)
-			printf(",  %3uK", num_prims[i] / 1000);
+		for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim); i++)
+			printf(",  %3uK", get_num_prims(i) / 1000);
 	}
 	printf("\n");
 
-	for (int cull_method = 0; cull_method < RASTERIZER_DISCARD; cull_method++)
-		run(INDEXED_TRIANGLES, cull_method, num_quads_per_dim, num_prims, ARRAY_SIZE(num_prims));
-	for (int cull_method = 0; cull_method < RASTERIZER_DISCARD; cull_method++)
-		run(INDEXED_TRIANGLES_2VTX, cull_method, num_quads_per_dim, num_prims, ARRAY_SIZE(num_prims));
-
-	for (int cull_method = RASTERIZER_DISCARD; cull_method < NUM_CULL_METHODS; cull_method++)
-		run(INDEXED_TRIANGLES, cull_method, num_quads_per_dim, num_prims, ARRAY_SIZE(num_prims));
-
-	/* glDrawArrays: Only test NONE and BACK_FACE_CULLING. */
-	for (int draw_method = TRIANGLES; draw_method < NUM_DRAW_METHODS; draw_method++) {
-		for (int cull_method = 0; cull_method <= BACK_FACE_CULLING; cull_method++)
-			run(draw_method, cull_method, num_quads_per_dim, num_prims, ARRAY_SIZE(num_prims));
-	}
+	iterate_tests();
 
 	exit(0);
 	return PIGLIT_SKIP;
