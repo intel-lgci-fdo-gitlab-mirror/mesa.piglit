@@ -24,7 +24,6 @@
  * Common perf code.  This should be re-usable with other tests.
  */
 
-#include "piglit-util-gl.h"
 #include "common.h"
 
 /**
@@ -118,4 +117,30 @@ double
 perf_measure_gpu_rate(perf_rate_func f, double duration)
 {
 	return measure_rate(f, duration, 5, measure_gpu_time);
+}
+
+GLuint
+perf_measure_gpu_time_get_query(perf_rate_func f, unsigned iterations)
+{
+	/* Run a few iterations to wake up power management - this helps AMD. */
+	f(MAX2(1, iterations / 4));
+
+	/* Measure the execution time. */
+	GLuint query;
+	glGenQueries(1, &query);
+	glBeginQuery(GL_TIME_ELAPSED, query);
+	f(iterations);
+	glEndQuery(GL_TIME_ELAPSED);
+
+	return query;
+}
+
+double
+perf_get_throughput_from_query(GLuint query, unsigned iterations)
+{
+	int64_t nsecs;
+	glGetQueryObjecti64v(query, GL_QUERY_RESULT, &nsecs);
+	glDeleteQueries(1, &query);
+
+	return iterations / (nsecs * 0.000000001);
 }

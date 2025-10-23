@@ -228,6 +228,8 @@ run_draw(unsigned iterations)
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
+#define NUM_ITER 100
+
 enum piglit_result
 piglit_display(void)
 {
@@ -240,6 +242,38 @@ piglit_display(void)
 		return PIGLIT_PASS;
 	}
 
+	puts("(AMD: use 'umr --gui' and set Power to profile_peak)\n");
+	puts("Measuring performance. This may take a while...\n");
+
+	/* Warm up the driver. */
+	for (unsigned i = 0; i < ARRAY_SIZE(progs); i++) {
+		glUseProgram(progs[i].prog);
+
+		for (unsigned j = 0; j < ARRAY_SIZE(fbs); j++) {
+			if (progs[i].sample_shading && fbs[j].num_samples <= 1)
+				continue;
+
+			glBindFramebuffer(GL_FRAMEBUFFER, fbs[j].fbo);
+			run_draw(1);
+		}
+	}
+
+	GLuint queries[ARRAY_SIZE(progs)][ARRAY_SIZE(fbs)];
+
+	/* Gather times. */
+	for (unsigned i = 0; i < ARRAY_SIZE(progs); i++) {
+		glUseProgram(progs[i].prog);
+
+		for (unsigned j = 0; j < ARRAY_SIZE(fbs); j++) {
+			if (progs[i].sample_shading && fbs[j].num_samples <= 1)
+				continue;
+
+			glBindFramebuffer(GL_FRAMEBUFFER, fbs[j].fbo);
+			queries[i][j] = perf_measure_gpu_time_get_query(run_draw, NUM_ITER);
+		}
+	}
+
+	/* Print results. */
 	printf("  %-60s, %s\n", "Fragment shader", gpu_freq_mhz ? "Samples/clock," : "GSamples/second");
 
 	printf("%*s", 62, "");
@@ -248,13 +282,8 @@ piglit_display(void)
 	}
 	puts("");
 
-	/* Warm up. */
-	glUseProgram(progs[0].prog);
-	perf_measure_gpu_rate(run_draw, 0.01);
-
 	for (unsigned i = 0; i < ARRAY_SIZE(progs); i++) {
 		printf("  %-60s", progs[i].name);
-		glUseProgram(progs[i].prog);
 
 		for (unsigned j = 0; j < ARRAY_SIZE(fbs); j++) {
 			if (progs[i].sample_shading && fbs[j].num_samples <= 1) {
@@ -262,9 +291,8 @@ piglit_display(void)
 				fflush(stdout);
 				continue;
 			}
-			glBindFramebuffer(GL_FRAMEBUFFER, fbs[j].fbo);
 
-			double rate = perf_measure_gpu_rate(run_draw, 0.01);
+			double rate = perf_get_throughput_from_query(queries[i][j], NUM_ITER);
 			rate *= (double)TEST_FBO_SIZE * TEST_FBO_SIZE * MAX2(fbs[j].num_samples, 1);
 
 			if (gpu_freq_mhz) {

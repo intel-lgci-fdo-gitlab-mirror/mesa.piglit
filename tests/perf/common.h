@@ -22,6 +22,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include "piglit-util-gl.h"
+
 typedef void (*perf_rate_func)(unsigned count);
 
 double
@@ -29,6 +31,12 @@ perf_measure_cpu_rate(perf_rate_func f, double minDuration);
 
 double
 perf_measure_gpu_rate(perf_rate_func f, double minDuration);
+
+GLuint
+perf_measure_gpu_time_get_query(perf_rate_func f, unsigned iterations);
+
+double
+perf_get_throughput_from_query(GLuint query, unsigned iterations);
 
 #endif /* COMMON_H */
 
