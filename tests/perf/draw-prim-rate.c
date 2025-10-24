@@ -475,7 +475,6 @@ enum draw_method {
 
 static enum draw_method global_draw_method;
 static unsigned count;
-static unsigned vb_size, ib_size;
 
 static void
 run_draw(unsigned iterations)
@@ -646,8 +645,8 @@ init_buffers(enum draw_method draw_method, enum cull_method cull_method,
 				  max_indices, &test->buffers->num_indices, indices);
 	}
 
-	vb_size = test->buffers->num_vertices * 12;
-	ib_size = test->buffers->num_indices * 4;
+	unsigned vb_size = test->buffers->num_vertices * 12;
+	unsigned ib_size = test->buffers->num_indices * 4;
 
 	/* Create buffers. */
 	glGenBuffers(1, &test->buffers->vb);
