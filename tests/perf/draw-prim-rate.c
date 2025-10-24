@@ -505,7 +505,20 @@ enum cull_method {
 	NUM_CULL_METHODS,
 };
 
-static const unsigned num_quads_per_dim[] = {
+enum test_stage {
+	INIT,
+	RUN,
+};
+
+struct test_data {
+	GLuint vb, ib;
+	unsigned num_vertices, num_indices;
+};
+
+struct test_data tests[1200];
+uint64_t mem_usage;
+
+static const unsigned num_quads_per_dim_array[] = {
 	/* The second number is the approx. number of primitives. */
 	ceil(sqrt(0.5 * 2000)),
 	ceil(sqrt(0.5 * 8000)),
@@ -517,16 +530,64 @@ static const unsigned num_quads_per_dim[] = {
 static unsigned
 get_num_prims(unsigned num_quads_index)
 {
-	return num_quads_per_dim[num_quads_index] * num_quads_per_dim[num_quads_index] * 2;
+	return num_quads_per_dim_array[num_quads_index] *
+	       num_quads_per_dim_array[num_quads_index] * 2;
 }
 
-static double
-run_test(unsigned debug_num_iterations, enum draw_method draw_method,
-	 enum cull_method cull_method, unsigned num_quads_per_dim,
-	 double quad_size_in_pixels, unsigned cull_percentage)
+enum cull_type {
+	CULL_TYPE_NONE,
+	CULL_TYPE_BACK_FACE,
+	CULL_TYPE_VIEW,
+	CULL_TYPE_DEGENERATE,
+};
+
+union buffer_set_index {
+	struct {
+		uint16_t draw_method_reduced:3;
+		uint16_t cull_type:2;
+		uint16_t cull_percentage_div25:3;
+		uint16_t num_quads_per_dim_index:3;
+		uint16_t pad:5;
+	};
+	uint16_t index;
+};
+
+static union buffer_set_index
+get_buffer_set_index(enum draw_method draw_method, enum cull_method cull_method,
+		     unsigned num_quads_per_dim_index, double quad_size_in_pixels,
+		     unsigned cull_percentage)
+{
+	assert(cull_percentage == 0 || cull_percentage == 25 || cull_percentage == 50 ||
+	       cull_percentage == 75 || cull_percentage == 100);
+	assert(num_quads_per_dim_index < 5);
+
+	union buffer_set_index set;
+
+	if (draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART)
+		set.draw_method_reduced = INDEXED_TRIANGLE_STRIP;
+	else
+		set.draw_method_reduced = draw_method;
+
+	set.cull_type = cull_method == BACK_FACE_CULLING ? CULL_TYPE_BACK_FACE :
+			cull_method == VIEW_CULLING ? CULL_TYPE_VIEW :
+			cull_method == DEGENERATE_PRIMS ? CULL_TYPE_DEGENERATE : CULL_TYPE_NONE;
+	set.cull_percentage_div25 = cull_percentage / 25;
+	set.num_quads_per_dim_index = num_quads_per_dim_index;
+	set.pad = 0;
+	return set;
+}
+
+static void
+init_buffers(enum draw_method draw_method, enum cull_method cull_method,
+	     unsigned num_quads_per_dim_index, double quad_size_in_pixels,
+	     unsigned cull_percentage, struct test_data *test)
 {
 	const unsigned max_indices = 8100000 * 3;
 	const unsigned max_vertices = max_indices;
+	union buffer_set_index set =
+		get_buffer_set_index(draw_method, cull_method, num_quads_per_dim_index,
+				     quad_size_in_pixels, cull_percentage);
+	unsigned num_quads_per_dim = num_quads_per_dim_array[set.num_quads_per_dim_index];
 
 	while (num_quads_per_dim * quad_size_in_pixels >= WINDOW_SIZE)
 		quad_size_in_pixels *= 0.5;
@@ -535,67 +596,68 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 	float *vertices = (float*)malloc(max_vertices * 12);
 	unsigned *indices = NULL;
 
-	if (draw_method == INDEXED_TRIANGLES ||
-	    draw_method == INDEXED_TRIANGLES_2VTX ||
-	    draw_method == INDEXED_TRIANGLE_STRIP ||
-	    draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART)
+	if (set.draw_method_reduced == INDEXED_TRIANGLES ||
+	    set.draw_method_reduced == INDEXED_TRIANGLES_2VTX ||
+	    set.draw_method_reduced == INDEXED_TRIANGLE_STRIP)
 		indices = (unsigned*)malloc(max_indices * 4);
 
-	unsigned num_vertices = 0, num_indices = 0;
-	if (draw_method == TRIANGLE_STRIP ||
-	    draw_method == INDEXED_TRIANGLE_STRIP ||
-	    draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART) {
+	if (set.draw_method_reduced == TRIANGLE_STRIP ||
+	    set.draw_method_reduced == INDEXED_TRIANGLE_STRIP) {
 		gen_triangle_strip_tile(num_quads_per_dim, quad_size_in_pixels,
-					cull_percentage,
-					cull_method == BACK_FACE_CULLING,
-					cull_method == VIEW_CULLING,
-					cull_method == DEGENERATE_PRIMS,
-					max_vertices, &num_vertices, vertices,
-					max_indices, &num_indices, indices);
+					set.cull_percentage_div25 * 25,
+					set.cull_type == CULL_TYPE_BACK_FACE,
+					set.cull_type == CULL_TYPE_VIEW,
+					set.cull_type == CULL_TYPE_DEGENERATE,
+					max_vertices, &test->num_vertices, vertices,
+					max_indices, &test->num_indices, indices);
 	} else {
 		gen_triangle_tile(num_quads_per_dim, quad_size_in_pixels,
-				  cull_percentage,
-				  draw_method == INDEXED_TRIANGLES_2VTX ? 2 : 1,
-				  cull_method == BACK_FACE_CULLING,
-				  cull_method == VIEW_CULLING,
-				  cull_method == DEGENERATE_PRIMS,
-				  max_vertices, &num_vertices, vertices,
-				  max_indices, &num_indices, indices);
+				  set.cull_percentage_div25 * 25,
+				  set.draw_method_reduced == INDEXED_TRIANGLES_2VTX ? 2 : 1,
+				  set.cull_type == CULL_TYPE_BACK_FACE,
+				  set.cull_type == CULL_TYPE_VIEW,
+				  set.cull_type == CULL_TYPE_DEGENERATE,
+				  max_vertices, &test->num_vertices, vertices,
+				  max_indices, &test->num_indices, indices);
 	}
 
-	vb_size = num_vertices * 12;
-	ib_size = num_indices * 4;
+	vb_size = test->num_vertices * 12;
+	ib_size = test->num_indices * 4;
 
 	/* Create buffers. */
-	GLuint vb, ib;
-	glGenBuffers(1, &vb);
-	glBindBuffer(GL_ARRAY_BUFFER, vb);
+	glGenBuffers(1, &test->vb);
+	glBindBuffer(GL_ARRAY_BUFFER, test->vb);
 	glBufferData(GL_ARRAY_BUFFER, vb_size, vertices, GL_STATIC_DRAW);
+	mem_usage += vb_size;
 	free(vertices);
 
 	if (indices) {
-		glGenBuffers(1, &ib);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+		glGenBuffers(1, &test->ib);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, test->ib);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib_size, indices, GL_STATIC_DRAW);
+		mem_usage += ib_size;
 		free(indices);
 	}
-	/* Make sure all uploads are finished. */
-	glFinish();
+}
 
+static double
+run_test(unsigned debug_num_iterations, enum draw_method draw_method,
+	 enum cull_method cull_method, struct test_data *test)
+{
 	/* Test */
 	if (cull_method == RASTERIZER_DISCARD)
 		glEnable(GL_RASTERIZER_DISCARD);
 	if (draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART)
 		glEnable(GL_PRIMITIVE_RESTART);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vb);
+	glBindBuffer(GL_ARRAY_BUFFER, test->vb);
 	glVertexPointer(3, GL_FLOAT, 0, NULL);
 
-	if (indices)
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+	if (test->ib)
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, test->ib);
 
 	global_draw_method = draw_method;
-	count = indices ? num_indices : num_vertices;
+	count = test->ib ? test->num_indices : test->num_vertices;
 
 	double rate = 0;
 
@@ -610,24 +672,44 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 		glDisable(GL_PRIMITIVE_RESTART);
 
 	/* Cleanup. */
-	glDeleteBuffers(1, &vb);
-	if (indices)
-		glDeleteBuffers(1, &ib);
+	glDeleteBuffers(1, &test->vb);
+	if (test->ib)
+		glDeleteBuffers(1, &test->ib);
 	return rate;
 }
 
-static void
-run(enum draw_method draw_method, enum cull_method cull_method)
+static double
+execute_test(unsigned debug_num_iterations, enum draw_method draw_method,
+	     enum cull_method cull_method, unsigned num_quads_per_dim_index,
+	     double quad_size_in_pixels, unsigned cull_percentage,
+	     enum test_stage test_stage, struct test_data *test)
 {
-	unsigned num_subtests = 1;
+	if (test_stage == INIT) {
+		init_buffers(draw_method, cull_method, num_quads_per_dim_index,
+			     quad_size_in_pixels, cull_percentage, test);
+	}
+
+	if (test_stage == RUN)
+		return run_test(debug_num_iterations, draw_method, cull_method, test);
+
+	return 0;
+}
+
+static void
+run(enum draw_method draw_method, enum cull_method cull_method, enum test_stage test_stage,
+    unsigned *test_index)
+{
 	static unsigned cull_percentages[] = {100, 75, 50};
 	static double quad_sizes_in_pixels[] = {1.0 / 7, 0.25, 0.5};
+	unsigned num_subtests;
 
 	if (cull_method == BACK_FACE_CULLING ||
 	    cull_method == VIEW_CULLING) {
 		num_subtests = ARRAY_SIZE(cull_percentages);
 	} else if (cull_method == SUBPIXEL_PRIMS) {
 		num_subtests = ARRAY_SIZE(quad_sizes_in_pixels);
+	} else {
+		num_subtests = 1;
 	}
 
 	for (unsigned subtest = 0; subtest < num_subtests; subtest++) {
@@ -643,30 +725,32 @@ run(enum draw_method draw_method, enum cull_method cull_method)
 			cull_percentage = cull_percentages[subtest];
 		}
 
-		printf("  %-14s, ",
-		       draw_method == INDEXED_TRIANGLES ? "DrawElems1Vtx" :
-		       draw_method == INDEXED_TRIANGLES_2VTX ? "DrawElems2Vtx" :
-		       draw_method == TRIANGLES ? "DrawArraysT" :
-		       draw_method == TRIANGLE_STRIP ? "DrawArraysTS" :
-		       draw_method == INDEXED_TRIANGLE_STRIP ? "DrawElemsTS" :
-		       "DrawTS_PrimR");
+		if (test_stage == RUN) {
+			printf("  %-14s, ",
+			       draw_method == INDEXED_TRIANGLES ? "DrawElems1Vtx" :
+			       draw_method == INDEXED_TRIANGLES_2VTX ? "DrawElems2Vtx" :
+			       draw_method == TRIANGLES ? "DrawArraysT" :
+			       draw_method == TRIANGLE_STRIP ? "DrawArraysTS" :
+			       draw_method == INDEXED_TRIANGLE_STRIP ? "DrawElemsTS" :
+			       "DrawTS_PrimR");
 
-		if (cull_method == NONE ||
-		    cull_method == RASTERIZER_DISCARD) {
-			printf("%-21s",
-			       cull_method == NONE ? "none" : "rasterizer discard");
-		} else if (cull_method == SUBPIXEL_PRIMS) {
-			printf("%2u small prims/pixel ",
-			       (unsigned)((1.0 / quad_size_in_pixels) *
-					  (1.0 / quad_size_in_pixels) * 2));
-		} else {
-			printf("%3u%% %-16s", cull_percentage,
-			       cull_method == BACK_FACE_CULLING ? "back faces" :
-				cull_method == VIEW_CULLING ?	  "culled by view" :
-				cull_method == DEGENERATE_PRIMS ? "degenerate prims" :
-								  "(error)");
+			if (cull_method == NONE ||
+			    cull_method == RASTERIZER_DISCARD) {
+				printf("%-21s",
+				       cull_method == NONE ? "none" : "rasterizer discard");
+			} else if (cull_method == SUBPIXEL_PRIMS) {
+				printf("%2u small prims/pixel ",
+				       (unsigned)((1.0 / quad_size_in_pixels) *
+						  (1.0 / quad_size_in_pixels) * 2));
+			} else {
+				printf("%3u%% %-16s", cull_percentage,
+				       cull_method == BACK_FACE_CULLING ? "back faces" :
+					cull_method == VIEW_CULLING ?	  "culled by view" :
+					cull_method == DEGENERATE_PRIMS ? "degenerate prims" :
+									  "(error)");
+			}
+			fflush(stdout);
 		}
-		fflush(stdout);
 
 		for (unsigned prog = 0; prog < ARRAY_SIZE(progs); prog++) {
 			if (!progs[prog])
@@ -674,43 +758,53 @@ run(enum draw_method draw_method, enum cull_method cull_method)
 
 			glUseProgram(progs[prog]);
 
-			if (prog)
+			if (test_stage == RUN && prog)
 				printf("   ");
 
-			for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim); i++) {
-				double rate = run_test(0, draw_method, cull_method,
-						       num_quads_per_dim[i],
-						       quad_size_in_pixels, cull_percentage);
-				rate *= get_num_prims(i);
+			for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim_array); i++) {
+				assert(*test_index < ARRAY_SIZE(tests));
+				struct test_data *test = &tests[*test_index];
+				(*test_index)++;
 
-				if (gpu_freq_mhz) {
-					rate /= gpu_freq_mhz * 1000000.0;
-					printf(",%6.3f", rate);
-				} else {
-					printf(",%6.3f", rate / 1000000000);
+				double rate = execute_test(0, draw_method, cull_method, i,
+							   quad_size_in_pixels, cull_percentage,
+							   test_stage, test);
+
+				if (test_stage == RUN) {
+					rate *= get_num_prims(i);
+
+					if (gpu_freq_mhz) {
+						rate /= gpu_freq_mhz * 1000000.0;
+						printf(",%6.3f", rate);
+					} else {
+						printf(",%6.3f", rate / 1000000000);
+					}
+					fflush(stdout);
 				}
-				fflush(stdout);
 			}
 		}
-		printf("\n");
+		if (test_stage == RUN)
+			printf("\n");
 	}
 }
 
 static void
-iterate_tests(void)
+iterate_tests(enum test_stage test_stage)
 {
+	unsigned test_index = 0;
+
 	for (int cull_method = 0; cull_method < RASTERIZER_DISCARD; cull_method++)
-		run(INDEXED_TRIANGLES, cull_method);
+		run(INDEXED_TRIANGLES, cull_method, test_stage, &test_index);
 	for (int cull_method = 0; cull_method < RASTERIZER_DISCARD; cull_method++)
-		run(INDEXED_TRIANGLES_2VTX, cull_method);
+		run(INDEXED_TRIANGLES_2VTX, cull_method, test_stage, &test_index);
 
 	for (int cull_method = RASTERIZER_DISCARD; cull_method < NUM_CULL_METHODS; cull_method++)
-		run(INDEXED_TRIANGLES, cull_method);
+		run(INDEXED_TRIANGLES, cull_method, test_stage, &test_index);
 
 	/* glDrawArrays: Only test NONE and BACK_FACE_CULLING. */
 	for (int draw_method = TRIANGLES; draw_method < NUM_DRAW_METHODS; draw_method++) {
 		for (int cull_method = 0; cull_method <= BACK_FACE_CULLING; cull_method++)
-			run(draw_method, cull_method);
+			run(draw_method, cull_method, test_stage, &test_index);
 	}
 }
 
@@ -721,13 +815,20 @@ piglit_display(void)
 
 	/* for debugging */
 	if (getenv("ONE")) {
+		struct test_data test = {0};
+
 		glUseProgram(progs[2]);
-		run_test(1, INDEXED_TRIANGLES_2VTX, BACK_FACE_CULLING, ceil(sqrt(0.5 * 512000)), 2, 50);
+		init_buffers(INDEXED_TRIANGLES_2VTX, BACK_FACE_CULLING, 4, 2, 50, &test);
+		run_test(1, INDEXED_TRIANGLES_2VTX, BACK_FACE_CULLING, &test);
 		piglit_swap_buffers();
 		return PIGLIT_PASS;
 	}
 
+	iterate_tests(INIT);
+	printf("GPU memory allocated: %lu MB\n\n", mem_usage >> 20);
+
 	printf("  Measuring %-27s,    ", gpu_freq_mhz ? "Prims/clock," : "GPrims/second,");
+
 	for (unsigned prog = 0; prog < ARRAY_SIZE(progs); prog++) {
 		if (progs[prog])
 			printf("%u Varyings %27s", prog, " ");
@@ -740,12 +841,12 @@ piglit_display(void)
 			continue;
 		if (prog)
 			printf("   ");
-		for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim); i++)
+		for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim_array); i++)
 			printf(",  %3uK", get_num_prims(i) / 1000);
 	}
 	printf("\n");
 
-	iterate_tests();
+	iterate_tests(RUN);
 
 	exit(0);
 	return PIGLIT_SKIP;
