@@ -475,8 +475,6 @@ enum draw_method {
 
 static enum draw_method global_draw_method;
 static unsigned count;
-static unsigned num_duplicates;
-static unsigned duplicate_index;
 static unsigned vb_size, ib_size;
 
 static void
@@ -485,21 +483,15 @@ run_draw(unsigned iterations)
 	for (unsigned i = 0; i < iterations; i++) {
 		if (global_draw_method == INDEXED_TRIANGLES ||
 		    global_draw_method == INDEXED_TRIANGLES_2VTX) {
-			glDrawElements(GL_TRIANGLES, count,
-				       GL_UNSIGNED_INT,
-				       (void*)(long)(ib_size * duplicate_index));
+			glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, NULL);
 		} else if (global_draw_method == TRIANGLES) {
-			glDrawArrays(GL_TRIANGLES, (vb_size / 12) * duplicate_index, count);
+			glDrawArrays(GL_TRIANGLES, 0, count);
 		} else if (global_draw_method == TRIANGLE_STRIP) {
-			glDrawArrays(GL_TRIANGLE_STRIP, (vb_size / 12) * duplicate_index, count);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
 		} else if (global_draw_method == INDEXED_TRIANGLE_STRIP ||
 			   global_draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART) {
-			glDrawElements(GL_TRIANGLE_STRIP, count,
-				       GL_UNSIGNED_INT,
-				       (void*)(long)(ib_size * duplicate_index));
+			glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, NULL);
 		}
-
-		duplicate_index = (duplicate_index + 1) % num_duplicates;
 	}
 }
 
@@ -574,40 +566,17 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 	vb_size = num_vertices * 12;
 	ib_size = num_indices * 4;
 
-	bool cached = true; /* TODO: test both cached and uncached vertices */
-
-	if (cached) {
-		num_duplicates = 1;
-	} else {
-		/* Duplicate buffers and switch between them, so that no data is cached
-		 * between draws. 256 MB should be greater than any cache.
-		 *
-		 * TODO: Varyings are sourced from zero-stride vertex attribs, so they don't
-		 * consume any bandwidth.
-		 */
-		num_duplicates = MAX2(1, 256*1024*1024 / vb_size);
-	}
-
 	/* Create buffers. */
 	GLuint vb, ib;
 	glGenBuffers(1, &vb);
 	glBindBuffer(GL_ARRAY_BUFFER, vb);
-	glBufferData(GL_ARRAY_BUFFER,
-		     vb_size * num_duplicates, NULL, GL_STATIC_DRAW);
-	for (unsigned i = 0; i < num_duplicates; i++)
-		glBufferSubData(GL_ARRAY_BUFFER, vb_size * i, vb_size, vertices);
+	glBufferData(GL_ARRAY_BUFFER, vb_size, vertices, GL_STATIC_DRAW);
 	free(vertices);
 
 	if (indices) {
 		glGenBuffers(1, &ib);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-			     ib_size * num_duplicates, NULL,
-			     GL_STATIC_DRAW);
-		for (unsigned i = 0; i < num_duplicates; i++) {
-			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, ib_size * i,
-					ib_size, indices);
-		}
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ib_size, indices, GL_STATIC_DRAW);
 		free(indices);
 	}
 	/* Make sure all uploads are finished. */
@@ -627,7 +596,6 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 
 	global_draw_method = draw_method;
 	count = indices ? num_indices : num_vertices;
-	duplicate_index = 0;
 
 	double rate = 0;
 
