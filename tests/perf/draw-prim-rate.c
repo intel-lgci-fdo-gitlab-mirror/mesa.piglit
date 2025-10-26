@@ -50,8 +50,13 @@ PIGLIT_GL_TEST_CONFIG_BEGIN
 
 PIGLIT_GL_TEST_CONFIG_END
 
+static bool has_mesh_shader;
 static unsigned gpu_freq_mhz;
 static GLint progs[9];
+static GLint mesh_progs[9];
+
+#define MAX_MESH_GROUPS 100000
+#define MAX_MESH_GROUPS_STR "100000"
 
 void
 piglit_init(int argc, char **argv)
@@ -62,6 +67,7 @@ piglit_init(int argc, char **argv)
 	}
 
 	piglit_require_gl_version(32);
+	has_mesh_shader = piglit_is_extension_supported("GL_EXT_mesh_shader");
 
 	for (unsigned i = 0; i <= 8; i++) {
 		if (i == 5 || i == 7)
@@ -74,8 +80,8 @@ piglit_init(int argc, char **argv)
 			 "#define N %u \n"
 			 " \n"
 			 "#if N > 0 \n"
-			 "varying vec4 v[N]; \n"
-			 "attribute vec4 a[N]; \n"
+			 "out vec4 v[N]; \n"
+			 "in vec4 a[N]; \n"
 			 "#endif \n"
 			 " \n"
 			 "void main() { \n"
@@ -90,7 +96,7 @@ piglit_init(int argc, char **argv)
 			 "#define N %u \n"
 			 " \n"
 			 "#if N > 0 \n"
-			 "varying vec4 v[N]; \n"
+			 "in vec4 v[N]; \n"
 			 "#endif \n"
 			 " \n"
 			 "void main() { \n"
@@ -105,6 +111,63 @@ piglit_init(int argc, char **argv)
 			 "}", i);
 
 		progs[i] = piglit_build_simple_program(vs, fs);
+
+		if (has_mesh_shader) {
+			char ms[4096];
+
+			snprintf(ms, sizeof(ms),
+				 "#version 450 compatibility \n"
+				 "#extension GL_EXT_mesh_shader : enable \n"
+				 "#define N %u \n"
+				 " \n"
+				 "layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in; \n"
+				 "layout(max_vertices = 128, max_primitives = 126, triangles) out; \n"
+				 " \n"
+				 "layout(binding = 0) uniform usamplerBuffer indices; \n"
+				 "layout(binding = 1) uniform samplerBuffer pos; \n"
+				 " \n"
+				 "layout(binding = 0) uniform GroupInfo { \n"
+				 "  uvec4 group_info["MAX_MESH_GROUPS_STR"];\n"
+				 "}; \n"
+				 " \n"
+				 "uniform int zero; \n" /* always zero to load index=0 for varyings */
+				 " \n"
+				 " \n"
+				 "#if N > 0 \n"
+				 "layout(binding = 2) uniform samplerBuffer a[N]; \n"
+				 "out vec4 v[][N]; \n"
+				 "#endif \n"
+				 " \n"
+				 "void main() { \n"
+				 "  uvec4 info = group_info[gl_WorkGroupID.x]; \n"
+				 "  uint base_vertex = info.x; \n"
+				 "  uint base_prim = info.y; \n"
+				 "  uint num_vertices = info.z; \n"
+				 "  uint num_primitives = info.w; \n"
+				 " \n"
+				 "  if (gl_LocalInvocationID.x == 0) \n"
+				 "    SetMeshOutputsEXT(num_vertices, num_primitives); \n"
+				 " \n"
+				 "  uint vertex_id = base_vertex + gl_LocalInvocationID.x; \n"
+				 "  uint prim_id = base_prim + gl_LocalInvocationID.x; \n"
+				 " \n"
+				 "  if (gl_LocalInvocationID.x < num_vertices) { \n"
+				 "    gl_MeshVerticesEXT[gl_LocalInvocationID.x].gl_Position = texelFetch(pos, int(vertex_id)); \n"
+				 "#if N > 0 \n"
+				 "    for (int i = 0; i < N; i++) v[gl_LocalInvocationID.x][i] = texelFetch(a[i], int(vertex_id) * zero); \n"
+				 "#endif \n"
+				 "  } \n"
+				 " \n"
+				 "  if (gl_LocalInvocationID.x < num_primitives) \n"
+				 "    gl_PrimitiveTriangleIndicesEXT[gl_LocalInvocationID.x] = texelFetch(indices, int(prim_id)).xyz;\n"
+				 " \n"
+				 "}", i);
+
+			mesh_progs[i] = piglit_build_simple_program_multiple_shaders(
+					    GL_MESH_SHADER_EXT, ms,
+					    GL_FRAGMENT_SHADER, fs,
+					    0);
+		}
 	}
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -116,13 +179,18 @@ static void
 gen_triangle_tile(unsigned num_quads_per_dim, double prim_size_in_pixels,
 		  unsigned cull_percentage, unsigned vertices_per_prim,
 		  bool back_face_culling, bool view_culling, bool degenerate_prims,
+		  bool mesh_shader,
 		  unsigned max_vertices, unsigned *num_vertices, float *vertices,
-		  unsigned max_indices, unsigned *num_indices, unsigned *indices)
+		  unsigned max_indices, unsigned *num_indices, unsigned *indices,
+		  unsigned max_groups, unsigned *num_groups, unsigned *groups)
 {
 	/* clip space coordinates in both X and Y directions: */
 	const double first = -1;
 	const double max_length = 2;
 	const double d = prim_size_in_pixels * 2.0 / WINDOW_SIZE;
+
+	unsigned num_vertices_per_group = 0;
+	unsigned num_prims_per_group = 0;
 
 	assert(d * num_quads_per_dim <= max_length);
 	assert(*num_vertices == 0);
@@ -136,7 +204,7 @@ gen_triangle_tile(unsigned num_quads_per_dim, double prim_size_in_pixels,
 		else if (cull_percentage == 25)
 			cull = ty % 4 == 0;
 		else if (cull_percentage == 50)
-			cull = ty % 2 == 0;
+			cull = ty % 2 == 1;
 		else if (cull_percentage == 75)
 			cull = ty % 4 != 0;
 		else if (cull_percentage == 100)
@@ -165,6 +233,7 @@ gen_triangle_tile(unsigned num_quads_per_dim, double prim_size_in_pixels,
 
 				/* generate horizontal stripes with maximum reuse */
 				if (x == 0) {
+					num_vertices_per_group += 2;
 					*num_vertices += 2;
 					assert(*num_vertices <= max_vertices);
 
@@ -240,7 +309,42 @@ gen_triangle_tile(unsigned num_quads_per_dim, double prim_size_in_pixels,
 					indices[idx - 5] = indices[idx - 4];
 					indices[idx - 2] = indices[idx - 1];
 				}
+
+				if (mesh_shader) {
+					num_vertices_per_group += 2;
+					num_prims_per_group += 2;
+
+					unsigned base_vertex = *num_vertices - num_vertices_per_group;
+
+					for (unsigned i = idx - 6; i < idx; i++)
+						indices[i] -= base_vertex;
+
+					/* Break the group if the group is full or we are at the end of the strip. */
+					if (num_prims_per_group == 126 || tx == num_quads_per_dim - 1) {
+						unsigned group_id = (*num_groups);
+						assert(group_id < max_groups);
+
+						unsigned base_prim = *num_indices / 3 - num_prims_per_group;
+
+						groups[group_id * 4 + 0] = base_vertex;
+						groups[group_id * 4 + 1] = base_prim;
+						groups[group_id * 4 + 2] = num_vertices_per_group;
+						groups[group_id * 4 + 3] = num_prims_per_group;
+
+						(*num_groups)++;
+						num_vertices_per_group = 0;
+						num_prims_per_group = 0;
+
+						/* If we are not at the end of the strip, reuse the last 2 vertices
+						 * from the previous group as the start of the new group to continue
+						 * the strip.
+						 */
+						if (tx < num_quads_per_dim - 1)
+							num_vertices_per_group += 2;
+					}
+				}
 			} else {
+				assert(!mesh_shader);
 				unsigned elem = *num_vertices * 3;
 				*num_vertices += 6;
 				assert(*num_vertices <= max_vertices);
@@ -413,11 +517,12 @@ enum draw_method {
 	TRIANGLE_STRIP,
 	INDEXED_TRIANGLE_STRIP,
 	INDEXED_TRIANGLE_STRIP_PRIM_RESTART,
+	MESH_TRIANGLES,
 	NUM_DRAW_METHODS,
 };
 
 static enum draw_method global_draw_method;
-static unsigned count;
+static unsigned count, num_mesh_groups;
 
 static void
 run_draw(unsigned iterations)
@@ -436,6 +541,11 @@ run_draw(unsigned iterations)
 		   global_draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART) {
 		for (unsigned i = 0; i < iterations; i++)
 			glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, NULL);
+	} else if (global_draw_method == MESH_TRIANGLES) {
+		for (unsigned i = 0; i < iterations; i++)
+			glDrawMeshTasksEXT(num_mesh_groups, 1, 1);
+	} else {
+		assert(!"unhandled draw_method");
 	}
 }
 
@@ -456,8 +566,9 @@ enum test_stage {
 };
 
 struct buffer_data {
-	GLuint vb, ib;
-	unsigned num_vertices, num_indices;
+	GLuint vb, ib, group_buf, single_attrib_buf;
+	GLuint vb_tbo, ib_tbo, single_attrib_tbo;
+	unsigned num_vertices, num_indices, num_groups;
 };
 
 struct test_data {
@@ -465,7 +576,7 @@ struct test_data {
 	GLuint query;
 };
 
-struct test_data tests[1200];
+struct test_data tests[1200 * 2];
 uint64_t mem_usage;
 
 static const unsigned num_quads_per_dim_array[] = {
@@ -541,6 +652,8 @@ init_buffers(enum draw_method draw_method, enum cull_method cull_method,
 {
 	const unsigned max_indices = 8100000 * 3;
 	const unsigned max_vertices = max_indices;
+	const unsigned max_groups = MAX_MESH_GROUPS;
+
 	union buffer_set_index set =
 		get_buffer_set_index(draw_method, cull_method, num_quads_per_dim_index,
 				     quad_size_in_pixels_index, cull_percentage);
@@ -564,11 +677,16 @@ init_buffers(enum draw_method draw_method, enum cull_method cull_method,
 	/* Generate vertices. */
 	float *vertices = (float*)malloc(max_vertices * 12);
 	unsigned *indices = NULL;
+	unsigned *groups = NULL;
 
 	if (set.draw_method_reduced == INDEXED_TRIANGLES ||
 	    set.draw_method_reduced == INDEXED_TRIANGLES_2VTX ||
-	    set.draw_method_reduced == INDEXED_TRIANGLE_STRIP)
+	    set.draw_method_reduced == INDEXED_TRIANGLE_STRIP ||
+	    set.draw_method_reduced == MESH_TRIANGLES)
 		indices = (unsigned*)malloc(max_indices * 4);
+
+	if (set.draw_method_reduced == MESH_TRIANGLES)
+		groups = (unsigned*)malloc(max_groups * 16);
 
 	if (set.draw_method_reduced == TRIANGLE_STRIP ||
 	    set.draw_method_reduced == INDEXED_TRIANGLE_STRIP) {
@@ -586,12 +704,44 @@ init_buffers(enum draw_method draw_method, enum cull_method cull_method,
 				  set.cull_type == CULL_TYPE_BACK_FACE,
 				  set.cull_type == CULL_TYPE_VIEW,
 				  set.cull_type == CULL_TYPE_DEGENERATE,
+				  set.draw_method_reduced == MESH_TRIANGLES,
 				  max_vertices, &test->buffers->num_vertices, vertices,
-				  max_indices, &test->buffers->num_indices, indices);
+				  max_indices, &test->buffers->num_indices, indices,
+				  max_groups, &test->buffers->num_groups, groups);
 	}
+
+#if 0 /* Print vertices, indices, and groups for mesh shaders for debugging */
+	for (unsigned g = 0; g < test->buffers->num_groups; g++) {
+		unsigned base_vertex = groups[g * 4 + 0];
+		unsigned base_prim = groups[g * 4 + 1];
+		unsigned num_vertices = groups[g * 4 + 2];
+		unsigned num_prims = groups[g * 4 + 3];
+
+		printf("group[%u] = %u, %u, %u, %u\n", g, base_vertex, base_prim, num_vertices, num_prims);
+
+		for (unsigned p = 0; p < num_prims; p++) {
+			printf("prim[%u] = ", base_prim + p);
+
+			for (unsigned i = 0; i < 3; i++) {
+				printf("%u, ", indices[(base_prim + p) * 3 + i]);
+			}
+			puts("");
+		}
+
+		for (unsigned v = 0; v < num_vertices; v++) {
+			printf("vertex[%u] = ", base_vertex + v);
+
+			for (unsigned i = 0; i < 3; i++) {
+				printf("%f, ", vertices[(base_vertex + v) * 3 + i]);
+			}
+			puts("");
+		}
+	}
+#endif
 
 	unsigned vb_size = test->buffers->num_vertices * 12;
 	unsigned ib_size = test->buffers->num_indices * 4;
+	unsigned group_data_size = test->buffers->num_groups * 16;
 
 	/* Create buffers. */
 	glGenBuffers(1, &test->buffers->vb);
@@ -607,6 +757,38 @@ init_buffers(enum draw_method draw_method, enum cull_method cull_method,
 		mem_usage += ib_size;
 		free(indices);
 	}
+
+	if (groups) {
+		glGenBuffers(1, &test->buffers->group_buf);
+		glBindBuffer(GL_ARRAY_BUFFER, test->buffers->group_buf);
+		glBufferData(GL_ARRAY_BUFFER, group_data_size, groups, GL_STATIC_DRAW);
+		mem_usage += group_data_size;
+		free(groups);
+
+		static const float attrib[] = {0, 0, 0, 1};
+		glGenBuffers(1, &test->buffers->single_attrib_buf);
+		glBindBuffer(GL_ARRAY_BUFFER, test->buffers->single_attrib_buf);
+		glBufferData(GL_ARRAY_BUFFER, 16, attrib, GL_STATIC_DRAW);
+		mem_usage += 16;
+	}
+
+	if (set.draw_method_reduced == MESH_TRIANGLES) {
+		assert(indices);
+
+		glGenTextures(1, &test->buffers->vb_tbo);
+		glBindTexture(GL_TEXTURE_BUFFER, test->buffers->vb_tbo);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, test->buffers->vb);
+
+		glGenTextures(1, &test->buffers->ib_tbo);
+		glBindTexture(GL_TEXTURE_BUFFER, test->buffers->ib_tbo);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32UI, test->buffers->ib);
+
+		glGenTextures(1, &test->buffers->single_attrib_tbo);
+		glBindTexture(GL_TEXTURE_BUFFER, test->buffers->single_attrib_tbo);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, test->buffers->single_attrib_buf);
+
+		glBindTexture(GL_TEXTURE_BUFFER, 0);
+	}
 }
 
 #define NUM_ITER 500
@@ -618,27 +800,49 @@ run_test(unsigned debug_num_iterations, enum draw_method draw_method,
 	/* Test */
 	if (cull_method == RASTERIZER_DISCARD)
 		glEnable(GL_RASTERIZER_DISCARD);
-	if (draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART)
-		glEnable(GL_PRIMITIVE_RESTART);
-
-	glBindBuffer(GL_ARRAY_BUFFER, test->buffers->vb);
-	glVertexPointer(3, GL_FLOAT, 0, NULL);
-
-	if (test->buffers->ib)
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, test->buffers->ib);
 
 	global_draw_method = draw_method;
-	count = test->buffers->ib ? test->buffers->num_indices : test->buffers->num_vertices;
+
+	if (draw_method == MESH_TRIANGLES) {
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, test->buffers->group_buf);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_BUFFER, test->buffers->ib_tbo);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_BUFFER, test->buffers->vb_tbo);
+		for (unsigned i = 0; i < 8; i++) {
+			glActiveTexture(GL_TEXTURE2 + i);
+			glBindTexture(GL_TEXTURE_BUFFER, test->buffers->single_attrib_tbo);
+		}
+
+		glActiveTexture(GL_TEXTURE0);
+
+		num_mesh_groups = test->buffers->num_groups;
+	} else {
+		if (draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART)
+			glEnable(GL_PRIMITIVE_RESTART);
+
+		glBindBuffer(GL_ARRAY_BUFFER, test->buffers->vb);
+		glVertexPointer(3, GL_FLOAT, 0, NULL);
+
+		if (test->buffers->ib)
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, test->buffers->ib);
+
+		count = test->buffers->ib ? test->buffers->num_indices : test->buffers->num_vertices;
+	}
 
 	if (debug_num_iterations)
 		run_draw(debug_num_iterations);
 	else
 		test->query = perf_measure_gpu_time_get_query(run_draw, NUM_ITER);
 
+	if (draw_method != MESH_TRIANGLES) {
+		if (draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART)
+			glDisable(GL_PRIMITIVE_RESTART);
+	}
+
 	if (cull_method == RASTERIZER_DISCARD)
 		glDisable(GL_RASTERIZER_DISCARD);
-	if (draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART)
-		glDisable(GL_PRIMITIVE_RESTART);
 }
 
 static void
@@ -647,6 +851,10 @@ run(enum draw_method draw_method, enum cull_method cull_method, enum test_stage 
 {
 	static unsigned cull_percentages[] = {100, 75, 50};
 	unsigned num_subtests;
+	GLint *shader_progs = draw_method == MESH_TRIANGLES ? mesh_progs : progs;
+
+	if (draw_method == MESH_TRIANGLES && !has_mesh_shader)
+		return;
 
 	if (cull_method == BACK_FACE_CULLING ||
 	    cull_method == VIEW_CULLING) {
@@ -673,7 +881,7 @@ run(enum draw_method draw_method, enum cull_method cull_method, enum test_stage 
 		switch (test_stage) {
 		case INIT:
 		    for (unsigned prog = 0; prog < ARRAY_SIZE(progs); prog++) {
-			if (progs[prog]) {
+			if (shader_progs[prog]) {
 			    for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim_array); i++) {
 				assert(*test_index < ARRAY_SIZE(tests));
 				struct test_data *test = &tests[(*test_index)++];
@@ -687,8 +895,8 @@ run(enum draw_method draw_method, enum cull_method cull_method, enum test_stage 
 
 		case RUN:
 		    for (unsigned prog = 0; prog < ARRAY_SIZE(progs); prog++) {
-			    if (progs[prog]) {
-				glUseProgram(progs[prog]);
+			    if (shader_progs[prog]) {
+				glUseProgram(shader_progs[prog]);
 
 				for (int i = 0; i < ARRAY_SIZE(num_quads_per_dim_array); i++) {
 				    assert(*test_index < ARRAY_SIZE(tests));
@@ -707,7 +915,8 @@ run(enum draw_method draw_method, enum cull_method cull_method, enum test_stage 
 			   draw_method == TRIANGLES ? "DrawArraysT" :
 			   draw_method == TRIANGLE_STRIP ? "DrawArraysTS" :
 			   draw_method == INDEXED_TRIANGLE_STRIP ? "DrawElemsTS" :
-			   "DrawTS_PrimR");
+			   draw_method == INDEXED_TRIANGLE_STRIP_PRIM_RESTART ? "DrawTS_PrimR" :
+			   draw_method == MESH_TRIANGLES ? "DrawMesh" : "invalid");
 
 		    if (cull_method == NONE ||
 			cull_method == RASTERIZER_DISCARD) {
@@ -727,7 +936,7 @@ run(enum draw_method draw_method, enum cull_method cull_method, enum test_stage 
 		    }
 
 		    for (unsigned prog = 0; prog < ARRAY_SIZE(progs); prog++) {
-			    if (progs[prog]) {
+			    if (shader_progs[prog]) {
 				if (prog > 0)
 				    printf("   ");
 
@@ -790,9 +999,19 @@ piglit_display(void)
 	if (getenv("ONE")) {
 		struct test_data test = {0};
 
-		glUseProgram(progs[2]);
+		glUseProgram(progs[1]);
 		init_buffers(INDEXED_TRIANGLES_2VTX, BACK_FACE_CULLING, 4, 0, 50, &test);
 		run_test(1, INDEXED_TRIANGLES_2VTX, BACK_FACE_CULLING, &test);
+		piglit_swap_buffers();
+		return PIGLIT_PASS;
+	}
+
+	if (getenv("MONE")) {
+		struct test_data test = {0};
+
+		glUseProgram(mesh_progs[1]);
+		init_buffers(MESH_TRIANGLES, BACK_FACE_CULLING, 4, 0, 50, &test);
+		run_test(1, MESH_TRIANGLES, BACK_FACE_CULLING, &test);
 		piglit_swap_buffers();
 		return PIGLIT_PASS;
 	}
