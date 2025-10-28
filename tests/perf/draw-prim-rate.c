@@ -63,106 +63,49 @@ piglit_init(int argc, char **argv)
 
 	piglit_require_gl_version(32);
 
-	progs[0] = piglit_build_simple_program(
-			  "#version 150 compatibility \n"
-			  "void main() { \n"
-			  "  gl_Position = gl_Vertex; \n"
-			  "}",
+	for (unsigned i = 0; i <= 8; i++) {
+		if (i == 5 || i == 7)
+			continue;
 
-			  "#version 150 compatibility \n"
-			  "void main() { \n"
-			  "  gl_FragColor = vec4(1.0); \n"
-			  "}");
+		char vs[1024], fs[1024];
 
-	progs[1] = piglit_build_simple_program(
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[1]; \n"
-			  "attribute vec4 a[1]; \n"
-			  "void main() { \n"
-			  "  for (int i = 0; i < 1; i++) v[i] = a[i]; \n"
-			  "  gl_Position = gl_Vertex; \n"
-			  "}",
+		snprintf(vs, sizeof(vs),
+			 "#version 150 compatibility \n"
+			 "#define N %u \n"
+			 " \n"
+			 "#if N > 0 \n"
+			 "varying vec4 v[N]; \n"
+			 "attribute vec4 a[N]; \n"
+			 "#endif \n"
+			 " \n"
+			 "void main() { \n"
+			 "#if N > 0 \n"
+			 "  for (int i = 0; i < N; i++) v[i] = a[i]; \n"
+			 "#endif \n"
+			 "  gl_Position = gl_Vertex; \n"
+			 "}", i);
 
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[1]; \n"
-			  "void main() { \n"
-			  "  gl_FragColor = v[0]; \n"
-			  "}");
+		snprintf(fs, sizeof(fs),
+			 "#version 150 compatibility \n"
+			 "#define N %u \n"
+			 " \n"
+			 "#if N > 0 \n"
+			 "varying vec4 v[N]; \n"
+			 "#endif \n"
+			 " \n"
+			 "void main() { \n"
+			 "#if N > 0 \n"
+			 "  vec4 mul = vec4(1.0); \n"
+			 "  for (int i = 0; i < N; i++) mul *= v[i]; \n"
+			 "  gl_FragColor = vec4(dot(mul, vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
+			 "#else \n"
+			 "  gl_FragColor = vec4(1.0); \n"
+			 "#endif \n"
+			 " \n"
+			 "}", i);
 
-	progs[2] = piglit_build_simple_program(
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[2]; \n"
-			  "attribute vec4 a[2]; \n"
-			  "void main() { \n"
-			  "  for (int i = 0; i < 2; i++) v[i] = a[i]; \n"
-			  "  gl_Position = gl_Vertex; \n"
-			  "}",
-
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[2]; \n"
-			  "void main() { \n"
-			  "  gl_FragColor = vec4(dot(v[0] * v[1], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
-			  "}");
-
-	progs[3] = piglit_build_simple_program(
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[3]; \n"
-			  "attribute vec4 a[3]; \n"
-			  "void main() { \n"
-			  "  for (int i = 0; i < 3; i++) v[i] = a[i]; \n"
-			  "  gl_Position = gl_Vertex; \n"
-			  "}",
-
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[3]; \n"
-			  "void main() { \n"
-			  "  gl_FragColor = vec4(dot(v[0] * v[1] * v[2], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
-			  "}");
-
-	progs[4] = piglit_build_simple_program(
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[4]; \n"
-			  "attribute vec4 a[4]; \n"
-			  "void main() { \n"
-			  "  for (int i = 0; i < 4; i++) v[i] = a[i]; \n"
-			  "  gl_Position = gl_Vertex; \n"
-			  "}",
-
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[4]; \n"
-			  "void main() { \n"
-			  "  gl_FragColor = vec4(dot(v[0] * v[1] * v[2] * v[3], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
-			  "}");
-
-	progs[6] = piglit_build_simple_program(
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[6]; \n"
-			  "attribute vec4 a[6]; \n"
-			  "void main() { \n"
-			  "  for (int i = 0; i < 6; i++) v[i] = a[i]; \n"
-			  "  gl_Position = gl_Vertex; \n"
-			  "}",
-
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[6]; \n"
-			  "void main() { \n"
-			  "  gl_FragColor = vec4(dot(v[0] * v[1] * v[2] * v[3] * v[4] * v[5], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
-			  "}");
-
-	progs[8] = piglit_build_simple_program(
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[8]; \n"
-			  "attribute vec4 a[8]; \n"
-			  "void main() { \n"
-			  "  for (int i = 0; i < 8; i++) v[i] = a[i]; \n"
-			  "  gl_Position = gl_Vertex; \n"
-			  "}",
-
-			  "#version 150 compatibility \n"
-			  "varying vec4 v[8]; \n"
-			  "void main() { \n"
-			  "  gl_FragColor = vec4(dot(v[0] * v[1] * v[2] * v[3] * v[4] * v[5] * v[6] * v[7], vec4(1.0)) == 1.0 ? 1.0 : 0.0); \n"
-			  "}");
+		progs[i] = piglit_build_simple_program(vs, fs);
+	}
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnable(GL_CULL_FACE);
