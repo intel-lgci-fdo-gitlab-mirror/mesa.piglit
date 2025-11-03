@@ -383,6 +383,7 @@ with profile.test_list.group_manager(
     g(['glx-multithread-makecurrent-4'], run_concurrent=False)
     g(['glx-multithread-shader-compile'], run_concurrent=False)
     g(['glx-shader-sharing'], run_concurrent=False)
+    g(['glx-shader-sharing-uniforms'], run_concurrent=False)
     g(['glx-swap-exchange'], run_concurrent=False)
     g(['glx-swap-event', '--event'], 'glx-swap-event')
     g(['glx-swap-event', '--interval-0'], 'glx-swap-event-interval-0')
