@@ -31,6 +31,10 @@
  *  	  UNSIGNED_INT_2_10_10_10_REV;
  *  	• type is INT_2_10_10_10_REV or UNSIGNED_INT_2_10_10_10_REV, and size
  *  	  is neither 4 or BGRA;"
+ *
+ * ARB_vertex_type_2_10_10_10_rev spec says:
+ * "If EXT_vertex_array_bgra is not supported, remove references to BGRA as an
+ *  allowed parameter for <size> in VertexAttrib."
  */
 
 #include "piglit-util-gl.h"
@@ -47,9 +51,6 @@ piglit_init(int argc, char **argv)
 {
 	bool pass = true;
 	int i;
-	GLint valid_sizes[] = {
-		4, GL_BGRA
-	};
 	GLint invalid_sizes[] = {
 		1, 2, 3
 	};
@@ -63,13 +64,25 @@ piglit_init(int argc, char **argv)
 	if(piglit_get_gl_version() < 33)
 		piglit_require_extension("GL_ARB_vertex_type_2_10_10_10_rev");
 
-	for (i = 0; i < ARRAY_SIZE(valid_sizes); i++) {
-		glVertexAttribPointer(0, valid_sizes[i],
+	/* Size 4 is always valid */
+	glVertexAttribPointer(0, 4,
+				GL_INT_2_10_10_10_REV, GL_TRUE,
+				0, NULL);
+	pass = piglit_check_gl_error(GL_NO_ERROR) && pass;
+
+	glVertexAttribPointer(0, 4,
+				GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE,
+				0, NULL);
+	pass = piglit_check_gl_error(GL_NO_ERROR) && pass;
+
+	/* GL_BGRA is only valid if extension is supported */
+	if (piglit_is_extension_supported("GL_EXT_vertex_array_bgra")) {
+		glVertexAttribPointer(0, GL_BGRA,
 					GL_INT_2_10_10_10_REV, GL_TRUE,
 					0, NULL);
 		pass = piglit_check_gl_error(GL_NO_ERROR) && pass;
 
-		glVertexAttribPointer(0, valid_sizes[i],
+		glVertexAttribPointer(0, GL_BGRA,
 					GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE,
 					0, NULL);
 		pass = piglit_check_gl_error(GL_NO_ERROR) && pass;
