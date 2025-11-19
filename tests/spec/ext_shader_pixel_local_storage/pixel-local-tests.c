@@ -1789,6 +1789,8 @@ static const struct piglit_subtest subtests[] = {
 void
 piglit_init(int argc, char **argv)
 {
+	piglit_require_extension("GL_EXT_shader_pixel_local_storage");
+
 	GLint max_pls_size;
 	glGetIntegerv(GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_SIZE_EXT,
 		      &max_pls_size);
