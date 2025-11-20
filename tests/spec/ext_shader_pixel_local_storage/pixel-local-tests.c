@@ -1096,7 +1096,7 @@ run_check_data(void *_data)
 	return res;
 }
 
-/* Check that color buffer correctly clears to 0. */
+/* Check that color buffer clears correctly set PLS variables to 0. */
 static enum piglit_result
 run_check_clear(void *_data)
 {
@@ -1104,12 +1104,21 @@ run_check_clear(void *_data)
 		"#version 300 es\n"
 		"#extension GL_EXT_shader_pixel_local_storage : require\n"
 		"precision mediump float;\n"
-		"__pixel_localEXT mydata {\n"
+		"__pixel_local_inEXT mydata {\n"
 		"	layout(rgba8) vec4 pls_color;\n"
-		"} outp;\n"
+		"} inp;\n"
+		"out vec4 final_color;\n"
 		"void main()\n"
 		"{\n"
-		"	outp.pls_color = vec4(1.0, 1.0, 1.0, 1.0);\n"
+		"	if (inp.pls_color.r != 0.0\n"
+		"	    || inp.pls_color.g != 0.0\n"
+		"	    || inp.pls_color.b != 0.0\n"
+		"	    || inp.pls_color.a != 0.0)\n"
+		"	{\n"
+		"		final_color = vec4(1.0, 0.0, 0.0, 1.0);\n"
+		"	} else {\n"
+		"		final_color = vec4(0.0, 1.0, 0.0, 1.0);\n"
+		"	}\n"
 		"}\n";
 
 	GLint prog = build_program_with_basic_vs(fs);
@@ -1154,22 +1163,14 @@ run_check_clear(void *_data)
 
 	glUseProgram(prog);
 
+	/* draw a triangle that covers the whole screen */
+	draw_triangle( -1.0, -1.0,
+			3.0, -1.0,
+		       -1.0,  3.0 );
+
 	glDisable(GL_SHADER_PIXEL_LOCAL_STORAGE_EXT);
 
-	GLubyte pixels[4] = {0};
-	float expected[4] = {0.0, 0.0, 0.0, 0.0};
-	float actual[4];
-
-	glReadPixels(0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	if (!piglit_check_gl_error(GL_NO_ERROR)) {
-		res = PIGLIT_FAIL;
-		goto end;
-	}
-
-	for (int p = 0; p < 4; ++p)
-		actual[p] = pixels[p] / 255.0;
-
-	if (!piglit_compare_pixels_float(expected, actual, expected, 4))
+	if (!piglit_probe_rect_rgb(0, 0, 1, 1, green))
 		res = PIGLIT_FAIL;
 
 end:
