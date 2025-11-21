@@ -668,10 +668,13 @@ run_blend_dither_test(void *_data)
  * pixel_local_storage variable.
  */
 static enum piglit_result
-make_draw_main_str(char *dst, struct pls_format_data format_data)
+make_draw_main_str(char *dst, struct pls_format_data format_data,
+		   const char *structname)
 {
 	char tmp[MAIN_SIZE];
-	static const char *lhs = "	outp.pls_color0 = ";
+	char lhs[MAIN_SIZE/2];
+	const char *dot = structname[0] ? "." : "";
+	snprintf(lhs, MAIN_SIZE/2, "	%s%spls_color0 = ", structname, dot);
 	if (format_data.num_components > 1)
 		snprintf(dst, MAIN_SIZE, "%s%s(", lhs, format_data.data_type);
 	else
@@ -713,15 +716,17 @@ make_draw_main_str(char *dst, struct pls_format_data format_data)
 }
 
 static enum piglit_result
-make_test_main_str(char *dst, struct pls_format_data format_data)
+make_test_main_str(char *dst, struct pls_format_data format_data,
+		   const char *structname)
 {
-	char *index = (format_data.num_components > 1) ? "[i]" : "";
+	const char *index = (format_data.num_components > 1) ? "[i]" : "";
+	const char *dot = structname[0] ? "." : "";
 	static const char *float_template =
 		"	vec4 tolerance = vec4(%.12e, %.12e, %.12e, %.12e);\n"
 		"	vec4 expected = vec4(%.12e, %.12e, %.12e, %.12e);\n"
 		"	outColor = vec4(0.0, 1.0, 0.0, 0.0);\n"
 		"	for (int i = 0; i < %d; i++) {\n"
-		"		if (abs(outp.pls_color0%s - expected[i]) > tolerance[i])\n"
+		"		if (abs(%s%spls_color0%s - expected[i]) > tolerance[i])\n"
 		"			outColor = vec4(1.0, 0.0, 0.0, 0.0);\n"
 		"	}\n";
 
@@ -729,7 +734,7 @@ make_test_main_str(char *dst, struct pls_format_data format_data)
 		"	ivec4 expected = ivec4(%i, %i, %i, %i);\n"
 		"	outColor = vec4(0.0, 1.0, 0.0, 0.0);\n"
 		"	for (int i = 0; i < %d; i++) {\n"
-		"		if (outp.pls_color0%s != expected[i])\n"
+		"		if (%s%spls_color0%s != expected[i])\n"
 		"			outColor = vec4(1.0, 0.0, 0.0, 0.0);\n"
 		"	}\n";
 
@@ -737,7 +742,7 @@ make_test_main_str(char *dst, struct pls_format_data format_data)
 		"	uvec4 expected = uvec4(%uu, %uu, %uu, %uu);\n"
 		"	outColor = vec4(0.0, 1.0, 0.0, 0.0);\n"
 		"	for (int i = 0; i < %d; i++) {\n"
-		"		if (outp.pls_color0%s != expected[i])\n"
+		"		if (%s%spls_color0%s != expected[i])\n"
 		"			outColor = vec4(1.0, 0.0, 0.0, 0.0);\n"
 		"	}\n";
 
@@ -761,7 +766,7 @@ make_test_main_str(char *dst, struct pls_format_data format_data)
 		snprintf(dst, MAIN_SIZE, float_template,
 			 tolerance[0], tolerance[1], tolerance[2], tolerance[3],
 			 expected[0], expected[1], expected[2], expected[3],
-			 format_data.num_components, index);
+			 format_data.num_components, structname, dot, index);
 		break;
 	}
 	case GL_RGBA8I:
@@ -775,7 +780,7 @@ make_test_main_str(char *dst, struct pls_format_data format_data)
 		}
 		snprintf(dst, MAIN_SIZE, int_template,
 			 expected[0], expected[1], expected[2], expected[3],
-			 format_data.num_components, index);
+			 format_data.num_components, structname, dot, index);
 		break;
 	}
 	case GL_RGB10_A2UI:
@@ -791,7 +796,7 @@ make_test_main_str(char *dst, struct pls_format_data format_data)
 		}
 		snprintf(dst, MAIN_SIZE, uint_template,
 			 expected[0], expected[1], expected[2], expected[3],
-			 format_data.num_components, index);
+			 format_data.num_components, structname, dot, index);
 		break;
 	}
 	default:
@@ -806,15 +811,15 @@ make_test_main_str(char *dst, struct pls_format_data format_data)
  * variable with the given format data.
  */
 static enum piglit_result
-run_check_format(struct pls_format_data format_data)
+run_check_format(struct pls_format_data format_data, const char *structname)
 {
 	enum piglit_result res = PIGLIT_PASS;
 	char vars[VARS_SIZE];
 	make_vars_str(vars, format_data.layout, format_data.data_type,
-		      "outp", NULL, NULL, PIXEL_LOCAL_INOUT, 1);
+		      structname, NULL, NULL, PIXEL_LOCAL_INOUT, 1);
 	char draw_fs[FS_SIZE];
 	char main[MAIN_SIZE];
-	res = make_draw_main_str(main, format_data);
+	res = make_draw_main_str(main, format_data, structname);
 	if (res != PIGLIT_PASS)
 		goto end;
 
@@ -822,9 +827,9 @@ run_check_format(struct pls_format_data format_data)
 				 true);
 
 	make_vars_str(vars, format_data.layout, format_data.data_type,
-		      "outp", "outColor", "vec4", PIXEL_LOCAL_INOUT, 1);
+		      structname, "outColor", "vec4", PIXEL_LOCAL_INOUT, 1);
 	char test_fs[FS_SIZE];
-	res = make_test_main_str(main, format_data);
+	res = make_test_main_str(main, format_data, structname);
 	if (res != PIGLIT_PASS)
 		goto end;
 
@@ -1089,7 +1094,8 @@ run_check_data(void *_data)
 		int format_index = (test->num_formats == PLS_FORMAT_COUNT) ?
 			i : test->format_indices[i];
 
-		res = run_check_format(format_data[format_index]);
+		res = run_check_format(format_data[format_index],
+				       (i&1) ? "outp" : "");
 		if (res != PIGLIT_PASS)
 			return res;
 	}
