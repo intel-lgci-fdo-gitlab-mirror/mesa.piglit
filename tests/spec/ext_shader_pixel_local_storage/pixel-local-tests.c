@@ -198,8 +198,11 @@ cleanup_and_return(enum piglit_result res,
 		glDeleteTextures(n_texts, texts);
 	if (n_rbs > 0)
 		glDeleteRenderbuffers(n_rbs, rbs);
-	if (n_fbs > 0)
+	if (n_fbs > 0) {
 		glDeleteFramebuffers(n_fbs, fbs);
+		/* restore the default framebuffer */
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 	return res;
 }
 
@@ -404,7 +407,6 @@ run_draw_buffers_check(void *_data)
 		goto fail;
 	glDisable(GL_SHADER_PIXEL_LOCAL_STORAGE_EXT);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	if (!fbos[0] || !piglit_check_gl_error(GL_NO_ERROR))
 		goto fail;
 
@@ -459,7 +461,6 @@ run_draw_buffers_check(void *_data)
 
 	/* Create a complete framebuffer with multiple attachments and retry. */
 	fbos[1] = create_fbo(3, color_attachments, textures);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	if (!fbos[1] || !piglit_check_gl_error(GL_NO_ERROR))
 		goto fail;
 	glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
@@ -473,7 +474,6 @@ run_draw_buffers_check(void *_data)
 	/* Try enabling pixel local storage while
 	 * there are multiple draw buffers. */
 	fbos[2] = create_fbo(1, att, textures);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	if (!fbos[2] || !piglit_check_gl_error(GL_NO_ERROR))
 		goto fail;
 	glBindFramebuffer(GL_FRAMEBUFFER, fbos[2]);
@@ -606,7 +606,6 @@ _run_blend_dither_test(bool blend, bool dither)
 				       GL_COLOR_ATTACHMENT0,
 				       GL_TEXTURE_2D,
 				       tex, 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		if (!piglit_check_gl_error(GL_NO_ERROR)) {
 			res = PIGLIT_FAIL;
 			goto end;
@@ -856,7 +855,6 @@ run_check_format(struct pls_format_data format_data, const char *structname)
 			       GL_COLOR_ATTACHMENT0,
 			       GL_TEXTURE_2D,
 			       tex, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	if (!piglit_check_gl_error(GL_NO_ERROR)) {
 		res = PIGLIT_FAIL;
@@ -1125,8 +1123,6 @@ run_check_clear(void *_data)
 			       GL_COLOR_ATTACHMENT0,
 			       GL_TEXTURE_2D,
 			       tex, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	if (!piglit_check_gl_error(GL_NO_ERROR)) {
 		res = PIGLIT_FAIL;
