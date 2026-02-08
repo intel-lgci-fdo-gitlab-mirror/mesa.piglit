@@ -173,7 +173,7 @@ clamp(GLint &x, GLint xmin, GLint xmax)
 }
 
 static float
-lerp(float x0, float x1, float w)
+linear_interp(float x0, float x1, float w)
 {
 	return x0 + (x1 - x0) * w;
 }
@@ -181,9 +181,9 @@ lerp(float x0, float x1, float w)
 static float
 lerp2d(float xy00, float xy01, float xy10, float xy11, float wx, float wy)
 {
-	float y0 = lerp(xy00, xy01, wx);
-	float y1 = lerp(xy10, xy11, wx);
-	return lerp(y0, y1, wy);
+	float y0 = linear_interp(xy00, xy01, wx);
+	float y1 = linear_interp(xy10, xy11, wx);
+	return linear_interp(y0, y1, wy);
 }
 
 static float clearColor[4] = {
