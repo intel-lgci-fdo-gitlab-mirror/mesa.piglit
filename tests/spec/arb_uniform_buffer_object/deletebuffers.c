@@ -43,6 +43,7 @@ piglit_init(int argc, char **argv)
 {
 	bool pass = true;
 	GLuint bo[2];
+	GLuint bo2[1];
 	GLint binding;
 
 	piglit_require_extension("GL_ARB_uniform_buffer_object");
@@ -55,6 +56,7 @@ piglit_init(int argc, char **argv)
 	}
 
 	glGenBuffers(2, bo);
+	glGenBuffers(1, bo2);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, bo[0]);
 	glBufferData(GL_UNIFORM_BUFFER, 4, NULL, GL_STATIC_DRAW);
@@ -64,6 +66,10 @@ piglit_init(int argc, char **argv)
 	glBufferData(GL_UNIFORM_BUFFER, 4, NULL, GL_STATIC_DRAW);
 	glBindBufferRange(GL_UNIFORM_BUFFER, 1, bo[1], 0, 4);
 
+	glBindBuffer(GL_UNIFORM_BUFFER, bo2[0]);
+	glBufferData(GL_UNIFORM_BUFFER, 4, NULL, GL_STATIC_DRAW);
+	glBindBufferRange(GL_UNIFORM_BUFFER, 2, bo2[0], 0, 4);
+
 	glDeleteBuffers(2, bo);
 
 	if (glIsBuffer(bo[0]) || glIsBuffer(bo[1])) {
@@ -72,10 +78,10 @@ piglit_init(int argc, char **argv)
 	}
 
 	glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &binding);
-	if (binding != 0) {
-		printf("Failed to unbind glBindBuffer() buffer %d:\n"
-		       "  binding set to %d, should be 0\n",
-		       bo[1], binding);
+	if (binding != bo2[0]) {
+		printf("Incorrectly unbound glBindBuffer() buffer %d:\n"
+		       "  binding set to %d instead\n",
+		       bo2[0], binding);
 		pass = false;
 	}
 
@@ -95,6 +101,15 @@ piglit_init(int argc, char **argv)
 		pass = false;
 	}
 
+	glDeleteBuffers(1, bo2);
+
+	glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &binding);
+	if (binding != 0) {
+		printf("Failed to unbind glBindBuffer() buffer %d:\n"
+		       "  binding set to %d, should be 0\n",
+		       bo2[0], binding);
+		pass = false;
+	}
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);
 }
 
