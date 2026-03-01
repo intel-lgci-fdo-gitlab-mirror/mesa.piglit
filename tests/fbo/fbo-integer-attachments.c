@@ -283,7 +283,7 @@ test_fbo(const struct format_info *info)
       return GL_FALSE;
 
    glBegin(GL_LINES);
-   glEnd(GL_LINES);
+   glEnd();
    /* Validation errors are triggered on both the Begin and End calls. So we
     * need to clear them out before the next loop iteration.
     */
