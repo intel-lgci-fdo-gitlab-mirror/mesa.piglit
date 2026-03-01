@@ -3684,6 +3684,7 @@ query_resource(unsigned interface_type, GLuint index, unsigned prop,
 			old_got++;
 			break;
 		default:
+			old_got = 0;
 			break;
 		}
 
@@ -3877,6 +3878,8 @@ query_resource_name(unsigned interface_type, GLuint index,
 						      NULL, NULL, old_name);
 			break;
 		default:
+			old_length = 0;
+			old_name[0] = '\0';
 			break;
 		}
 
@@ -3916,6 +3919,7 @@ query_resource_index(unsigned interface_type, const char *name, GLuint expected,
 
 			break;
 		default:
+			old = 0;
 			break;
 		}
 
@@ -3958,6 +3962,7 @@ query_resource_location(unsigned interface_type, const char *name,
 
 			break;
 		default:
+			old = 0;
 			break;
 		}
 
