@@ -1,0 +1,50 @@
+[require]
+GLSL >= 1.50
+GL_ARB_gpu_shader5
+
+[vertex shader passthrough]
+
+[fragment shader]
+#version 150
+#extension GL_ARB_gpu_shader5: require
+
+uniform float billion = 1000000000.0;
+uniform float flt_max = 3.40282347E+38;
+
+out vec4 piglit_fragcolor;
+
+void main()
+{
+    float inf = flt_max * flt_max;
+    float also_inf = flt_max * billion;
+
+    /* Trying very hard to trigger a problematic optimization in the
+     * Intel compiler backend. The following code should result in NIR
+     * like
+     *
+     *    32     %6 = fadd %5, %4 // exact, preserve:inf,nan
+     *    32     %7 = load_const (0x3f800000 = 1.000000)
+     *    32     %8 = fmin %6, %7 (1.000000) // preserve:inf,nan
+     *    32     %9 = fsat %8 // preserve:inf,nan
+     *
+     * The Intel backend will compile this to
+     *
+     *    sel.sat.l(8)    g3<1>F          g2<0,1,0>F      0x3f800000F
+     *
+     * This is, so far, NaN safe. However, a part of brw_opt_algebraic
+     * will convert the sel.sat.l (which implements fmin) to a
+     * mov.sat. For a NaN input, this will produce 0.0 instead of 1.0
+     */
+    precise float a = inf - also_inf;
+    precise float b = min(a, 1.0);
+    precise float c = min(max(b, 0.0), 1.0);
+
+    if (isnan(a) && c == 1.0)
+	piglit_fragcolor = vec4(0.0, 1.0, 0.0, 1.0);
+    else
+	piglit_fragcolor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+[test]
+draw rect -1 -1 2 2
+probe all rgba 0.0 1.0 0.0 1.0
