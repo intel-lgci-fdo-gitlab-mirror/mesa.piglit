@@ -2205,6 +2205,7 @@ with profile.test_list.group_manager(
     g(['arb_sampler_objects-sampler-objects'], 'sampler-objects',)
     g(['arb_sampler_objects-sampler-incomplete'], 'sampler-incomplete',)
     g(['arb_sampler_objects-srgb-decode'], 'GL_EXT_texture_sRGB_decode',)
+    g(['arb_sampler_objects-srgb-decode-multiple-sampler-views'], 'GL_EXT_texture_sRGB_decode-multi-views',)
     g(['arb_sampler_objects-framebufferblit'], 'framebufferblit',
       run_concurrent=False)
 
