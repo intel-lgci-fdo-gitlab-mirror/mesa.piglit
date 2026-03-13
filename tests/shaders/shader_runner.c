@@ -131,6 +131,7 @@ static int gl_max_vertex_attribs;
 static int gl_max_varying_components;
 static int gl_max_clip_planes;
 static int gl_num_program_binary_formats = 0;
+static int gl_subgroup_size_khr = 0;
 
 static const char *test_start = NULL;
 static unsigned test_start_line_num = 0;
@@ -1247,6 +1248,11 @@ process_requirement(const char *line)
 			"GL_NUM_PROGRAM_BINARY_FORMATS",
 			&gl_num_program_binary_formats,
 			"num program binary formats",
+		},
+		{
+			"GL_SUBGROUP_SIZE_KHR",
+			&gl_subgroup_size_khr,
+			"subgroup size",
 		},
 	};
 	unsigned i;
@@ -6803,6 +6809,9 @@ piglit_init(int argc, char **argv)
 	if (piglit_is_extension_supported("GL_ARB_get_program_binary"))
 		glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS,
 		              &gl_num_program_binary_formats);
+	if (piglit_is_extension_supported("GL_KHR_shader_subgroup"))
+		glGetIntegerv(GL_SUBGROUP_SIZE_KHR,
+		              &gl_subgroup_size_khr);
 #else
 	if (piglit_is_extension_supported("GL_OES_get_program_binary"))
 		glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS_OES,

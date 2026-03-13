@@ -1,0 +1,154 @@
+[require]
+GL >= 4.6
+GLSL >= 4.60
+GL_ARB_compute_shader
+GL_KHR_shader_subgroup
+GL_SUBGROUP_SIZE_KHR >= 32
+
+[compute shader]
+#version 460
+#extension GL_KHR_shader_subgroup_shuffle : require
+
+layout(local_size_x = 32) in;
+
+layout(std430, binding = 0) buffer Data
+{
+    uint values[];
+};
+
+// Bitonic sort for exactly 32 values, one value per invocation.
+//
+// This version assumes:
+// - subgroup size is exactly 32 (the algorithm works with any 2^n array size though)
+// - all 32 subgroup lanes participate
+// - each lane starts with one element in `x`
+//
+// Returns this lane's sorted value after the full 32-element sort.
+//
+// This is the most efficient algorithm for sorting an array on a SIMD because:
+// - both loops can be unrolled, i.e. no control flow is needed
+// - the number of comparisons and lane shuffles is constant for a constant array size,
+//   independent of data
+uint bitonicSort32(uint x)
+{
+    uint lane = gl_SubgroupInvocationID;
+
+    // k = size of the bitonic merge block: 2, 4, 8, 16, 32
+    for (uint k = 2u; k <= 32u; k <<= 1u)
+    {
+        // j = XOR partner distance within this stage: k/2, k/4, ..., 1
+        for (uint j = k >> 1u; j > 0u; j >>= 1u)
+        {
+            // Read the partner lane's value.
+            uint y = subgroupShuffleXor(x, j);
+
+            // Compare this lane's value with the partner's value.
+            uint lo = min(x, y);
+            uint hi = max(x, y);
+
+            // Bitonic direction for this lane in the current k-block.
+            bool ascending = (lane & k) == 0u;
+
+            // Whether this lane is the lower-index member of the XOR pair.
+            bool lowerSide = (lane & j) == 0u;
+
+            // Keep either the lower or upper value depending on:
+            //   1) whether this half of the network is ascending/descending
+            //   2) whether this lane is the lower or upper side of the pair
+            if (ascending)
+                x = lowerSide ? lo : hi;
+            else
+                x = lowerSide ? hi : lo;
+        }
+    }
+
+    return x;
+}
+
+void main()
+{
+    uint lane = gl_SubgroupInvocationID;
+
+    // One element per lane.
+    uint x = values[lane];
+
+    // Sort the 32 values held by the subgroup.
+    x = bitonicSort32(x);
+
+    // Write back this lane's sorted result.
+    values[lane] = x;
+}
+
+[test]
+ssbo 0 128
+
+# Unsorted array
+ssbo 0 subdata int 0   17
+ssbo 0 subdata int 4   3
+ssbo 0 subdata int 8   29
+ssbo 0 subdata int 12  8
+ssbo 0 subdata int 16  14
+ssbo 0 subdata int 20  1
+ssbo 0 subdata int 24  25
+ssbo 0 subdata int 28  11
+ssbo 0 subdata int 32  6
+ssbo 0 subdata int 36  19
+ssbo 0 subdata int 40  2
+ssbo 0 subdata int 44  27
+ssbo 0 subdata int 48  9
+ssbo 0 subdata int 52  31
+ssbo 0 subdata int 56  5
+ssbo 0 subdata int 60  13
+ssbo 0 subdata int 64  21
+ssbo 0 subdata int 68  7
+ssbo 0 subdata int 72  24
+ssbo 0 subdata int 76  10
+ssbo 0 subdata int 80  16
+ssbo 0 subdata int 84  0
+ssbo 0 subdata int 88  28
+ssbo 0 subdata int 92  4
+ssbo 0 subdata int 96  20
+ssbo 0 subdata int 100 15
+ssbo 0 subdata int 104 30
+ssbo 0 subdata int 108 12
+ssbo 0 subdata int 112 26
+ssbo 0 subdata int 116 18
+ssbo 0 subdata int 120 23
+ssbo 0 subdata int 124 22
+
+# Sort
+compute 1 1 1
+
+# Verify that the array is sorted.
+probe ssbo uint 0 0    == 0
+probe ssbo uint 0 4    == 1
+probe ssbo uint 0 8    == 2
+probe ssbo uint 0 12   == 3
+probe ssbo uint 0 16   == 4
+probe ssbo uint 0 20   == 5
+probe ssbo uint 0 24   == 6
+probe ssbo uint 0 28   == 7
+probe ssbo uint 0 32   == 8
+probe ssbo uint 0 36   == 9
+probe ssbo uint 0 40   == 10
+probe ssbo uint 0 44   == 11
+probe ssbo uint 0 48   == 12
+probe ssbo uint 0 52   == 13
+probe ssbo uint 0 56   == 14
+probe ssbo uint 0 60   == 15
+probe ssbo uint 0 64   == 16
+probe ssbo uint 0 68   == 17
+probe ssbo uint 0 72   == 18
+probe ssbo uint 0 76   == 19
+probe ssbo uint 0 80   == 20
+probe ssbo uint 0 84   == 21
+probe ssbo uint 0 88   == 22
+probe ssbo uint 0 92   == 23
+probe ssbo uint 0 96   == 24
+probe ssbo uint 0 100  == 25
+probe ssbo uint 0 104  == 26
+probe ssbo uint 0 108  == 27
+probe ssbo uint 0 112  == 28
+probe ssbo uint 0 116  == 29
+probe ssbo uint 0 120  == 30
+probe ssbo uint 0 124  == 31
