@@ -6644,8 +6644,8 @@ init_test(const char *file)
 
 		bind_vao_if_supported();
 
-		num_vbo_rows = setup_vbo_from_text(prog, vertex_data_start,
-						   vertex_data_end);
+		num_vbo_rows = setup_vbo_from_text(sso_in_use ? sso_vertex_prog : prog,
+						   vertex_data_start, vertex_data_end);
 		vbo_present = true;
 
 		if (num_elements > 0)
