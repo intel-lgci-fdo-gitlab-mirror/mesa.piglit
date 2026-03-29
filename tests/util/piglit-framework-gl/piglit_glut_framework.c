@@ -92,6 +92,9 @@ exception_filter(PEXCEPTION_POINTERS pExceptionInfo)
 
 // http://www.programmingunlimited.net/siteexec/content.cgi?page=mingw-seh
 // http://www.microsoft.com/msj/0197/exception/exception.aspx
+#ifndef ExceptionExecuteHandler
+#define ExceptionExecuteHandler 4
+#endif
 EXCEPTION_DISPOSITION
 exception_handler(struct _EXCEPTION_RECORD *ExceptionRecord, void *EstablisherFrame, struct _CONTEXT *ContextRecord, void *DispatcherContext)
 {
