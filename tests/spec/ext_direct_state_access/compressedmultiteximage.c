@@ -303,7 +303,7 @@ test_MultiCompressedTexImageNDEXT(void* data)
 	}
 
 	if (use_display_list != GL_NONE)
-		glEndList(list);
+		glEndList();
 
 	if (use_display_list == GL_COMPILE) {
 		int width;
@@ -421,7 +421,7 @@ test_MultiCompressedTexSubImageNDEXT(void* data)
 	}
 
 	if (use_display_list != GL_NONE)
-		glEndList(list);
+		glEndList();
 	if (use_display_list == GL_COMPILE)
 		glCallList(list);
 
