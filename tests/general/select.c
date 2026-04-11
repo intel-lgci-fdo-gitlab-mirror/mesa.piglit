@@ -49,13 +49,24 @@ GLuint ReferenceHitEntries[3][64];
 #define MAX_Z			2
 #define NAME_STACK_0		3
 
+static uint32_t
+float_to_uint(float f)
+{
+	return (uint32_t)roundf(f * (UINT32_MAX - 1));
+}
+
+static float
+uint_to_float(uint32_t ui)
+{
+	return (float)ui / (UINT32_MAX - 1);
+}
+
 /**
  * Draw 4 objects and handle name stack
  */
 static void
 draw_objects()
 {
-	float zscale = (float)(~0u);
 	glInitNames();
 
 	/* no draw call issued for name '0' */
@@ -68,7 +79,7 @@ draw_objects()
 	piglit_draw_rect_z(0.8, 10, 30, 50, 50);
 	/* fill reference buffer */
 	ReferenceHitEntries[0][NAME_STACK_DEPTH] = 2;
-	ReferenceHitEntries[0][MIN_Z] = (GLuint)roundf(zscale * ((1 - 0.8) * 0.5));
+	ReferenceHitEntries[0][MIN_Z] = (GLuint)roundf(float_to_uint((1 - 0.8) * 0.5));
 	ReferenceHitEntries[0][MAX_Z] = ReferenceHitEntries[0][MIN_Z];
 	ReferenceHitEntries[0][NAME_STACK_0] = 0;
 	ReferenceHitEntries[0][NAME_STACK_0 + 1] = 1;
@@ -81,8 +92,8 @@ draw_objects()
 	piglit_draw_rect_z(0.4, 10, 75, 25, 10);
 	/* fill reference buffer */
 	ReferenceHitEntries[1][NAME_STACK_DEPTH] = 3;
-	ReferenceHitEntries[1][MIN_Z] = (GLuint)roundf(zscale * ((1 - 0.5)*0.5));
-	ReferenceHitEntries[1][MAX_Z] = (GLuint)roundf(zscale * ((1 - 0.4)*0.5));
+	ReferenceHitEntries[1][MIN_Z] = (GLuint)roundf(float_to_uint((1 - 0.5) * 0.5));
+	ReferenceHitEntries[1][MAX_Z] = (GLuint)roundf(float_to_uint((1 - 0.4) * 0.5));
 	ReferenceHitEntries[1][NAME_STACK_0] = 0;
 	ReferenceHitEntries[1][NAME_STACK_0 + 1] = 1;
 	ReferenceHitEntries[1][NAME_STACK_0 + 2] = 2;
@@ -100,7 +111,7 @@ draw_objects()
 	piglit_draw_rect_z(0.2, 50, 45, 80, 20);
 	/* fill reference buffer */
 	ReferenceHitEntries[2][NAME_STACK_DEPTH] = 3;
-	ReferenceHitEntries[2][MIN_Z] = (GLuint)roundf(zscale * ((1 - 0.2)*0.5));
+	ReferenceHitEntries[2][MIN_Z] = (GLuint)roundf(float_to_uint((1 - 0.2) * 0.5));
 	ReferenceHitEntries[2][MAX_Z] = ReferenceHitEntries[2][MIN_Z];
 	ReferenceHitEntries[2][NAME_STACK_0] = 0;
 	ReferenceHitEntries[2][NAME_STACK_0 + 1] = 1;
@@ -125,7 +136,7 @@ compare_hit_record(GLuint* hit1, GLuint* hit2)
 		return false;
 	}
 
-	diffz = abs(hit1[MIN_Z] - hit2[MIN_Z])/zscale;
+	diffz = fabsf(uint_to_float(hit1[MIN_Z]) - uint_to_float(hit2[MIN_Z]));
 	if (diffz > 0.1) {
 		printf("\t%s : Incorrect Minz : %u %u (%f %f) %f\n",
 			__FUNCTION__,
@@ -137,7 +148,7 @@ compare_hit_record(GLuint* hit1, GLuint* hit2)
 		return false;
 	}
 
-	diffz = abs(hit1[MAX_Z] - hit2[MAX_Z])/zscale;
+	diffz = fabsf(uint_to_float(hit1[MAX_Z]) - uint_to_float(hit2[MAX_Z]));
 	if (diffz > 0.1) {
 		printf("\t%s : Incorrect Maxz : %u %u (%f %f) %f\n",
 			__FUNCTION__,
