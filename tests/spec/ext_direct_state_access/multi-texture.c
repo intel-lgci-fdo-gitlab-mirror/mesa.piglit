@@ -257,7 +257,7 @@ test_MultiTexEnviEXT(void* data)
 						  (float) values[3]);
 
 				if (use_display_list != GL_NONE)
-					glEndList(list);
+					glEndList();
 
 				if (use_display_list == GL_COMPILE) {
 					for (l = 0; l < 4; l++) {
@@ -320,7 +320,7 @@ test_MultiTexEnvfvEXT(void* data)
 			color);
 
 	if (use_display_list != GL_NONE)
-		glEndList(list);
+		glEndList();
 
 	glGetMultiTexEnvfvEXT(texunits[1],
 			GL_TEXTURE_ENV,
@@ -440,7 +440,7 @@ test_MultiTexImageNDEXT(void* data)
 	texunit = init_texunit(target, &image_size, &expected_pixels);
 
 	if (use_display_list != GL_NONE)
-		glEndList(list);
+		glEndList();
 
 	if (use_display_list == GL_COMPILE) {
 		/* Texture shouldn't have been bound yet */
@@ -518,7 +518,7 @@ test_MultiTexSubImageNDEXT(void* data)
 	}
 
 	if (use_display_list != GL_NONE)
-		glEndList(list);
+		glEndList();
 
 	/* Compare glGetMultiTexImageEXT output and modified_pixels */
 	got_pixels = (float*) malloc(image_size);
@@ -572,7 +572,7 @@ test_CopyMultiTexImageNDEXT(void* data)
 	}
 
 	if (use_display_list != GL_NONE)
-		glEndList(list);
+		glEndList();
 
 	got_pixels = (float*) malloc(piglit_width * height * 4 * sizeof(float));
 	/* Compare glGetTextureImageEXT and read pixels */
@@ -628,7 +628,7 @@ test_CopyMultiTexSubImageNDEXT(void* data)
 	}
 
 	if (use_display_list != GL_NONE)
-		glEndList(list);
+		glEndList();
 
 	got_pixels = (float*) malloc(image_size);
 	/* Compare glGetTextureImageEXT and read pixels */
@@ -933,7 +933,7 @@ test_MultiTexParameterEXT(void* data)
 					&tested[j].values[k]);
 
 				if (use_display_list != GL_NONE)
-					glEndList(list);
+					glEndList();
 
 				if (use_display_list == GL_COMPILE) {
 					int v;
@@ -1036,7 +1036,7 @@ test_MultiTexParameterfEXT(void* data)
 					&tested[j].values[k]);
 
 				if (use_display_list != GL_NONE)
-					glEndList(list);
+					glEndList();
 
 				if (use_display_list == GL_COMPILE) {
 					for (l = 0; l < 2; l++) {
