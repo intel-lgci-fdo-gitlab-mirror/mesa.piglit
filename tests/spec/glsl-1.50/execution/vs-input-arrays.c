@@ -264,7 +264,7 @@ piglit_display(void)
 
 	glDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
 
-	pass = piglit_probe_pixel_rgb( 0.5, 0.5, expected_color );
+	pass = piglit_probe_pixel_rgb( 0, 0, expected_color );
 
 	piglit_present_results();
 
