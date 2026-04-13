@@ -1357,38 +1357,39 @@ static void init_int_texture(const struct format_desc *format,
 	static int i8black[4] = {0, 0, 0, 0};
 	int *i8colors[7] = {i8red, i8cyan, i8blue, i8orange, i8white, i8black, border_real};
 
-	static unsigned ui32red[4] = {UINT_MAX, 0, 0, UINT_MAX*0.8};
-	static unsigned ui32cyan[4] = {0, UINT_MAX, UINT_MAX, UINT_MAX*0.6};
-	static unsigned ui32blue[4] = {0, 0, UINT_MAX, UINT_MAX*0.4};
-	static unsigned ui32orange[4] = {UINT_MAX, UINT_MAX*0.6, UINT_MAX*0.3, UINT_MAX*0.2};
-	static unsigned ui32white[4] = {UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX};
-	static unsigned ui32black[4] = {0, 0, 0, 0};
-	unsigned *ui32colors[7] = {ui32red, ui32cyan, ui32blue, ui32orange, ui32white, ui32black, (unsigned*)border_real};
+	static int ui32red[4] = {UINT_MAX, 0, 0, (unsigned)(UINT_MAX*0.8)};
+	static int ui32cyan[4] = {0, UINT_MAX, UINT_MAX, (unsigned)(UINT_MAX*0.6)};
+	static int ui32blue[4] = {0, 0, UINT_MAX, (unsigned)(UINT_MAX*0.4)};
+	static int ui32orange[4] = {UINT_MAX, (unsigned)(UINT_MAX*0.6), (unsigned)(UINT_MAX*0.3),
+	                            (unsigned)(UINT_MAX*0.2)};
+	static int ui32white[4] = {UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX};
+	static int ui32black[4] = {0, 0, 0, 0};
+	int *ui32colors[7] = {ui32red, ui32cyan, ui32blue, ui32orange, ui32white, ui32black, border_real};
 
-	static unsigned ui16red[4] = {USHRT_MAX, 0, 0, USHRT_MAX*0.8};
-	static unsigned ui16cyan[4] = {0, USHRT_MAX, USHRT_MAX, USHRT_MAX*0.6};
-	static unsigned ui16blue[4] = {0, 0, USHRT_MAX, USHRT_MAX*0.4};
-	static unsigned ui16orange[4] = {USHRT_MAX, USHRT_MAX*0.6, USHRT_MAX*0.3, USHRT_MAX*0.2};
-	static unsigned ui16white[4] = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
-	static unsigned ui16black[4] = {0, 0, 0, 0};
-	unsigned *ui16colors[7] = {ui16red, ui16cyan, ui16blue, ui16orange, ui16white, ui16black, (unsigned*)border_real};
+	static int ui16red[4] = {USHRT_MAX, 0, 0, USHRT_MAX*0.8};
+	static int ui16cyan[4] = {0, USHRT_MAX, USHRT_MAX, USHRT_MAX*0.6};
+	static int ui16blue[4] = {0, 0, USHRT_MAX, USHRT_MAX*0.4};
+	static int ui16orange[4] = {USHRT_MAX, USHRT_MAX*0.6, USHRT_MAX*0.3, USHRT_MAX*0.2};
+	static int ui16white[4] = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
+	static int ui16black[4] = {0, 0, 0, 0};
+	int *ui16colors[7] = {ui16red, ui16cyan, ui16blue, ui16orange, ui16white, ui16black, border_real};
 
-	static unsigned ui8red[4] = {UCHAR_MAX, 0, 0, UCHAR_MAX*0.8};
-	static unsigned ui8cyan[4] = {0, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX*0.6};
-	static unsigned ui8blue[4] = {0, 0, UCHAR_MAX, UCHAR_MAX*0.4};
-	static unsigned ui8orange[4] = {UCHAR_MAX, UCHAR_MAX*0.6, UCHAR_MAX*0.3, UCHAR_MAX*0.2};
-	static unsigned ui8white[4] = {UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX};
-	static unsigned ui8black[4] = {0, 0, 0, 0};
-	unsigned *ui8colors[7] = {ui8red, ui8cyan, ui8blue, ui8orange, ui8white, ui8black, (unsigned*)border_real};
+	static int ui8red[4] = {UCHAR_MAX, 0, 0, UCHAR_MAX*0.8};
+	static int ui8cyan[4] = {0, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX*0.6};
+	static int ui8blue[4] = {0, 0, UCHAR_MAX, UCHAR_MAX*0.4};
+	static int ui8orange[4] = {UCHAR_MAX, UCHAR_MAX*0.6, UCHAR_MAX*0.3, UCHAR_MAX*0.2};
+	static int ui8white[4] = {UCHAR_MAX, UCHAR_MAX, UCHAR_MAX, UCHAR_MAX};
+	static int ui8black[4] = {0, 0, 0, 0};
+	int *ui8colors[7] = {ui8red, ui8cyan, ui8blue, ui8orange, ui8white, ui8black, border_real};
 
-	static unsigned ui1010102red[4] = {1023, 0, 0, 3*0.8};
-	static unsigned ui1010102cyan[4] = {0, 1023, 1023, 3*0.6};
-	static unsigned ui1010102blue[4] = {0, 0, 1023, 3*0.4};
-	static unsigned ui1010102orange[4] = {1023, 1023*0.6, 1023*0.3, 3*0.2};
-	static unsigned ui1010102white[4] = {1023, 1023, 1023, 3};
-	static unsigned ui1010102black[4] = {0, 0, 0, 0};
-	unsigned *ui1010102colors[7] = {ui1010102red, ui1010102cyan, ui1010102blue, ui1010102orange,
-					ui1010102white, ui1010102black, (unsigned*)border_real};
+	static int ui1010102red[4] = {1023, 0, 0, 3*0.8};
+	static int ui1010102cyan[4] = {0, 1023, 1023, 3*0.6};
+	static int ui1010102blue[4] = {0, 0, 1023, 3*0.4};
+	static int ui1010102orange[4] = {1023, 1023*0.6, 1023*0.3, 3*0.2};
+	static int ui1010102white[4] = {1023, 1023, 1023, 3};
+	static int ui1010102black[4] = {0, 0, 0, 0};
+	int *ui1010102colors[7] = {ui1010102red, ui1010102cyan, ui1010102blue, ui1010102orange,
+	                           ui1010102white, ui1010102black, border_real};
 
 	int **colors = { 0 };
 	int *red, *cyan, *blue, *orange, *white, *black;
@@ -1413,16 +1414,16 @@ static void init_int_texture(const struct format_desc *format,
 	case UINT_TYPE:
 		switch (bits) {
 		case 10:
-			colors = (int**)ui1010102colors;
+			colors = ui1010102colors;
 			break;
 		case 8:
-			colors = (int**)ui8colors;
+			colors = ui8colors;
 			break;
 		case 16:
-			colors = (int**)ui16colors;
+			colors = ui16colors;
 			break;
 		case 32:
-			colors = (int**)ui32colors;
+			colors = ui32colors;
 			break;
 		default:
 			assert(!"Unexpected number of bits");
