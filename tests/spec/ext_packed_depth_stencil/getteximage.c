@@ -56,7 +56,7 @@ test_z24_s8(void)
 	for (i = 0; i < WIDTH * HEIGHT; i++) {
 		GLuint s = 255 - (i & 255);
 		GLuint z = i * 100;
-		tex[i] = (z << 24) | s;
+		tex[i] = (z << 8) | s;
 	}
 
 	/* create texture */
