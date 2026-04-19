@@ -675,6 +675,7 @@ modifier_test(uint32_t format, EGLuint64KHR modifier, bool external_only,
 	if (!img) {
 		/* Close the descriptor also, EGL does not have ownership */
 		close(buf.fd);
+		buf.fd = -1;
 	}
 
 	if (res != PIGLIT_PASS) {
@@ -697,7 +698,8 @@ modifier_test(uint32_t format, EGLuint64KHR modifier, bool external_only,
 destroy:
 	delete_tex(&tex);
 	destroy_img(&img);
-	close(buf.fd);
+	if (buf.fd != -1)
+		close(buf.fd);
 	return res;
 }
 
