@@ -185,7 +185,9 @@ piglit_init(int argc, char **argv)
 
 		/* Draw EGLImage contents TODO: verify result */
 		GLuint tex;
-		texture_for_egl_image(img, &tex, true);
+		result = texture_for_egl_image(img, &tex, true);
+		if (result != PIGLIT_PASS)
+			piglit_report_result(result);
 		sample_tex(tex, 0, 0, 1, piglit_height, true);
 
 		piglit_destroy_dma_buf(buf);
