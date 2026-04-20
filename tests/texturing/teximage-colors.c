@@ -894,7 +894,7 @@ piglit_display(void)
 	bool warn = false, pass = true;
 	GLuint rb, fbo;
 	int i, j;
-	float times[ARRAY_LENGTH(gl_formats)][ARRAY_LENGTH(gl_types)];
+	float times[ARRAY_LENGTH(gl_formats)][ARRAY_LENGTH(gl_types)] = {0};
 
 	glGenRenderbuffersEXT(1, &rb);
 	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, rb);
