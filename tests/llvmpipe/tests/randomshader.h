@@ -52,6 +52,8 @@ public:
 
    ~RandomShader()
    {
+      /* mShader and the vertex shader are deleted by mProgram's destructor. */
+      delete mProgram;
    }
 
    glsl::Program* program()
