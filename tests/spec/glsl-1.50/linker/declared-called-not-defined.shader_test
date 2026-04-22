@@ -1,0 +1,32 @@
+# Test that calling a declared but undefined function causes a link error.
+
+[require]
+GLSL >= 1.50
+
+[vertex shader]
+#version 150
+
+/* declared but not defined */
+vec4  transform_color(vec3 color, float alpha);
+float calculate_attenuation(vec3 light_dir, float distance);
+
+in vec4 piglit_vertex;
+
+void main()
+{
+    float atten = calculate_attenuation(vec3(1.0, 0.0, 0.0), 10.0);
+    gl_Position = piglit_vertex * transform_color(vec3(1.0), atten);
+}
+
+[fragment shader]
+#version 150
+
+out vec4 color;
+
+void main()
+{
+    color = vec4(1.0);
+}
+
+[test]
+link error

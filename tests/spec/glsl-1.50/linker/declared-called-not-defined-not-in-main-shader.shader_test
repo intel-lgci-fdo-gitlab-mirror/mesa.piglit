@@ -1,0 +1,53 @@
+# Test that a function which is declared and called but not defined,
+# where both the declaration and the call site are in a separate shader
+# object (not the main shader containing main()), does not cause a
+# link error when the calling function is never reachable from main().
+
+#   helper shader object: declares transform_color(), calls it from apply_transform()
+#   main shader object:   main() does NOT call apply_transform()
+# Since apply_transform() is never called from main(), transform_color()
+# is never reachable — lenient linkers (Mesa) should accept this.
+
+[require]
+GLSL >= 1.50
+
+[vertex shader]
+/* helper shader object — contains declaration and caller */
+#version 150
+
+/* declared but not defined */
+vec4 transform_color(vec3 color, float alpha);
+
+/* calls transform_color — but this function is never called from main */
+vec4 apply_transform(vec3 color, float alpha)
+{
+    return transform_color(color, alpha);
+}
+
+[vertex shader]
+/* main shader object — contains main() */
+#version 150
+
+in vec4 piglit_vertex;
+
+void main()
+{
+    /* apply_transform is never called here */
+    gl_Position = piglit_vertex;
+}
+
+[fragment shader]
+#version 150
+
+out vec4 color;
+
+void main()
+{
+    color = vec4(0.0, 1.0, 0.0, 1.0);
+}
+
+[test]
+clear color 0.0 0.0 0.0 0.0
+clear
+draw rect -1 -1 2 2
+relative probe rect rgb (0.0, 0.0, 1.0, 1.0) (0.0, 1.0, 0.0)
