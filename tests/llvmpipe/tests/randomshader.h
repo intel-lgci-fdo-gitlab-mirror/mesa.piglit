@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "../glsl/shader.h"
 #include "../glsl/functions.h"
 
@@ -52,13 +54,17 @@ public:
 
    ~RandomShader()
    {
-      /* mShader and the vertex shader are deleted by mProgram's destructor. */
-      delete mProgram;
    }
 
+   /*
+    * Transfer ownership of the Program to the caller. The Program owns
+    * mShader and the vertex shader, so deleting it later transitively
+    * frees both. If program() is never called, mProgram's destructor
+    * frees everything when this RandomShader goes out of scope.
+    */
    glsl::Program* program()
    {
-      return mProgram;
+      return mProgram.release();
    }
 
    bool usesTexture()
@@ -207,7 +213,7 @@ private:
 
 private:
    glsl::Shader& mShader;
-   glsl::Program* mProgram;
+   std::unique_ptr<glsl::Program> mProgram;
 
    bool mUsesUniform;
    bool mUsesTexture;
