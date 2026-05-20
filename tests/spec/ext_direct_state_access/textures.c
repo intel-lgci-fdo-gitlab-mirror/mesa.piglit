@@ -231,6 +231,7 @@ test_TextureSubImageNDEXT(void* data)
 	glDeleteTextures(1, &tex);
 	free(modified_pixels);
 	free(original_pixels);
+	free(got_pixels);
 
 	return pass ? PIGLIT_PASS : PIGLIT_FAIL;
 }
@@ -912,6 +913,7 @@ piglit_display(void)
 	for (i = 0; tests[i].name; i++) {
 		char* test_name_display_list;
 		asprintf(&test_name_display_list, "%s_AND_EXECUTE", tests[i].name);
+		free((char *)tests[i].name);
 		tests[i].name = test_name_display_list;
 	}
 	use_display_list = GL_COMPILE_AND_EXECUTE;
@@ -919,5 +921,7 @@ piglit_display(void)
 
 	glDeleteLists(list, 1);
 
+	for (i = 0; tests[i].name; i++)
+		free((char *)tests[i].name);
 	return result;
 }

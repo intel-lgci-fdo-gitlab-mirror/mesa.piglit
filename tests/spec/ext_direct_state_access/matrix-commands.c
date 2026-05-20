@@ -661,6 +661,7 @@ piglit_init(int argc, char **argv)
 	for (i = 0; tests[i].name; i++) {
 		char* test_name_display_list;
 		asprintf(&test_name_display_list, "%s_AND_EXECUTE", tests[i].name);
+		free((char *)tests[i].name);
 		tests[i].name = test_name_display_list;
 	}
 	use_display_list = GL_COMPILE_AND_EXECUTE;
