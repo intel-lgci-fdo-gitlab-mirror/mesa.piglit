@@ -150,6 +150,9 @@ build_shaders(const char *vs_prefix, int vs_blocks,
 	glDeleteShader(vs);
 	glDeleteShader(fs);
 
+	free(vs_source);
+	free(fs_source);
+
 	return prog;
 }
 

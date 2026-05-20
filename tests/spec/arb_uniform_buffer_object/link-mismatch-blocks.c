@@ -232,9 +232,12 @@ test_link_fail(struct test *test, GLenum a_target, GLenum b_target)
 			"Linking shaders succeeded when it should have "
 			"failed:\n%s\n%s\n",
 			a_source, b_source);
-		return false;
 	}
-	return true;
+
+	free(a_source);
+	free(b_source);
+
+	return !ok;
 }
 
 static bool
