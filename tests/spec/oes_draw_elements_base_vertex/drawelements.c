@@ -145,6 +145,8 @@ piglit_init(int argc, char **argv)
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glEnableVertexAttribArray(vertex_index);
 	glVertexAttribPointer(vertex_index, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	free(vertices);
 }
 
 enum piglit_result
