@@ -112,6 +112,8 @@ piglit_display(void)
 	pass = piglit_probe_image_rgba(0, 0, w, h, color_buffer)
 	       && pass;
 
+	free(color_buffer);
+
 	if (!piglit_automatic)
 		piglit_present_results();
 	return (pass ? PIGLIT_PASS : PIGLIT_FAIL);

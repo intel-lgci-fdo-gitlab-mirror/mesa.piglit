@@ -592,6 +592,9 @@ Test::measure_accuracy()
 	printf("The error threshold for partially lit pixels is %f\n",
                error_threshold);
 	pass = partially_lit_stats.is_better_than(error_threshold) && pass;
+	delete[] reference_data;
+	delete[] test_data;
+
 	// TODO: deal with sRGB.
 	return pass;
 }
