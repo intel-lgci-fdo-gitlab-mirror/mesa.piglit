@@ -86,6 +86,7 @@ create_and_destroy_texture(struct piglit_dma_buf *buf, int fourcc)
 static void
 thread_cleanup(struct thread_data *data)
 {
+	eglMakeCurrent(data->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroyContext(data->dpy, data->ctx);
 }
 
@@ -176,15 +177,20 @@ piglit_init(int argc, char **argv)
 		data[i].result = PIGLIT_PASS;
 
 		if (pthread_create(&data[i].thread, NULL, thread_main,
-					&data[i]))
+					&data[i])) {
+			eglTerminate(egl_dpy);
 			piglit_report_result(PIGLIT_FAIL);
+		}
 	}
 
 	for (int i = 0; i < THREAD_COUNT; i++) {
 		pthread_join(data[i].thread, NULL);
-		if (data[i].result != PIGLIT_PASS)
+		if (data[i].result != PIGLIT_PASS) {
+			eglTerminate(egl_dpy);
 			piglit_report_result(data[i].result);
+		}
 	}
+	eglTerminate(egl_dpy);
 
 	piglit_report_result(PIGLIT_PASS);
 }

@@ -45,6 +45,13 @@ piglit_display(void)
 	return PIGLIT_FAIL;
 }
 
+#define REPORT_RESULT(result)							\
+{										\
+	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);	\
+	eglTerminate(dpy);  							\
+	piglit_report_result(PIGLIT_##result);					\
+}
+
 void
 piglit_init(int argc, char **argv)
 {
@@ -79,15 +86,22 @@ piglit_init(int argc, char **argv)
 	if (!eglInitialize(dpy, &major, &minor))
 		piglit_report_result(PIGLIT_FAIL);
 
-	piglit_require_egl_extension(dpy, "EGL_MESA_configless_context");
-	piglit_require_egl_extension(dpy, "EGL_EXT_image_flush_external");
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_MESA_configless_context")) {
+		fprintf(stderr, "Test requires EGL_MESA_configless_context\n");
+		REPORT_RESULT(SKIP);
+	}
+
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_EXT_image_flush_external")) {
+		fprintf(stderr, "Test requires EGL_EXT_image_flush_external\n");
+		REPORT_RESULT(SKIP);
+	}
 
 	PFNEGLIMAGEFLUSHEXTERNALEXTPROC peglImageFlushExternalEXT = NULL;
 	peglImageFlushExternalEXT = (PFNEGLIMAGEFLUSHEXTERNALEXTPROC)
 		eglGetProcAddress("eglImageFlushExternalEXT");
 	if (!peglImageFlushExternalEXT) {
 		fprintf(stderr, "eglImageFlushExternalEXT missing\n");
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	PFNEGLIMAGEINVALIDATEEXTERNALEXTPROC peglImageInvalidateExternalEXT = NULL;
@@ -95,7 +109,7 @@ piglit_init(int argc, char **argv)
 		eglGetProcAddress("eglImageInvalidateExternalEXT");
 	if (!peglImageInvalidateExternalEXT) {
 		fprintf(stderr, "eglImageInvalidateExternalEXT missing\n");
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	EGLint ctx_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
@@ -103,7 +117,7 @@ piglit_init(int argc, char **argv)
 		eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, ctx_attr);
 	if (ctx == EGL_NO_CONTEXT) {
 		fprintf(stderr, "could not create EGL context\n");
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
@@ -117,7 +131,7 @@ piglit_init(int argc, char **argv)
 		     GL_UNSIGNED_BYTE, NULL);
 
 	if (!piglit_check_gl_error(GL_NO_ERROR))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	/* Create EGLImage with EGL_IMAGE_EXTERNAL_FLUSH_EXT set. */
 	EGLint attribs[] = { EGL_IMAGE_EXTERNAL_FLUSH_EXT, EGL_TRUE, EGL_NONE };
@@ -127,7 +141,7 @@ piglit_init(int argc, char **argv)
 				       attribs);
 	if (!egl_image) {
 		fprintf(stderr, "failed to create ImageKHR\n");
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	EGLBoolean status = EGL_FALSE;
@@ -137,35 +151,32 @@ piglit_init(int argc, char **argv)
 
 	status = peglImageFlushExternalEXT(dpy, egl_image, bad_attrs);
 	if (!piglit_check_egl_error(EGL_BAD_PARAMETER))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	if (status == EGL_TRUE) {
 		fprintf(stderr, "expected EGL_FALSE but got 0x%x\n", status);
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	status = peglImageInvalidateExternalEXT(dpy, egl_image, bad_attrs);
 	if (!piglit_check_egl_error(EGL_BAD_PARAMETER))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	if (status == EGL_TRUE) {
 		fprintf(stderr, "expected EGL_FALSE but got 0x%x\n", status);
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	/* Call flush & invalidate with proper parameters. */
 	const EGLAttribKHR good_attrs[] = { EGL_NONE, EGL_NONE };
 	status = peglImageFlushExternalEXT(dpy, egl_image, good_attrs);
 	if (!piglit_check_egl_error(EGL_SUCCESS))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	status = peglImageInvalidateExternalEXT(dpy, egl_image, good_attrs);
 	if (!piglit_check_egl_error(EGL_SUCCESS))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	glDeleteTextures(1, &texture);
 	peglDestroyImageKHR(dpy, egl_image);
 
-	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-	eglTerminate(dpy);
-
-	piglit_report_result(PIGLIT_PASS);
+	REPORT_RESULT(PASS);
 }

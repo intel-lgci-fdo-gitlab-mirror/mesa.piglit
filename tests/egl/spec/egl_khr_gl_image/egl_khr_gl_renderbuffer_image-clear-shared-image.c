@@ -76,12 +76,14 @@ create_context(EGLDisplay dpy)
 		EGLint egl_error = eglGetError();
 		piglit_loge("failed to get EGLConfig: %s(0x%x)",
 			  piglit_get_egl_error_name(egl_error), egl_error);
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 
 	ok = piglit_egl_bind_api(EGL_OPENGL_API);
 	if (!ok) {
 		piglit_loge("failed to bind EGL_OPENGL_API");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 
 	}
@@ -91,6 +93,7 @@ create_context(EGLDisplay dpy)
 		EGLint egl_error = eglGetError();
 		piglit_loge("failed to create EGLContext: %s(0x%x)",
 			  piglit_get_egl_error_name(egl_error), egl_error);
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 
@@ -120,11 +123,13 @@ create_display(void)
 
 	if (!piglit_is_egl_extension_supported(dpy, "EGL_KHR_gl_renderbuffer_image")) {
 		piglit_loge("display does not support EGL_KHR_gl_renderbuffer_image\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 
 	eglCreateImageKHR = (void*) eglGetProcAddress("eglCreateImageKHR");
 	if (!eglCreateImageKHR) {
+		eglTerminate(dpy);
 		fprintf(stderr, "eglGetProcAddress(\"eglCreateImageKHR\") failed\n");
 		piglit_report_result(PIGLIT_FAIL);
 	}
@@ -189,6 +194,14 @@ create_framebuffers(EGLDisplay dpy, EGLContext ctx,
 }
 
 static void
+teardown(EGLDisplay dpy, EGLContext ctx)
+{
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglDestroyContext(dpy, ctx);
+        eglTerminate(dpy);
+}
+
+static void
 test_rgba(EGLDisplay dpy, EGLContext ctx)
 {
 	const float color1[4] = { 0.0, 1.0, 0.0, 1.0 };
@@ -212,6 +225,8 @@ test_rgba(EGLDisplay dpy, EGLContext ctx)
 	glBindFramebuffer(GL_FRAMEBUFFER, fb1);
 	pass &= piglit_probe_rect_rgba(0, 0, width, height, color2);
 	pass &= piglit_check_gl_error(GL_NO_ERROR);
+
+	teardown(dpy, ctx);
 
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);
 }
@@ -240,6 +255,8 @@ test_depth24(EGLDisplay dpy, EGLContext ctx)
 	glBindFramebuffer(GL_FRAMEBUFFER, fb1);
 	pass &= piglit_probe_rect_depth(0, 0, width, height, depth2);
 	pass &= piglit_check_gl_error(GL_NO_ERROR);
+
+	teardown(dpy, ctx);
 
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);
 }
@@ -292,6 +309,7 @@ main(int argc, char **argv)
 
 	if (!piglit_is_extension_supported("GL_OES_EGL_image")) {
 		piglit_loge("context does not support GL_OES_EGL_image");
+		teardown(dpy, ctx);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 

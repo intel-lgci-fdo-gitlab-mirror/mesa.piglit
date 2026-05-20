@@ -101,8 +101,15 @@ piglit_init(int argc, char **argv)
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	piglit_require_egl_extension(dpy, "EGL_IMG_context_priority");
-	piglit_require_egl_extension(dpy, "EGL_MESA_configless_context");
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_IMG_context_priority")) {
+		eglTerminate(dpy);
+		piglit_report_result(PIGLIT_SKIP);
+	}
+
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_MESA_configless_context")) {
+		eglTerminate(dpy);
+		piglit_report_result(PIGLIT_SKIP);
+	}
 
 	ctx = create_context(dpy, attr);
 
@@ -119,6 +126,7 @@ piglit_init(int argc, char **argv)
 
 	if (ctx != EGL_NO_CONTEXT) {
 		fprintf(stderr, "should fail with invalid parameter\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -133,6 +141,8 @@ piglit_init(int argc, char **argv)
 
 		eglDestroyContext(dpy, ctx);
 	}
+
+	eglTerminate(dpy);
 
 	piglit_report_result(PIGLIT_PASS);
 }

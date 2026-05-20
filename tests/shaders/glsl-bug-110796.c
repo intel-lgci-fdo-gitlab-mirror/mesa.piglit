@@ -107,10 +107,12 @@ int main(int argc, char **argv)
 		switch (error) {
 			case EGL_BAD_MATCH:
 				printf("EGL_BAD_MATCH: Test requires at least ES 3.2.\n");
+				eglTerminate(dpy);
 				piglit_report_result(PIGLIT_SKIP);
 				break;
 			default:
 				fprintf(stderr, "glsl-bug-110796: first context creation failed\n");
+				eglTerminate(dpy);
 				piglit_report_result(PIGLIT_FAIL);
 				break;
 		}
@@ -128,6 +130,9 @@ int main(int argc, char **argv)
 	program = piglit_build_simple_program(vert_shader_text, frag_shader_text1);
 	check_error(__LINE__);
 	if (!program) {
+		eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+		//eglDestroyContext(dpy, ctx1);
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -137,12 +142,13 @@ int main(int argc, char **argv)
 
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
-	eglDestroyContext(dpy, ctx1);
+	//eglDestroyContext(dpy, ctx1);
 
 	ctx2 = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, attr);
 
 	if (!ctx2) {
 		fprintf(stderr, "glsl-bug-110796: second context creation failed\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -153,6 +159,9 @@ int main(int argc, char **argv)
 	program = piglit_build_simple_program(vert_shader_text, frag_shader_text2);
 	check_error(__LINE__);
 	if (!program) {
+		eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+		//eglDestroyContext(dpy, ctx2);
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -160,9 +169,9 @@ int main(int argc, char **argv)
 	glUseProgram(program);
 	check_error(__LINE__);
 
-	eglDestroyContext(dpy, ctx2);
-
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	//eglDestroyContext(dpy, ctx2);
+	eglTerminate(dpy);
 
 	piglit_report_result(PIGLIT_PASS);
 

@@ -67,6 +67,13 @@ verify_rgbw_texture()
 	return pass;
 }
 
+#define REPORT_RESULT(result)							\
+{										\
+	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);	\
+	eglTerminate(dpy);							\
+	piglit_report_result(PIGLIT_##result);					\
+}
+
 void
 piglit_init(int argc, char **argv)
 {
@@ -103,7 +110,10 @@ piglit_init(int argc, char **argv)
 	if (!eglInitialize(dpy, &major, &minor))
 		piglit_report_result(PIGLIT_FAIL);
 
-	piglit_require_egl_extension(dpy, "EGL_MESA_configless_context");
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_MESA_configless_context")) {
+		fprintf(stderr, "Test requires EGL_MESA_configless_context\n");
+		REPORT_RESULT(SKIP);
+	}
 
 	EGLint ctx_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	EGLContext ctx =
@@ -111,7 +121,7 @@ piglit_init(int argc, char **argv)
 				 ctx_attr);
 	if (ctx == EGL_NO_CONTEXT) {
 		fprintf(stderr, "could not create EGL context\n");
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
@@ -124,7 +134,7 @@ piglit_init(int argc, char **argv)
 	glGetInternalformativ(GL_RENDERBUFFER, GL_RGBA8,
 			      GL_SURFACE_COMPRESSION_EXT, 1, &rate);
 	if (num_rates == 0)
-		piglit_report_result(PIGLIT_SKIP);
+		REPORT_RESULT(SKIP);
 
 	/* Create a compressed texture. */
 	GLuint texture_a;
@@ -134,13 +144,13 @@ piglit_init(int argc, char **argv)
 	const GLint attribs[3] = {GL_SURFACE_COMPRESSION_EXT, rate, GL_NONE};
 	glTexStorageAttribs2DEXT(GL_TEXTURE_2D, 1, GL_RGBA8, 256, 256, attribs);
 	if (!piglit_check_gl_error(GL_NO_ERROR))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	GLubyte *data = piglit_rgbw_image_ubyte(256, 256, GL_TRUE);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 256, 256, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	free(data);
 	if (!piglit_check_gl_error(GL_NO_ERROR))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	/* Create EGLImage from texture.  */
 	EGLint img_attribs[] = { EGL_NONE };
@@ -150,7 +160,7 @@ piglit_init(int argc, char **argv)
 				       img_attribs);
 	if (!egl_image) {
 		fprintf(stderr, "failed to create ImageKHR\n");
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	/* Create another texture. */
@@ -164,7 +174,7 @@ piglit_init(int argc, char **argv)
 		GL_NONE };
 	glEGLImageTargetTexStorageEXT(GL_TEXTURE_2D, egl_image, none_attr);
 	if (!piglit_check_gl_error(GL_INVALID_OPERATION))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	/* Specify texture from EGLImage, valid params.  */
 	const int default_attr[] = {
@@ -172,22 +182,22 @@ piglit_init(int argc, char **argv)
 		GL_NONE };
 	glEGLImageTargetTexStorageEXT(GL_TEXTURE_2D, egl_image, default_attr);
 	if (!piglit_check_gl_error(GL_NO_ERROR))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	if (!verify_rgbw_texture())
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	/* Expected to be immutable. */
 	GLint immutable_format;
 	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_IMMUTABLE_FORMAT,
 			    &immutable_format);
 	if (immutable_format != 1)
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 
 	glDeleteTextures(1, &texture_a);
 	glDeleteTextures(1, &texture_b);
 	peglDestroyImageKHR(dpy, egl_image);
 
-	piglit_report_result(PIGLIT_PASS);
+	REPORT_RESULT(PASS);
 }

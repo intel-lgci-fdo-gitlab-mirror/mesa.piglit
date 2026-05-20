@@ -41,6 +41,13 @@ piglit_display(void)
 	return PIGLIT_FAIL;
 }
 
+#define REPORT_RESULT(result)	\
+{				\
+	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);	\
+	eglTerminate(dpy);							\
+	piglit_report_result(PIGLIT_##result);					\
+}
+
 void
 piglit_init(int argc, char **argv)
 {
@@ -75,14 +82,17 @@ piglit_init(int argc, char **argv)
 	if (!eglInitialize(dpy, &major, &minor))
 		piglit_report_result(PIGLIT_FAIL);
 
-	piglit_require_egl_extension(dpy, "EGL_MESA_configless_context");
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_MESA_configless_context")) {
+		fprintf(stderr, "Test requires EGL_MESA_configless_context\n");
+		REPORT_RESULT(SKIP);
+	}
 
 	EGLint ctx_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	EGLContext ctx =
 		eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, ctx_attr);
 	if (ctx == EGL_NO_CONTEXT) {
 		fprintf(stderr, "could not create EGL context\n");
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
@@ -100,7 +110,7 @@ piglit_init(int argc, char **argv)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
 
 	if (!piglit_check_gl_error(GL_NO_ERROR))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	/* Create EGLImage from texture_a miplevel 1. */
 	EGLint attribs[] = { EGL_GL_TEXTURE_LEVEL_KHR, 1, EGL_NONE };
@@ -110,7 +120,7 @@ piglit_init(int argc, char **argv)
 				       attribs);
 	if (!egl_image) {
 		fprintf(stderr, "failed to create ImageKHR\n");
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	/* Create another texture. */
@@ -127,7 +137,7 @@ piglit_init(int argc, char **argv)
 	/* Specify texture from EGLImage but use wrong target. */
 	glEGLImageTargetTexture2DOES(GL_TEXTURE_CUBE_MAP_ARRAY, egl_image);
 	if (!piglit_check_gl_error(GL_INVALID_ENUM))
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 
 	/* Specify texture from EGLImage properly. */
 	glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
@@ -140,7 +150,7 @@ piglit_init(int argc, char **argv)
 	if (w != 128 || h != 128) {
 		fprintf(stderr, "expected 128x128 (miplevel 1), got %dx%d\n",
                         w, h);
-		piglit_report_result(PIGLIT_FAIL);
+		REPORT_RESULT(FAIL);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -153,5 +163,5 @@ piglit_init(int argc, char **argv)
 	glDeleteTextures(1, &texture_b);
 	peglDestroyImageKHR(dpy, egl_image);
 
-	piglit_report_result(PIGLIT_PASS);
+	REPORT_RESULT(PASS);
 }

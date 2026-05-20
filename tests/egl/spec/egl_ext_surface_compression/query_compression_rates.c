@@ -53,13 +53,18 @@ main(int argc, char *argv[])
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	piglit_require_egl_extension(dpy, "EGL_EXT_surface_compression");
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_EXT_surface_compression")) {
+		printf("Test requires EGL_EXT_surface_compression\n");
+		eglTerminate(dpy);
+		piglit_report_result(PIGLIT_SKIP);
+	}
 
 	peglQuerySupportedCompressionRatesEXT =
 		(void *)eglGetProcAddress("eglQuerySupportedCompressionRatesEXT");
 
 	if (!peglQuerySupportedCompressionRatesEXT) {
 		piglit_loge("No display query entrypoint\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -80,6 +85,7 @@ main(int argc, char *argv[])
 
 	if (!eglChooseConfig(dpy, config_attrs, NULL, 0, &n_configs)) {
 		printf("eglChooseConfig failed\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -91,6 +97,7 @@ main(int argc, char *argv[])
 				                            NULL, 0, &n_rates);
 		if (!ret) {
 			piglit_loge("Couldn't query the compression rates\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
 		}
 
@@ -106,6 +113,7 @@ main(int argc, char *argv[])
 	}
 
 	free(configs);
+	eglTerminate(dpy);
 
 	piglit_report_result(PIGLIT_PASS);
 }

@@ -113,6 +113,7 @@ piglit_init(int argc, char **argv)
 	/* Successful call. */
 	peglSetBlobCacheFuncs(dpy, set_blob, get_blob);
 	EXPECT(EGL_SUCCESS);
+	eglTerminate(dpy);
 
 #undef EXPECT
 

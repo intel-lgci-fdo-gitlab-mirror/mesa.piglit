@@ -89,6 +89,7 @@ main(void)
 		myEGLQueryString = (void *) eglGetProcAddress("eglQueryString");
 		if (!myEGLQueryString) {
 			printf("eglGetProcAddress(\"eglQueryString\") failed\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
 		}
 
@@ -98,6 +99,7 @@ main(void)
 			    display_exts_len + 1) != 0) {
 			printf("eglQueryString(EGL_EXTENSIONS) result differs "
 			       "when called through eglGetProcAddress\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
 		}
 
@@ -117,14 +119,17 @@ main(void)
 			printf("EGL_KHR_get_all_proc_addresses and "
 			       "EGL_EXT_client_extensions are supported but "
 			       "not EGL_KHR_client_get_all_proc_addresses\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
 		} else if (has_client_ext && !has_display_ext) {
 			printf("EGL_KHR_client_get_all_proc_addresses is "
 			       "supported but not "
 			       "EGL_KHR_get_all_proc_addresses\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
 		}
 	}
+	eglTerminate(dpy);
 
 	piglit_report_result(PIGLIT_PASS);
 }

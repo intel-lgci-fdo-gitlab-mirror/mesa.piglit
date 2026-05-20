@@ -46,6 +46,7 @@ int main(int argc, char **argv)
 	};
 	GLuint query, query_handle;
 	bool ok;
+	enum piglit_result result = PIGLIT_PASS;
 
 	dpy = piglit_egl_get_default_display(EGL_NONE);
 
@@ -58,6 +59,7 @@ int main(int argc, char **argv)
 	ctx1 = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, attr);
 
 	if (!ctx1) {
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 		return -1;
 	}
@@ -70,24 +72,31 @@ int main(int argc, char **argv)
 
 	piglit_dispatch_default_init(PIGLIT_DISPATCH_GL);
 
-	piglit_require_extension("GL_INTEL_performance_query");
+	if (!piglit_is_extension_supported("GL_INTEL_performance_query")) {
+		printf("Test requires GL_INTEL_performance_query\n");
+		result = PIGLIT_SKIP;
+		goto end;
+	}
 
 	glGetFirstPerfQueryIdINTEL(&query);
 	if (!query) {
-		/* No query available */
-		piglit_report_result(PIGLIT_SKIP);
-		return 0;
+		printf("No query available\n");
+		result = PIGLIT_SKIP;
+		goto end;
 	}
 
 	glCreatePerfQueryINTEL(query, &query_handle);
 
 	glBeginPerfQueryINTEL(query_handle);
 
+end:
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
 	eglDestroyContext(dpy, ctx1);
 
-	piglit_report_result(PIGLIT_PASS);
+	eglTerminate(dpy);
+
+	piglit_report_result(result);
 
 	return 0;
 }

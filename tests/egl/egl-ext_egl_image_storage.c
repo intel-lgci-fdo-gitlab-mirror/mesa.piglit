@@ -245,13 +245,16 @@ piglit_init(int argc, char **argv)
 
 	piglit_require_egl_extension(dpy, "EGL_MESA_configless_context");
 
+	enum piglit_result result;
+
 	EGLint ctx_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	EGLContext ctx =
 		eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT,
 				 ctx_attr);
 	if (ctx == EGL_NO_CONTEXT) {
 		fprintf(stderr, "could not create EGL context\n");
-		piglit_report_result(PIGLIT_FAIL);
+		result = PIGLIT_FAIL;
+		goto end;
 	}
 
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
@@ -269,7 +272,8 @@ piglit_init(int argc, char **argv)
 				       attribs);
 	if (!egl_image) {
 		fprintf(stderr, "failed to create ImageKHR\n");
-		piglit_report_result(PIGLIT_FAIL);
+		result = PIGLIT_FAIL;
+		goto end;
 	}
 
 	/* Create another texture. */
@@ -284,18 +288,24 @@ piglit_init(int argc, char **argv)
 
 	/* Specify texture from EGLImage, valid params.  */
 	glEGLImageTargetTexStorageEXT(GL_TEXTURE_2D, egl_image, none_attr);
-	if (!piglit_check_gl_error(GL_NO_ERROR))
-		piglit_report_result(PIGLIT_FAIL);
+	if (!piglit_check_gl_error(GL_NO_ERROR)) {
+		result = PIGLIT_FAIL;
+		goto end;
+	}
 
-	if (!verify_rgbw_texture())
-		piglit_report_result(PIGLIT_FAIL);
+	if (!verify_rgbw_texture()) {
+		result = PIGLIT_FAIL;
+		goto end;
+	}
 
 	/* Expected to be immutable. */
 	GLint immutable_format;
 	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_IMMUTABLE_FORMAT,
 			    &immutable_format);
-	if (immutable_format != 1)
-		piglit_report_result(PIGLIT_FAIL);
+	if (immutable_format != 1) {
+		result = PIGLIT_FAIL;
+		goto end;
+	}
 
 	/* If OES_texture_view supported, attempt to create a view. */
 	if (piglit_is_extension_supported("GL_OES_texture_view")) {
@@ -305,7 +315,8 @@ piglit_init(int argc, char **argv)
 			         0, 1, 0, 1);
 		if (!piglit_check_gl_error(GL_NO_ERROR)) {
 			fprintf(stderr, "failed to create textureview!\n");
-			piglit_report_result(PIGLIT_FAIL);
+			result = PIGLIT_FAIL;
+			goto end;
 		}
 
 		glDeleteTextures(1, &texture_c);
@@ -317,8 +328,15 @@ piglit_init(int argc, char **argv)
 
 	if (!test_invalid_target_dmabuf(dpy)) {
 		fprintf(stderr, "failed to test dma-buf storage\n");
-		piglit_report_result(PIGLIT_FAIL);
+		result = PIGLIT_FAIL;
+		goto end;
 	}
 
-	piglit_report_result(PIGLIT_PASS);
+	result = PIGLIT_PASS;
+
+end:
+	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	eglTerminate(dpy);
+
+	piglit_report_result(result);
 }

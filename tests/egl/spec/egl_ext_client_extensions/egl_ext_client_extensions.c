@@ -159,11 +159,13 @@ test_3(void)
 	if (!piglit_check_egl_error(EGL_SUCCESS)) {
 		printf("eglQueryString(EGL_EXTENSIONS) failed on default "
 		       "display\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 	if (!display_ext_string) {
 		printf("eglQueryString(EGL_EXTENSIONS) returned null for "
 		       "default display\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -172,11 +174,13 @@ test_3(void)
 		if (piglit_check_egl_error(EGL_BAD_DISPLAY)) {
 			printf("eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS) "
 			       "returned null. Skipping.\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_SKIP);
 		} else {
 			printf("eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS) "
 			       "returned null but did not emit "
 			       "EGL_BAD_DISPLAY\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
 		}
 
@@ -199,6 +203,7 @@ test_3(void)
 		}
 	}
 
+	eglTerminate(dpy);
 	piglit_report_result(result);
 }
 

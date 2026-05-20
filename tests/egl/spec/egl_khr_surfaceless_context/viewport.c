@@ -59,6 +59,7 @@ choose_config(void)
 	if (!eglChooseConfig(egl_dpy, config_attribs, &cfg, 1, &count) ||
 	    count == 0) {
 		fprintf(stderr, "eglChooseConfig() failed\n");
+		eglTerminate(egl_dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 }
@@ -78,6 +79,14 @@ create_context(void)
 	}
 }
 
+static void
+teardown(void)
+{
+	eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	eglDestroyContext(egl_dpy, ctx);
+	eglTerminate(egl_dpy);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -86,12 +95,17 @@ main(int argc, char **argv)
 	int i;
 
 	choose_config();
-	piglit_require_egl_extension(egl_dpy, "EGL_KHR_surfaceless_context");
+	if (!piglit_is_egl_extension_supported(egl_dpy, "EGL_KHR_surfaceless_context")) {
+		fprintf(stderr, "Test requires EGL_KHR_surfaceless_context\n");
+		eglTerminate(egl_dpy);
+		piglit_report_result(PIGLIT_SKIP);
+	}
 	create_context();
 
 	/* Bind the context with no surface */
 	if (!eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx)) {
 		fprintf(stderr, "eglMakeCurrent() failed\n");
+		teardown();
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -119,9 +133,11 @@ main(int argc, char **argv)
 				actual_viewport[1],
 				actual_viewport[2],
 				actual_viewport[3]);
+			teardown();
 			piglit_report_result(PIGLIT_FAIL);
 		}
 	}
+	teardown();
 
 	piglit_report_result(PIGLIT_PASS);
 }

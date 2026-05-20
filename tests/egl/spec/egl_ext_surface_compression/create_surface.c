@@ -73,13 +73,17 @@ main(int argc, char *argv[])
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	piglit_require_egl_extension(dpy, "EGL_EXT_surface_compression");
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_EXT_surface_compression")) {
+		eglTerminate(dpy);
+		piglit_report_result(PIGLIT_SKIP);
+	}
 
 	peglQuerySupportedCompressionRatesEXT =
 		(void *)eglGetProcAddress("eglQuerySupportedCompressionRatesEXT");
 
 	if (!peglQuerySupportedCompressionRatesEXT) {
 		piglit_loge("No display query entrypoint\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -102,6 +106,7 @@ main(int argc, char *argv[])
 
 	if (!eglChooseConfig(dpy, config_attrs, NULL, 0, &n_configs)) {
 		printf("eglChooseConfig failed\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -113,6 +118,7 @@ main(int argc, char *argv[])
 				                            NULL, 0, &n_rates);
 		if (!ret) {
 			piglit_loge("Couldn't query the compression rates\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
 		}
 
@@ -123,6 +129,7 @@ main(int argc, char *argv[])
 		ctx = eglCreateContext(dpy, configs[c], EGL_NO_CONTEXT, NULL);
 		if (ctx == EGL_NO_CONTEXT) {
 			fprintf(stderr, "eglCreateContext() failed\n");
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
 		}
 
@@ -140,6 +147,7 @@ main(int argc, char *argv[])
 			surf = eglCreateWindowSurface(dpy, configs[c], window, surface_attrs);
 			if (surf == EGL_NO_SURFACE) {
 				fprintf(stderr, "eglCreateWindowSurface() failed\n");
+				eglTerminate(dpy);
 				piglit_report_result(PIGLIT_FAIL);
 			}
 
@@ -147,8 +155,12 @@ main(int argc, char *argv[])
 			piglit_dispatch_default_init(PIGLIT_DISPATCH_ES2);
 			draw();
 
-			if (!piglit_probe_pixel_rgb(10, 10, color))
+			if (!piglit_probe_pixel_rgb(10, 10, color)) {
+				eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+				eglDestroyContext(dpy, ctx);
+				eglTerminate(dpy);
 				piglit_report_result(PIGLIT_FAIL);
+			}
 
 			eglSwapBuffers(dpy, surf);
 		}
@@ -159,6 +171,7 @@ main(int argc, char *argv[])
 	}
 
 	free(configs);
+	eglTerminate(dpy);
 
 	piglit_report_result(PIGLIT_PASS);
 }

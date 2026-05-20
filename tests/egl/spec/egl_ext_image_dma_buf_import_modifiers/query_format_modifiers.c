@@ -63,10 +63,14 @@ main(int argc, char *argv[])
 
 	if (egl_major < 1 || (egl_major == 1 && egl_minor < 2)) {
 		piglit_logi("EGL 1.2 required");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 
-	piglit_require_egl_extension(dpy, "EGL_EXT_image_dma_buf_import_modifiers");
+	if (!piglit_is_egl_extension_supported(dpy, "EGL_EXT_image_dma_buf_import_modifiers")) {
+		eglTerminate(dpy);
+		piglit_report_result(PIGLIT_SKIP);
+	}
 
 	peglQueryDmaBufFormatsEXT =
 		(void *)eglGetProcAddress("eglQueryDmaBufFormatsEXT");
@@ -75,12 +79,15 @@ main(int argc, char *argv[])
 
 	if (!peglQueryDmaBufFormatsEXT || !peglQueryDmaBufModifiersEXT) {
 		piglit_loge("No display query entrypoint\n");
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
 	ret = peglQueryDmaBufFormatsEXT(dpy, 0, NULL, &n_formats);
-	if (!ret)
+	if (!ret) {
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
+	}
 	piglit_logd("Found %i format(s):", n_formats);
 
 	formats = calloc(n_formats, sizeof(*formats));
@@ -100,8 +107,10 @@ main(int argc, char *argv[])
 
 		ret = peglQueryDmaBufModifiersEXT(dpy, formats[f], 0, NULL,
 						  NULL, &n_modifiers);
-		if (!ret)
+		if (!ret) {
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
+		}
 
 		piglit_logd("\t%i modifiers:", n_modifiers);
 
@@ -110,8 +119,10 @@ main(int argc, char *argv[])
 		ret = peglQueryDmaBufModifiersEXT(dpy, formats[f],
 						  n_modifiers, modifiers,
 						  external, &n_modifiers);
-		if (!ret)
+		if (!ret) {
+			eglTerminate(dpy);
 			piglit_report_result(PIGLIT_FAIL);
+		}
 
 		for (m = 0; m < n_modifiers; m++) {
 			piglit_logd("\t0x%016lx external=%i", modifiers[m], external[m]);
@@ -137,12 +148,18 @@ main(int argc, char *argv[])
 	piglit_logd("Trying to query random format 0x%x", rand_format);
 	ret = peglQueryDmaBufModifiersEXT(dpy, rand_format,
 					  0, NULL, NULL, &n_modifiers);
-	if (ret)
+	if (ret) {
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
-	if (eglGetError() != EGL_BAD_PARAMETER)
+	}
+
+	if (eglGetError() != EGL_BAD_PARAMETER) {
+		eglTerminate(dpy);
 		piglit_report_result(PIGLIT_FAIL);
+	}
 
 	free(formats);
 
+	eglTerminate(dpy);
 	piglit_report_result(PIGLIT_PASS);
 }
