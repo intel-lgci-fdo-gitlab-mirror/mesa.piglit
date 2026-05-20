@@ -167,6 +167,7 @@ do_test(const struct test_desc *test)
 		pass = check_indexed(test, GL_TRANSFORM_FEEDBACK_BUFFER_SIZE,
 				     i, size) && pass;
 	}
+	free(bufs);
 
 	return pass;
 }

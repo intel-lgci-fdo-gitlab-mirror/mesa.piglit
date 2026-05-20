@@ -220,7 +220,7 @@ do_test(const struct test_desc *test)
 	int i;
 	int num_varyings = test->mode == NO_VARYINGS ? 0 : test->num_buffers;
 	GLint max_separate_attribs;
-	char* vstext_sep;
+	char* vstext_sep = NULL;
 
 	if (test->mode == USEPROGSTAGE_ACTIVE
 	    || test->mode == USEPROGSTAGE_NOACTIVE
@@ -285,6 +285,9 @@ do_test(const struct test_desc *test)
 						  (const char **) &vstext_sep);
 		pass = piglit_link_check_status(progs[1]) && pass;
 	}
+
+	if (vstext_sep)
+		free(vstext_sep);
 
 	if (test->mode == USEPROG_ACTIVE || test->mode == LINK_OTHER_ACTIVE) {
 		printf("Prepare 2nd program\n");
