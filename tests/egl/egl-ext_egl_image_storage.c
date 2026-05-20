@@ -246,6 +246,9 @@ piglit_init(int argc, char **argv)
 	piglit_require_egl_extension(dpy, "EGL_MESA_configless_context");
 
 	enum piglit_result result;
+	EGLImageKHR egl_image = NULL;
+	GLuint texture_a = 0;
+	GLuint texture_b = 0;
 
 	EGLint ctx_attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	EGLContext ctx =
@@ -260,13 +263,12 @@ piglit_init(int argc, char **argv)
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
 
 	/* Create a texture. */
-	GLuint texture_a = piglit_rgbw_texture(GL_RGBA, 256, 256, true, true,
+	texture_a = piglit_rgbw_texture(GL_RGBA, 256, 256, true, true,
 					       GL_UNSIGNED_BYTE);
 	glBindTexture(GL_TEXTURE_2D, texture_a);
 
 	/* Create EGLImage from texture.  */
 	EGLint attribs[] = { EGL_NONE };
-	EGLImageKHR egl_image;
 	egl_image = peglCreateImageKHR(dpy, ctx, EGL_GL_TEXTURE_2D,
 				       (EGLClientBuffer) (intptr_t) texture_a,
 				       attribs);
@@ -277,7 +279,6 @@ piglit_init(int argc, char **argv)
 	}
 
 	/* Create another texture. */
-	GLuint texture_b;
 	glGenTextures(1, &texture_b);
 	glBindTexture(GL_TEXTURE_2D, texture_b);
 
@@ -323,8 +324,11 @@ piglit_init(int argc, char **argv)
 	}
 
 	glDeleteTextures(1, &texture_a);
+	texture_a = 0;
 	glDeleteTextures(1, &texture_b);
+	texture_b = 0;
 	peglDestroyImageKHR(dpy, egl_image);
+	egl_image = NULL;
 
 	if (!test_invalid_target_dmabuf(dpy)) {
 		fprintf(stderr, "failed to test dma-buf storage\n");
@@ -335,6 +339,13 @@ piglit_init(int argc, char **argv)
 	result = PIGLIT_PASS;
 
 end:
+	if (texture_a)
+		glDeleteTextures(1, &texture_a);
+	if (texture_b)
+		glDeleteTextures(1, &texture_b);
+	if (egl_image)
+		peglDestroyImageKHR(dpy, egl_image);
+
 	eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglTerminate(dpy);
 
