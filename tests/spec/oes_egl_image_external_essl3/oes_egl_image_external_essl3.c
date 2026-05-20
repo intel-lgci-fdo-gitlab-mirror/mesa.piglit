@@ -224,6 +224,7 @@ test_case_image_load(void *data)
    glDeleteProgram(prog);
    glUseProgram(0);
 
+   free(vs_src);
    free(fs_src);
 
    if (!piglit_probe_rect_rgba(0, 0, piglit_width, piglit_height, green))
@@ -274,6 +275,7 @@ test_case_image_store(void *data)
    glDeleteProgram(prog);
    glUseProgram(0);
 
+   free(vs_src);
    free(fs_src);
 
    if (!piglit_probe_rect_rgba(0, 0, piglit_width, piglit_height, green))
@@ -305,6 +307,7 @@ test_case_sampler(void *data)
    glDeleteProgram(prog);
    glUseProgram(0);
 
+   free(vs_src);
    free(fs_src);
 
    if (!piglit_probe_rect_rgba(0, 0, piglit_width, piglit_height, green))
