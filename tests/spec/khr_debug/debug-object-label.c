@@ -369,6 +369,7 @@ test_object_label()
 				fprintf(stderr, "GL_INVALID_VALUE should be generated when label length >= MAX_LABEL_LENGTH\n");
 				pass = false;
 			}
+			free(bigLabel);
 		}
 	}
 	else {
