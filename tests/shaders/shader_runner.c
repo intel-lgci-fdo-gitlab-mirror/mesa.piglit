@@ -133,6 +133,8 @@ static int gl_max_clip_planes;
 static int gl_num_program_binary_formats = 0;
 static int gl_subgroup_size_khr = 0;
 
+static char *text = NULL;
+
 static const char *test_start = NULL;
 static unsigned test_start_line_num = 0;
 
@@ -674,6 +676,7 @@ compile_and_bind_program(GLenum target, const char *start, int len)
 	glBindProgramARB(target, prog);
 	link_ok = true;
 	prog_in_use = true;
+	free(source);
 
 	return PIGLIT_PASS;
 }
@@ -1988,7 +1991,7 @@ process_test_script(const char *script_name)
 {
 	unsigned text_size;
 	unsigned line_num;
-	char *text = piglit_load_text_file(script_name, &text_size);
+	text = piglit_load_text_file(script_name, &text_size);
 	enum states state = none;
 	const char *line = text;
 	enum piglit_result result;
@@ -2017,8 +2020,10 @@ process_test_script(const char *script_name)
 					return res;
 				}
 			result = leave_state(state, line, script_name);
-			if (result != PIGLIT_PASS)
+			if (result != PIGLIT_PASS) {
+				free(text);
 				return result;
+			}
 
 			if (parse_str(line, "[require]", NULL)) {
 				state = requirements;
@@ -2115,6 +2120,7 @@ process_test_script(const char *script_name)
 					spirv_replaces_glsl) {
 					fprintf(stderr, "SPIRV YES/ONLY test, but"
 						" spirv section was not found.\n");
+					free(text);
 
 					return PIGLIT_FAIL;
 				}
@@ -2124,6 +2130,7 @@ process_test_script(const char *script_name)
 				fprintf(stderr,
 					"Unknown section in test script.  "
 					"Perhaps missing closing ']'?\n");
+				free(text);
 				return PIGLIT_FAIL;
 			}
 		} else {
@@ -2134,8 +2141,10 @@ process_test_script(const char *script_name)
 
 			case requirements:
 				result = process_requirement(line);
-				if (result != PIGLIT_PASS)
+				if (result != PIGLIT_PASS) {
+					free(text);
 					return result;
+				}
 				break;
 
 			case geometry_layout:
@@ -2170,8 +2179,10 @@ process_test_script(const char *script_name)
 			case compute_shader_specializations: {
 				enum piglit_result result =
 					process_specialization(state, line);
-				if (result != PIGLIT_PASS)
+				if (result != PIGLIT_PASS) {
+					free(text);
 					return result;
+				}
 				break;
 			}
 
@@ -2183,8 +2194,10 @@ process_test_script(const char *script_name)
 			case elements: {
 				enum piglit_result result =
 					process_elements(state, line);
-				if (result != PIGLIT_PASS)
+				if (result != PIGLIT_PASS) {
+					free(text);
 					return result;
+				}
 				break;
 			}
 
@@ -2205,6 +2218,7 @@ process_test_script(const char *script_name)
 		fprintf(stderr, "SPIRV YES/ONLY test, but"
 			" spirv section was not found.\n");
 
+		free(text);
 		return PIGLIT_FAIL;
 	 }
 
@@ -5464,8 +5478,10 @@ piglit_display(void)
 	unsigned list = 0;
 	struct block_info block_data = {0, -1, -1, -1, -1};
 
-	if (test_start == NULL)
+	if (test_start == NULL) {
+		free(text);
 		return PIGLIT_PASS;
+	}
 
 	next_line = test_start;
 	line_num = test_start_line_num;
@@ -6609,6 +6625,7 @@ piglit_display(void)
 			glDeleteProgramPipelines(1, &pipeline);
 	}
 
+	free(text);
 	return full_result;
 }
 
