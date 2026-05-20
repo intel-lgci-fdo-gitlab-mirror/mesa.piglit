@@ -216,4 +216,6 @@ piglit_init(int argc, char **argv)
 		 "env", max_env_parameters - 47, max_env_parameters - 1);
 
 	(void) piglit_compile_program(GL_VERTEX_PROGRAM_ARB, shader_source);
+
+	free(shader_source);
 }
