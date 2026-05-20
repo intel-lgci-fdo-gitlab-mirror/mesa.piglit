@@ -125,6 +125,8 @@ test_format(GLenum intFormat, GLenum format, GLenum type)
 	}
 
 	glDeleteTextures(1, &tex);
+	free(image);
+	free(getimage);
 
 	return pass;
 }
