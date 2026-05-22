@@ -62,6 +62,9 @@ piglit_init(int argc, char **argv)
 	GLint cull_distances;
 	char *use_cull = "", *use_clip = "";
 
+	piglit_require_gl_version(30);
+	piglit_require_extension("GL_ARB_cull_distance");
+
 	glGetIntegerv(GL_MAX_CLIP_DISTANCES, &max_clip_distances);
 	glGetIntegerv(GL_MAX_CULL_DISTANCES, &max_cull_distances);
 	glGetIntegerv(GL_MAX_COMBINED_CLIP_AND_CULL_DISTANCES,
@@ -92,8 +95,6 @@ piglit_init(int argc, char **argv)
 		 use_clip, clip_distances,
 		 use_cull, cull_distances);
 
-	piglit_require_gl_version(30);
-	piglit_require_extension("GL_ARB_cull_distance");
 
 	vs = piglit_compile_shader_text_nothrow(GL_VERTEX_SHADER, vert, false);
 	if (vs == 0)
