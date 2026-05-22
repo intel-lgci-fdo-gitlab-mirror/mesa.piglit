@@ -180,6 +180,9 @@ draw(Display *dpy)
 
 	glXSwapBuffers(dpy, win);
 
+	glXDestroyPixmap(dpy, rgb_pixmap);
+	glXDestroyPixmap(dpy, rgba_pixmap);
+
 	return pass ? PIGLIT_PASS : PIGLIT_FAIL;
 }
 

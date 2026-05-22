@@ -87,8 +87,11 @@ thread_func(void *arg)
 		glUseProgram(program);
 		piglit_check_gl_error(GL_NO_ERROR);
 
+		glXMakeCurrent(dpy, None, NULL);
 		glXDestroyContext(dpy, ctx);
 	}
+	XFree(visinfo);
+	XCloseDisplay(dpy);
 
 	return NULL;
 }

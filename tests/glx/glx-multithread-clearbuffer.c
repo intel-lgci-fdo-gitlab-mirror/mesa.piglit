@@ -73,7 +73,9 @@ thread_func(void *arg)
 		piglit_check_gl_error(0);
 	}
 
+	glXMakeCurrent(dpy, None, NULL);
 	glXDestroyContext(dpy, ctx);
+	XFree(visinfo);
 	return NULL;
 }
 

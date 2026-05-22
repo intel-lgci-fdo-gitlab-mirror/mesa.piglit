@@ -74,6 +74,9 @@ draw(Display *dpy)
 		glXSwapBuffers(dpy, wins[i]);
 	}
 
+	glXMakeCurrent(dpy, None, NULL);
+	glXDestroyContext(dpy, ctx);
+
 	return pass ? PIGLIT_PASS : PIGLIT_FAIL;
 }
 
@@ -103,6 +106,7 @@ main(int argc, char **argv)
 	/* Free our resources when we're done. */
 	glXMakeCurrent(dpy, None, NULL);
 	glXDestroyContext(dpy, piglit_get_glx_context(dpy, visinfo));
+	XCloseDisplay(dpy);
 
 	return 0;
 }

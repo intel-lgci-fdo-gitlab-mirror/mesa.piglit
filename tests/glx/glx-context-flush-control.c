@@ -323,6 +323,7 @@ check_changed_to_red(struct thread_data *data)
 static void
 do_test_flush(Display *display,
 	      struct window *window,
+	      GLXContext context_a,
 	      GLXContext context_b,
 	      struct thread_data *thread_data,
 	      enum release_behavior release_behavior)
@@ -376,6 +377,7 @@ do_test_flush(Display *display,
 		run_in_thread(thread_data, check_changed_to_red);
 	}
 
+	glXMakeCurrent(display, window->glx_window, context_a);
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDeleteRenderbuffers(1, &rb);
@@ -422,7 +424,7 @@ test_flush(Display *display,
 
 	run_in_thread(&thread_data, bind_context);
 
-	do_test_flush(display, window, context_b,
+	do_test_flush(display, window, context_a, context_b,
 		      &thread_data, release_behavior);
 
 	run_in_thread(&thread_data, unbind_context);
@@ -437,6 +439,7 @@ test_flush(Display *display,
 	pthread_cond_destroy(&thread_data.cond);
 	pthread_mutex_destroy(&thread_data.mutex);
 
+	glXMakeCurrent(display, None, NULL);
 	glXDestroyContext(display, context_c);
 	glXDestroyContext(display, context_b);
 	glXDestroyContext(display, context_a);
@@ -479,6 +482,7 @@ main(int argc, char **argv)
 	test_flush(display, &window, RB_FLUSH);
 
 	destroy_window(display, &window);
+	XCloseDisplay(display);
 
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);
 
