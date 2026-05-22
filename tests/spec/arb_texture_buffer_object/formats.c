@@ -571,7 +571,8 @@ piglit_display(void)
 	}
 
 	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
+	if (piglit_get_gl_version() >= 31)
+		glDeleteVertexArrays(1, &vao);
 
 	piglit_present_results();
 
