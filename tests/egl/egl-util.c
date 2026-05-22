@@ -194,14 +194,21 @@ event_loop(struct egl_state *state, const struct egl_test *test)
 	return result;
 }
 
-static void
+static bool
 check_extensions(struct egl_state *state, const struct egl_test *test)
 {
 	int i;
 
-	for (i = 0; test->extensions[i]; i++)
-		piglit_require_egl_extension(state->egl_dpy,
-					     test->extensions[i]);
+	for (i = 0; test->extensions[i]; i++) {
+		if (!piglit_is_egl_extension_supported(state->egl_dpy,
+					test->extensions[i])) {
+			fprintf(stderr, "Test requires %s\n",
+					test->extensions[i]);
+			return false;
+		}
+	}
+
+	return true;
 }
 
 enum piglit_result
@@ -275,7 +282,10 @@ egl_util_run(const struct egl_test *test, int argc, char *argv[])
 	else
 		eglBindAPI(EGL_OPENGL_ES_API);
 
-	check_extensions(&state, test);
+	if (!check_extensions(&state, test)) {
+		result = PIGLIT_SKIP;
+		goto fail;
+	}
 
 	if (!eglChooseConfig(state.egl_dpy, test->config_attribs, &state.cfg, 1, &count) ||
 	    count == 0) {
@@ -333,6 +343,8 @@ fail:
 		XDestroyWindow(state.dpy, state.win);
 	if (state.egl_dpy)
 		eglTerminate(state.egl_dpy);
+	if (state.dpy)
+		XCloseDisplay(state.dpy);
 	if (test->stop_on_failure)
 		piglit_report_result(result);
 	return result;

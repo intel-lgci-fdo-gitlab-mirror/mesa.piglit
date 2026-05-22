@@ -76,9 +76,9 @@ draw(struct egl_state *state)
    piglit_draw_rect_tex(0, 0, 256, 256, 0, 0, 1, 1);
 
    if (!piglit_probe_rect_rgba(0, 0, 256, 256, purple))
-      piglit_report_result(PIGLIT_FAIL);
+      return PIGLIT_FAIL;
 
-   piglit_report_result(PIGLIT_PASS);
+   return PIGLIT_PASS;
 }
 
 int
