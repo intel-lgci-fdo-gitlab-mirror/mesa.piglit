@@ -164,6 +164,7 @@ draw(Display *dpy)
 
   glXDestroyContext(dpy, ctx1);
   glXDestroyContext(dpy, ctx2);
+  glXDestroyGLXPixmap(dpy, load_win);
 
   return PIGLIT_PASS;
 }
