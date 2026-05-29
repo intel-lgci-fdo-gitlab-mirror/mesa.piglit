@@ -46,7 +46,7 @@ piglit_display(void)
     /* Each ETC1 block encodes 4x4 pixels and is 8 bytes. Therefore this
      * image size is 32 bytes.
      */
-    const GLubyte fake_tex_data[32];
+    const GLubyte fake_tex_data[32] = {0};
 
     GLuint t;
     int pass = GL_TRUE;
