@@ -62,7 +62,7 @@ static bool
 test_semaphore_parameter_enum_errors()
 {
 	GLuint sem;
-	GLuint64 param;
+	GLuint64 param = 0;
 
 	glGenSemaphoresEXT(1, &sem);
 
