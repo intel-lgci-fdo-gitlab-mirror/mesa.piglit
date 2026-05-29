@@ -79,7 +79,7 @@ compare_counter(uint32_t value, const char *subtest)
 void
 piglit_init(int argc, char **argv)
 {
-	GLuint buffer, fbo, vao;
+	GLuint fbo, vao;
 	GLint prog, max_samples;
 	int i;
 	unsigned samples[16];
@@ -209,7 +209,6 @@ piglit_init(int argc, char **argv)
 
 	glDeleteFramebuffers(1, &fbo);
 	glDeleteVertexArrays(1, &vao);
-	glDeleteBuffers(1, &buffer);
 	glDeleteProgram(prog);
 	glDeleteQueries(1, &query);
 
