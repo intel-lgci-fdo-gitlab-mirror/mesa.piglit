@@ -308,7 +308,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 if (NOT MSVC)
-	if (PIGLIT_SSE2 AND CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)")
+	if (PIGLIT_SSE2 AND CMAKE_SYSTEM_PROCESSOR MATCHES
+			"(x86)|(X86)|(i386)|(amd64)")
 		# enables SSE2 and precision used on x86-64 by default
 		SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2 -mfpmath=sse")
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -mfpmath=sse")
