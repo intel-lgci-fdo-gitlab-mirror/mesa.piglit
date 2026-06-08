@@ -1,0 +1,52 @@
+# [description]
+# Sample shadow2D(sampler2DShadow, vec3) in two consecutive draws with no
+# state change between them. The depth comparison must apply to every draw,
+# not only the one where sampler state was last made dirty.
+#
+# Regression test for drivers that emulate the shadow compare in the shader
+# and rebuild a per-draw shader-variant key only when sampler state is dirty.
+# The key is rebuilt from scratch each draw, so the second back-to-back draw
+# could pick a variant without the compare and return the raw depth instead
+# of the comparison result.
+
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+#version 110
+
+varying vec4 texcoords;
+
+void main() {
+	gl_Position = gl_Vertex;
+	texcoords = (gl_Vertex + 1.0) / 2.0;
+}
+
+[fragment shader]
+#version 110
+
+uniform sampler2DShadow tex;
+varying vec4 texcoords;
+
+void main() {
+	gl_FragColor = shadow2D(tex, texcoords.xyy);
+}
+
+[test]
+uniform int tex 0
+texture shadow2D 0 (32, 32)
+texparameter 2D depth_mode luminance
+texparameter 2D compare_func greater
+
+# Two draws, nothing that touches sampler state in between. The probes below
+# apply to the result of the second draw.
+draw rect -1 -1 2 2
+draw rect -1 -1 2 2
+
+# depth comparison pass
+relative probe rgba (0.0, 0.1) (1.0, 1.0, 1.0, 1.0)
+relative probe rgba (0.9, 1.0) (1.0, 1.0, 1.0, 1.0)
+
+# depth comparison fail
+relative probe rgba (0.1, 0.0) (0.0, 0.0, 0.0, 1.0)
+relative probe rgba (1.0, 0.9) (0.0, 0.0, 0.0, 1.0)
