@@ -21,9 +21,12 @@ kernel void test(global int* out) {
 	uintptr_t uit;
 	//half h; // Can be only used as a pointer to a buffer
 
-// Needs cl_khr_fp64
-#ifdef cl_khr_fp64
+// Needs cl_khr_fp64 or __opencl_c_fp64
+#if defined(cl_khr_fp64)
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+	double d;
+	double* d1;
+#elif defined(__opencl_c_fp64)
 	double d;
 	double* d1;
 #endif

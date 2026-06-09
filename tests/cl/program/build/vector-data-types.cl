@@ -27,7 +27,10 @@ kernel void test(global int* out) {
 	float3   f3;
 #endif
 
-#if __OPENCL_C_VERSION__ >= 120
+#if defined(cl_khr_fp64)
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+	double2 d2; double3 d3; double4 d4; double8 d8; double16 d16;
+#elif defined(__opencl_c_fp64)
 	double2 d2; double3 d3; double4 d4; double8 d8; double16 d16;
 #endif
 }
