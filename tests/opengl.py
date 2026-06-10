@@ -1917,7 +1917,7 @@ with profile.test_list.group_manager(
     g(['same-attachment-renderbuffer-depth_stencil'])
     g(['arb_framebuffer_object-get-attachment-parameter-default-framebuffer'], run_concurrent=False)
     g(['fbo-alpha'])
-    g(['fbo-blit-stretch'])
+    g(['fbo-blit-stretch'], run_concurrent=False)
     g(['fbo-blit-scaled-linear'])
     g(['fbo-attachments-blit-scaled-linear'])
     g(['fbo-deriv'])
@@ -1937,7 +1937,7 @@ with profile.test_list.group_manager(
       'FBO blit from missing attachment')
     g(['fbo-scissor-blit', 'fbo'], 'fbo-scissor-blit fbo')
     g(['fbo-scissor-blit', 'window'], 'fbo-scissor-blit window',
-      )
+      run_concurrent=False)
     g(['fbo-tex-rgbx'], 'fbo-tex-rgbx')
     g(['arb_framebuffer_object-mixed-buffer-sizes'], 'mixed-buffer-sizes')
     g(['arb_framebuffer_object-negative-readpixels-no-rb'],
@@ -2551,7 +2551,7 @@ with profile.test_list.group_manager(
     g(['tex-miplevel-selection', 'GL2:textureProj', '2DRect_ProjVec4'])
     g(['tex-miplevel-selection', 'GL2:textureProj', '2DRectShadow'])
     add_msaa_visual_plain_tests(g, ['copyteximage', 'RECT'],
-                                )
+                                run_concurrent=False)
     add_texwrap_target_tests(g, 'RECT')
 
 with profile.test_list.group_manager(
@@ -3263,7 +3263,7 @@ with profile.test_list.group_manager(
 with profile.test_list.group_manager(
         PiglitGLTest,
         grouptools.join('spec', 'ext_packed_depth_stencil')) as g:
-    g(['fbo-blit-d24s8'])
+    g(['fbo-blit-d24s8'], run_concurrent=False)
     g(['fbo-clear-formats', 'GL_EXT_packed_depth_stencil', 'stencil'],
       'fbo-clear-formats stencil')
     g(['ext_packed_depth_stencil-depth-stencil-texture'],
@@ -3338,9 +3338,9 @@ with profile.test_list.group_manager(
     g(['getteximage-targets', '2D_ARRAY'])
     g(['texsubimage', 'array'])
     add_msaa_visual_plain_tests(g, ['copyteximage', '1D_ARRAY'],
-                                )
+                                run_concurrent=False)
     add_msaa_visual_plain_tests(g, ['copyteximage', '2D_ARRAY'],
-                                )
+                                run_concurrent=False)
     for test in ('depth-clear', 'depth-layered-clear', 'depth-draw',
                  'fs-writes-depth', 'stencil-clear', 'stencil-layered-clear',
                  'stencil-draw', 'fs-writes-stencil'):
@@ -3366,7 +3366,7 @@ with profile.test_list.group_manager(
     g(['cubemap-shader', 'bias'], 'cubemap-shader bias')
     g(['getteximage-targets', 'CUBE'])
     add_msaa_visual_plain_tests(g, ['copyteximage', 'CUBE'],
-                                )
+                                run_concurrent=False)
 
 with profile.test_list.group_manager(
         PiglitGLTest,
