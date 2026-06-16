@@ -77,6 +77,20 @@ piglit_cl_test(const int argc,
 		                              0,
 		                              NULL,
 		                              &param_value_size);
+
+#ifdef CL_VERSION_2_0
+		/*
+		 * CL_QUEUE_SIZE is only valid for device command-queues.
+		 * For host command-queues, CL_INVALID_COMMAND_QUEUE is
+		 * the expected error per spec.
+		 */
+		if(command_queue_infos[i] == CL_QUEUE_SIZE &&
+		   errNo == CL_INVALID_COMMAND_QUEUE) {
+			printf("SKIP (only valid for device command-queues)\n");
+			continue;
+		}
+#endif
+
 		if(!piglit_cl_check_error(errNo, CL_SUCCESS)) {
 			fprintf(stderr,
 			        "Failed (error code: %s): Get size of %s.\n",
