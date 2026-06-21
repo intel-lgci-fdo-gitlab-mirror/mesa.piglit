@@ -218,7 +218,6 @@ piglit_display(void)
 	struct piglit_subtest tests[ARRAY_SIZE(Lines) + 1];
 	for (int i = 0; i < ARRAY_SIZE(Lines); ++i) {
 		tests[i].name = Lines[i].name;
-		tests[i].option = "";
 		tests[i].subtest_func = test_line;
 		tests[i].data = &Lines[i];
 	}

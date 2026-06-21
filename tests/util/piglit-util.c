@@ -776,9 +776,13 @@ piglit_parse_subtest_args(int *argc, char *argv[],
 			}
 
 			for (i = 0; !PIGLIT_SUBTEST_END(&subtests[i]); ++i) {
-				printf("%s: %s\n",
-				       subtests[i].option,
-				       subtests[i].name);
+				if (subtests[i].option != NULL) {
+					printf("%s: %s\n",
+					       subtests[i].option,
+					       subtests[i].name);
+				} else {
+					printf("%s\n", subtests[i].name);
+				}
 			}
 
 			exit(EXIT_SUCCESS);
@@ -797,8 +801,13 @@ piglit_find_subtest(const struct piglit_subtest *subtests, const char *name)
 	if (!subtests)
 		return NULL;
 	for (i = 0; !PIGLIT_SUBTEST_END(&subtests[i]); i++) {
-		if (strcmp(subtests[i].option, name) == 0)
-			return &subtests[i];
+		if (subtests[i].option) {
+			if (strcmp(subtests[i].option, name) == 0)
+				return &subtests[i];
+		} else {
+			if (strcmp(subtests[i].name, name) == 0)
+				return &subtests[i];
+		}
 	}
 
 	return NULL;
