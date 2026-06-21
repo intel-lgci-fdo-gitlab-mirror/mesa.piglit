@@ -197,9 +197,6 @@ test_draw_pixels(void *null)
 					     GL_UNSIGNED_BYTE, pbo_mem);
 			}
 
-			if (!piglit_automatic)
-				piglit_present_results();
-
 			/* Check the result */
 			if (use_pack) {
 				glGenBuffersARB(1, pb_pack);
@@ -221,6 +218,9 @@ test_draw_pixels(void *null)
 					     GL_BGRA,
 					     GL_UNSIGNED_BYTE, pbo_pack_mem);
 			}
+
+			if (!piglit_automatic)
+				piglit_present_results();
 
 			/* Make expected. */
 			for (j = 0; j < WINSIZE; j++) {
@@ -448,9 +448,6 @@ test_bitmap(void *null)
 					 pbo_unpack_mem);
 			}
 
-			if (!piglit_automatic)
-				piglit_present_results();
-
 			/* Check the result */
 			if (use_pack) {
 				glGenBuffersARB(1, pb_pack);
@@ -473,6 +470,9 @@ test_bitmap(void *null)
 				glReadPixels(0, 0, WINSIZE, WINSIZE,
 					     GL_RGB, GL_FLOAT, pbo_pack_mem);
 			}
+
+			if (!piglit_automatic)
+				piglit_present_results();
 
 			/* Compute expected and compare it to the result. */
 			for (j = 0; j < WINSIZE; j++) {
