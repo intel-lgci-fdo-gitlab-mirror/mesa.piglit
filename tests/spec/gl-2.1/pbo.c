@@ -716,6 +716,9 @@ test_tex_image(void *null)
 						     GL_RGB, GL_FLOAT,
 						     buf);
 
+					if (!piglit_automatic)
+						piglit_present_results();
+
 					for (j = 0; j < WINSIZE; j++) {
 						for (i = 0; i < WINSIZE; i++) {
 							int idx = (j * WINSIZE + i) * 3;
@@ -829,6 +832,9 @@ test_tex_sub_image(void *null)
 		glDisable(GL_TEXTURE_2D);
 
 		glReadPixels(0, 0, WINSIZE, WINSIZE, GL_RGB, GL_FLOAT, buf);
+
+		if (!piglit_automatic)
+			piglit_present_results();
 
 		for (j = 0; j < WINSIZE; j++) {
 			for (i = 0; i < WINSIZE; i++) {
@@ -957,6 +963,9 @@ test_polygon_stip(void *null)
 
 			/* Check the result */
 			glReadPixels(0, 0, WINSIZE, WINSIZE, GL_RGB, GL_FLOAT, buf);
+
+			if (!piglit_automatic)
+				piglit_present_results();
 
 			for (j = 0; j < WINSIZE; j++) {
 				for (i = 0; i < WINSIZE; i++) {
