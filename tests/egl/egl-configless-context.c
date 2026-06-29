@@ -364,7 +364,7 @@ main(int argc, char **argv)
 	static const EGLint config_attribs[] = {
 		EGL_NONE
 	};
-	struct state state;
+	struct state state = {0};
 
 	state.dpy = XOpenDisplay(NULL);
 	if (state.dpy == NULL) {
