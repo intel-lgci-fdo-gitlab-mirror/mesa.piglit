@@ -179,14 +179,14 @@ create_textures(GLuint *r8_tex, GLuint *gr88_tex,
 	glActiveTexture(GL_TEXTURE0);
 	*r8_tex = create_dma_buf_texture(width, height,
 					 DRM_FORMAT_R8, *r8_pixels, r8_dmabuf);
-	if (!r8_tex)
+	if (!*r8_tex)
 		return false;
 
 	glActiveTexture(GL_TEXTURE1);
 	*gr88_tex = create_dma_buf_texture(width / 2, height / 2,
 					   DRM_FORMAT_GR88, *gr88_pixels, gr88_dmabuf);
 
-	if (!gr88_tex)
+	if (!*gr88_tex)
 		return false;
 
 	return true;
