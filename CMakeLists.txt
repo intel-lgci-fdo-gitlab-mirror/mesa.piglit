@@ -307,6 +307,12 @@ if(NOT CMAKE_BUILD_TYPE)
 	"May be one of: None Debug RelWithDebInfo Release MinSizeRel" FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
+# Piglit loves to violate strict aliasing rules (e.g. texwrap.c's unsigned
+# *uresult = (unsigned*)iresult; and accessing uresult).  Disabling strict
+# aliasing analysis fixes test failures on at least gcc 15.
+SET(CMAKE_C_FLAGS "-fno-strict-aliasing ${CMAKE_C_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-fno-strict-aliasing ${CMAKE_CXX_FLAGS}")
+
 if (NOT MSVC)
 	if (PIGLIT_SSE2 AND CMAKE_SYSTEM_PROCESSOR MATCHES
 			"(x86)|(X86)|(i386)|(amd64)")
