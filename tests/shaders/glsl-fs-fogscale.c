@@ -125,6 +125,7 @@ piglit_display(void)
 			GL_GEOMETRY_SHADER, gs_source,
 			GL_FRAGMENT_SHADER, fs_source,
 			0);
+		free(gs_source);
 		pass = pass && test_prog(prog, tests[1]);
 
 		/* Test gl_FogFragCoord both as a gs output and input */
@@ -134,6 +135,7 @@ piglit_display(void)
 			GL_GEOMETRY_SHADER, gs_source2,
 			GL_FRAGMENT_SHADER, fs_source,
 			0);
+		free(gs_source2);
 		pass = pass && test_prog(prog, tests[2]);
 
 	} else {
