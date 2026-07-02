@@ -125,6 +125,7 @@ compile_shader(void)
 		 "in dvec3 color2;\n");
 
 	prog = piglit_build_simple_program_unlinked(vert, frag);
+	free(vert);
 	if (!locations_in_shader) {
 		glBindAttribLocation(prog, 0, "vertex");
 		glBindAttribLocation(prog, 1, "color0");
