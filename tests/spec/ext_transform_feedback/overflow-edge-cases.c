@@ -154,6 +154,7 @@ piglit_init(int argc, char **argv)
 				 mode_gs_out_primtypes[mode]);
 			gs = piglit_compile_shader_text(GL_GEOMETRY_SHADER,
 							gstext);
+			free(gstext);
 		} else {
 			vs = piglit_compile_shader_text(GL_VERTEX_SHADER,
 							vstext_nogs);
