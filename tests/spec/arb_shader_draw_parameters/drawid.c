@@ -84,6 +84,7 @@ piglit_init(int argc, char **argv)
 	piglit_require_extension("GL_ARB_base_instance");
 
 	prog = piglit_build_simple_program(vs_text, fs_text);
+	free(vs_text);
 
 	glBindAttribLocation(prog, 1, (const GLchar *) "ref");
 	glLinkProgram(prog);

@@ -123,6 +123,8 @@ piglit_init(int argc, char **argv)
 
 	prog = piglit_build_simple_program(vs_text, fs_text);
 
+	free(vs_text);
+
 	glBindAttribLocation(prog, 1, (const GLchar *) "ref");
 	glLinkProgram(prog);
 	glUseProgram(prog);
