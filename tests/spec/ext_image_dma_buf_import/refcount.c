@@ -72,21 +72,21 @@ piglit_display(void)
 
 	res = egl_image_for_dma_buf_fd(buf, dup(buf->fd), fourcc, &img1);
 	if (res != PIGLIT_PASS)
-		return res;
+		goto err_buf;
 
 	res = egl_image_for_dma_buf_fd(buf, dup(buf->fd), fourcc, &img2);
 	if (res != PIGLIT_PASS)
-		return res;
+		goto err_img1;
 
 	close(buf->fd);
 
 	res = texture_for_egl_image(img1, &tex1, true);
 	if (res != PIGLIT_PASS)
-		return res;
+		goto err_img2;
 
 	res = texture_for_egl_image(img2, &tex2, true);
 	if (res != PIGLIT_PASS)
-		return res;
+		goto err_tex1;
 
 	sample_tex(tex1,
 		   0, y_spacing * 0,
@@ -118,6 +118,20 @@ piglit_display(void)
 
 	piglit_present_results();
 
+	return res;
+
+err_tex1:
+	glDeleteTextures(1, &tex1);
+err_img2:
+	eglDestroyImageKHR(eglGetCurrentDisplay(), img2);
+	piglit_destroy_dma_buf(buf);
+	return res;
+
+err_img1:
+	eglDestroyImageKHR(eglGetCurrentDisplay(), img1);
+err_buf:
+	close(buf->fd);
+	piglit_destroy_dma_buf(buf);
 	return res;
 }
 
