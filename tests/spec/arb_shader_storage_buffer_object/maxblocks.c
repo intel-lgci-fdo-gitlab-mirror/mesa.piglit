@@ -141,6 +141,9 @@ build_shaders(const char *vs_prefix, int vs_blocks,
 	vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vs_source);
 	fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, fs_source);
 
+	free(vs_source);
+	free(fs_source);
+
 	prog = glCreateProgram();
 	glAttachShader(prog, vs);
 	glAttachShader(prog, fs);
