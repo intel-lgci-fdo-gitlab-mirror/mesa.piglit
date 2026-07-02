@@ -300,6 +300,7 @@ piglit_glx_iterate_pixmap_fbconfigs(enum piglit_result (*draw)(Display *dpy,
 	configs = glXGetFBConfigs(dpy, screen, &n_configs);
 	if (!configs) {
 		fprintf(stderr, "No GLX FB configs\n");
+		XCloseDisplay(dpy);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 
@@ -350,11 +351,14 @@ piglit_glx_iterate_pixmap_fbconfigs(enum piglit_result (*draw)(Display *dpy,
 			any_pass = true;
 
 		XFreePixmap(dpy, pix);
+		glXMakeCurrent(dpy, None, None);
+		glXDestroyPixmap(dpy, glx_pix);
 		glXDestroyContext(dpy, ctx);
 	}
 
         XFree(depths);
 	XFree(configs);
+	XCloseDisplay(dpy);
 
 	if (any_fail)
 		return PIGLIT_FAIL;
@@ -387,6 +391,7 @@ piglit_glx_iterate_visuals(enum piglit_result (*draw)(Display *dpy,
 	configs = glXGetFBConfigs(dpy, screen, &n_configs);
 	if (!configs) {
 		fprintf(stderr, "No GLX FB configs\n");
+		XCloseDisplay(dpy);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 
@@ -413,10 +418,12 @@ piglit_glx_iterate_visuals(enum piglit_result (*draw)(Display *dpy,
 			any_pass = true;
 
 		XDestroyWindow(dpy, d);
+		glXMakeCurrent(dpy, None, None);
 		glXDestroyContext(dpy, ctx);
 	}
 
 	XFree(configs);
+	XCloseDisplay(dpy);
 
 	if (any_fail)
 		return PIGLIT_FAIL;

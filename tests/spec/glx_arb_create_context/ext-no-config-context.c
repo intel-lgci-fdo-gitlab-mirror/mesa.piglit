@@ -137,6 +137,7 @@ int main(int argc, char **argv)
 
 		visinfo = glXGetVisualFromFBConfig(dpy, configs[i]);
 		window = piglit_get_glx_window(dpy, visinfo);
+		XFree(visinfo);
 
 		if (!glXMakeCurrent(dpy, window, ctx)) {
 			fprintf(stderr, "Failed to make current\n");
@@ -151,6 +152,9 @@ int main(int argc, char **argv)
 	GLX_ARB_create_context_teardown();
 
 	XFree(configs);
+
+	glXMakeCurrent(dpy, None, None);
+	glXDestroyContext(dpy, ctx);
 
 	piglit_report_result(PIGLIT_PASS);
 	return 0;

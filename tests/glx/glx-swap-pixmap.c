@@ -96,6 +96,9 @@ main(int argc, char **argv)
 
 	glXDestroyPixmap(dpy, g);
 
+	glXMakeCurrent(dpy, None, None);
+	glXDestroyContext(dpy, ctx);
+
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);
 
 	return 0;
