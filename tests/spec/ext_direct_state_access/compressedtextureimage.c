@@ -446,10 +446,14 @@ piglit_display(void)
 	for (i = 0; tests[i].name; i++) {
 		char* test_name_display_list;
 		asprintf(&test_name_display_list, "%s_AND_EXECUTE", tests[i].name);
+		free((char*)tests[i].name);
 		tests[i].name = test_name_display_list;
 	}
 	use_display_list = GL_COMPILE_AND_EXECUTE;
 	result = piglit_run_selected_subtests(tests, NULL, 0, result);
+
+	for (i = 0; tests[i].name; i++)
+		free((char*)tests[i].name);
 
 	glDeleteLists(list, 1);
 
