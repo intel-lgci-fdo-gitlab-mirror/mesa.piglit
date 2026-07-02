@@ -100,6 +100,7 @@ dispatch_size(uint32_t x, uint32_t y, uint32_t z)
 	assert(ok);
 
 	prog = glCreateProgram();
+	free(compute_shader);
 
 	glAttachShader(prog, shader);
 
