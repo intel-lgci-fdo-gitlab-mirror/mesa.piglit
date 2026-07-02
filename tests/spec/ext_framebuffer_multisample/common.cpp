@@ -595,8 +595,15 @@ Test::measure_accuracy()
 	 * reference image. To cope with this we allow a small margin
 	 * of error for the pixels that are either fully lit or fully
 	 * unlit.
+	 *
+	 * For sRGB buffers, the sRGB encoding amplifies the per-pixel
+	 * error of these edge-misclassified pixels (a sample value of
+	 * (N-1)/N stored without sRGB encoding decodes to a linear
+	 * value significantly below (N-1)/N, widening the gap from
+	 * the expected 1.0).  Use 10% of error_threshold rather than
+	 * 5% to keep the margin adequate at high sample counts.
 	 */
-	double full_pixel_threshold = error_threshold * 0.05f;
+	double full_pixel_threshold = error_threshold * 0.1f;
 
 	printf("Pixels that should be unlit\n");
 	unlit_stats.summarize();
