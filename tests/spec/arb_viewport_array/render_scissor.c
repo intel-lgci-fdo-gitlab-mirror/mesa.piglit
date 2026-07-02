@@ -265,5 +265,9 @@ piglit_init(int argc, char **argv)
 					GL_GEOMETRY_SHADER, gsSource,
 					GL_FRAGMENT_SHADER, fsSource,
 					0);
+	free(vsSource);
+	free(gsSource);
+	free(fsSource);
+
 	glUseProgram(program);
 }
