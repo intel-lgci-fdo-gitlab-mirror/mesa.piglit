@@ -315,6 +315,7 @@ piglit_display(void)
 			0);
 
 		pass = pass && test_prog(prog, tests[1], false);
+		free(gs_source);
 
 		/* Test both the gs outputs and inputs */
 		create_gs_source(&gs_source2, gs_inputs_outputs);
@@ -325,6 +326,7 @@ piglit_display(void)
 			0);
 
 		pass = pass && test_prog(prog, tests[2], false);
+		free(gs_source2);
 
 		if (piglit_is_extension_supported("GL_ARB_tessellation_shader")) {
 			/* Test tes outputs only */
