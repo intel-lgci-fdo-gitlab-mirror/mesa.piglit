@@ -320,7 +320,7 @@ piglit_ktx_parse_images(struct piglit_ktx *self)
 			 * out-of-bounds memory.
 			 */
 			piglit_ktx_error("size of data stream must be at "
-					 "least %u", CUR_SIZE + 1);
+					 "least %zd", CUR_SIZE + 1);
 			return false;
 		}
 
