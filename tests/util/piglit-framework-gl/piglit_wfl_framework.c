@@ -587,6 +587,13 @@ make_context_current(struct piglit_wfl_framework *wfl_fw,
 			if (test_config->supports_gl_compat_version == 31 &&
 			    !piglit_is_extension_supported("GL_ARB_compatibility")) {
 				printf("piglit: info: Failed to create a compat profile\n");
+				/* We're bailing out before the caller gets a chance to
+				 * register the framework's destroy callback via
+				 * piglit_set_destroy_func(), so piglit_report_result()
+				 * won't tear down the display we just connected. Do it
+				 * ourselves to avoid leaking the EGL/DRI2 display.
+				 */
+				piglit_wfl_framework_teardown(wfl_fw);
 				piglit_report_result(PIGLIT_SKIP);
 			}
 
@@ -608,6 +615,7 @@ make_context_current(struct piglit_wfl_framework *wfl_fw,
 #endif
 
 	printf("piglit: info: Failed to create any GL context\n");
+	piglit_wfl_framework_teardown(wfl_fw);
 	piglit_report_result(PIGLIT_SKIP);
 }
 
