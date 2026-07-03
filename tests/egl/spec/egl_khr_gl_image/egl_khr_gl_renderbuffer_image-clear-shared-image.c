@@ -44,6 +44,9 @@ static PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
 static const uint32_t width = 1024;
 static const uint32_t height = 1024;
 
+static void
+teardown(EGLDisplay dpy, EGLContext ctx);
+
 static EGLContext
 create_context(EGLDisplay dpy)
 {
@@ -159,14 +162,18 @@ create_framebuffers(EGLDisplay dpy, EGLContext ctx,
 	glGenRenderbuffers(1, &rb1);
 	glBindRenderbuffer(GL_RENDERBUFFER, rb1);
 	glRenderbufferStorage(GL_RENDERBUFFER, internal_format, width, height);
-	if (!piglit_check_gl_error(GL_NO_ERROR))
+	if (!piglit_check_gl_error(GL_NO_ERROR)) {
+		teardown(dpy, ctx);
 		piglit_report_result(PIGLIT_FAIL);
+	}
 
 	glGenFramebuffers(1, fb1);
 	glBindFramebuffer(GL_FRAMEBUFFER, *fb1);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment_point, GL_RENDERBUFFER, rb1);
-	if (!piglit_check_gl_error(GL_NO_ERROR))
+	if (!piglit_check_gl_error(GL_NO_ERROR)) {
+		teardown(dpy, ctx);
 		piglit_report_result(PIGLIT_FAIL);
+	}
 
 	/* We intentionally create the EGLImage before using the renderbuffer.
 	 * This confuses some versions of the Intel driver.
@@ -177,20 +184,25 @@ create_framebuffers(EGLDisplay dpy, EGLContext ctx,
 		 * to reject image creation.
 		 */
 		piglit_loge("failed to create EGLImage");
+		teardown(dpy, ctx);
 		piglit_report_result(PIGLIT_SKIP);
 	}
 
 	glGenRenderbuffers(1, &rb2);
 	glBindRenderbuffer(GL_RENDERBUFFER, rb2);
 	glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, img);
-	if (!piglit_check_gl_error(GL_NO_ERROR))
+	if (!piglit_check_gl_error(GL_NO_ERROR)) {
+		teardown(dpy, ctx);
 		piglit_report_result(PIGLIT_FAIL);
+	}
 
 	glGenFramebuffers(1, fb2);
 	glBindFramebuffer(GL_FRAMEBUFFER, *fb2);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment_point, GL_RENDERBUFFER, rb2);
-	if (!piglit_check_gl_error(GL_NO_ERROR))
+	if (!piglit_check_gl_error(GL_NO_ERROR)) {
+		teardown(dpy, ctx);
 		piglit_report_result(PIGLIT_FAIL);
+	}
 }
 
 static void
