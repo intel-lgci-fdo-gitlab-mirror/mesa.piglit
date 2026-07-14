@@ -1,0 +1,52 @@
+# Check proper functioning of the gl_PrimitiveID fragment shader input,
+# in the case where there is no geometry shader and the fragment shader
+# also reads a user-defined varying.
+#
+# Reproduces https://gitlab.freedesktop.org/mesa/mesa/-/issues/15660 where
+# the fragment shader inputs were remapped incorrectly when gl_PrimitiveID
+# was read together with a user-defined varying, causing gl_PrimitiveID to
+# read garbage. Either input on its own worked correctly.
+#
+# Note: the varying must be read by the fragment shader and must not be a
+# compile-time constant, otherwise the linker can eliminate it, leaving
+# gl_PrimitiveID as the only input which hides the bug. Here pos.w
+# (expected to be 1.0) provides the output alpha.
+
+[require]
+GL >= 3.2
+GLSL >= 1.50
+
+[vertex shader]
+#version 150
+
+in vec4 piglit_vertex;
+out vec4 pos;
+
+void main()
+{
+  pos = piglit_vertex;
+  gl_Position = piglit_vertex;
+}
+
+[fragment shader]
+#version 150
+
+in vec4 pos;
+out vec4 color;
+
+void main()
+{
+  /* We draw a rect (two triangles), so gl_PrimitiveID must be 0 or 1. */
+  if (gl_PrimitiveID >= 0 && gl_PrimitiveID <= 1)
+    color = vec4(0.0, 1.0, 0.0, pos.w);
+  else
+    color = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+[test]
+clear color 0.2 0.2 0.2 1.0
+clear
+
+draw rect -1 -1 2 2
+
+probe all rgba 0.0 1.0 0.0 1.0
